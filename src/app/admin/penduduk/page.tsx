@@ -7,6 +7,7 @@ import ExportButton from '@/components/ExportButton';
 
 import MutasiButton from '@/components/MutasiButton';
 import PrintBiodata from '@/components/PrintBiodata';
+import FilterPenduduk from '@/components/FilterPenduduk';
 
 export default async function DataPendudukPage({
   searchParams,
@@ -89,26 +90,13 @@ export default async function DataPendudukPage({
 
       {/* FILTER BAR */}
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-        <form className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                <div className="relative md:col-span-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input type="text" name="q" defaultValue={query} placeholder="Cari Nama/NIK..." className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-xs font-medium" />
-                </div>
-                <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input type="text" name="kk" defaultValue={kkQuery} placeholder="No KK..." className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-xs font-medium" />
-                </div>
-                <select name="dusun" defaultValue={dusunFilter} className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 outline-none cursor-pointer">
-                    <option value="">SEMUA DUSUN</option>
-                    <option value="Selungguh">SELUNGGUH</option><option value="Sekadalan">SEKADALAN</option><option value="Ledok">LEDOK</option>
-                </select>
-                <select name="rt" defaultValue={rtFilter} className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 outline-none cursor-pointer">
-                    <option value="">RT</option>
-                    {['001', '002', '003', '004', '005', '006', '007', '008', '009', '010'].map(rt => <option key={rt} value={rt}>{rt}</option>)}
-                </select>
-                <button type="submit" className="bg-slate-800 text-white rounded-xl px-4 py-2.5 font-bold text-xs hover:bg-slate-700 transition-all">FILTER</button>
-            </div>
+        <div className="space-y-4">
+            <FilterPenduduk 
+              initialQuery={query}
+              initialKk={kkQuery}
+              initialDusun={dusunFilter}
+              initialRt={rtFilter}
+            />
 
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50 mt-2">
                 <Link 
@@ -124,7 +112,7 @@ export default async function DataPendudukPage({
                 <FilterChip label="Sudah Rekam" active={statusFilter === 'SUDAH REKAM'} href={buildUrl(params, { statusRekam: 'SUDAH REKAM', page: '1' })} />
                 <FilterChip label="KTP Jadi" active={statusFilter === 'KTP SUDAH JADI'} href={buildUrl(params, { statusRekam: 'KTP SUDAH JADI', page: '1' })} />
             </div>
-        </form>
+        </div>
       </div>
 
       {/* TABLE */}
