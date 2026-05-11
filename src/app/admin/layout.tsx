@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
+import {
+  LayoutDashboard,
+  Users,
   RefreshCcw,
-  FileText, 
-  Map, 
-  PieChart, 
-  Settings, 
+  FileText,
+  Map,
+  PieChart,
+  Settings,
   LogOut,
   UserCircle,
   Menu,
@@ -30,13 +30,13 @@ export default function AdminLayout({
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Sidebar */}
-      <motion.aside 
+      <motion.aside
         initial={false}
         animate={{ width: isCollapsed ? 80 : 260 }}
         className="bg-white border-r border-slate-200 flex flex-col shrink-0 relative z-20 shadow-xl shadow-slate-200/50"
       >
         {/* Toggle Button */}
-        <button 
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="absolute -right-3 top-20 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-emerald-600 shadow-sm z-50 transition-colors"
         >
@@ -49,7 +49,7 @@ export default function AdminLayout({
               <LayoutDashboard size={18} />
             </div>
             {!isCollapsed && (
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="font-black text-slate-800 text-lg tracking-tight"
@@ -62,12 +62,12 @@ export default function AdminLayout({
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
           <SidebarLink href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === '/admin'} isCollapsed={isCollapsed} />
-          
+
           {/* Menu Kependudukan dengan Submenu */}
           <div className="space-y-1">
             {!isCollapsed ? (
               <div className="flex items-center gap-3 px-3 py-2 text-slate-400 text-[11px] font-black uppercase tracking-[0.1em] mt-6 mb-1 whitespace-nowrap">
-                 Kependudukan
+                Kependudukan
               </div>
             ) : (
               <div className="h-px bg-slate-100 my-4 mx-2" />
@@ -86,7 +86,7 @@ export default function AdminLayout({
           <SidebarLink href="/admin/surat" icon={<FileText size={20} />} label="Persuratan" active={pathname.startsWith('/admin/surat')} isCollapsed={isCollapsed} />
           <SidebarLink href="/admin/apbdes" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/apbdes')} isCollapsed={isCollapsed} />
           <SidebarLink href="/admin/gis" icon={<Map size={20} />} label="Pemetaan GIS" active={pathname.startsWith('/admin/gis')} isCollapsed={isCollapsed} />
-          
+
           {!isCollapsed ? (
             <div className="pt-6 mb-1">
               <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Social & Ekonomi</p>
@@ -103,21 +103,21 @@ export default function AdminLayout({
             <LogOut size={20} className="shrink-0" />
             {!isCollapsed && <span>Keluar</span>}
           </button>
-          
+
           {!isCollapsed && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="px-3 pt-2"
             >
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Developed By</p>
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 shadow-inner">
-                 <p className="text-[11px] font-bold text-slate-700">Supriyanto Abadi Jaya</p>
-                 <div className="mt-2 pt-2 border-t border-slate-200">
-                    <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Donasi RoKi ☕🚬</p>
-                    <p className="text-[10px] font-mono font-black text-emerald-600 select-all">085655620979</p>
-                    <p className="text-[9px] text-slate-400 italic">OVO / DANA / GOPAY</p>
-                 </div>
+                <p className="text-[11px] font-bold text-slate-700">Supriyanto Abadi Jaya</p>
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Donasi RoKi ☕🚬</p>
+                  <p className="text-[10px] font-mono font-black text-emerald-600 select-all">085655620979</p>
+                  <p className="text-[9px] text-slate-400 italic">OVO / DANA / GOPAY</p>
+                </div>
               </div>
             </motion.div>
           )}
@@ -150,7 +150,7 @@ export default function AdminLayout({
           <div className="flex-1">
             {children}
           </div>
-          
+
           {/* Footer Statis */}
           <footer className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6 text-slate-400">
             <div className="text-[11px] font-bold tracking-wider uppercase">
@@ -174,13 +174,12 @@ export default function AdminLayout({
 
 function SidebarLink({ href, icon, label, active = false, isCollapsed = false }: { href: string, icon: React.ReactNode, label: string, active?: boolean, isCollapsed?: boolean }) {
   return (
-    <Link 
+    <Link
       href={href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm relative group ${
-        active 
-          ? 'bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50' 
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm relative group ${active
+          ? 'bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50'
           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-      } ${isCollapsed ? 'justify-center' : ''}`}
+        } ${isCollapsed ? 'justify-center' : ''}`}
     >
       <span className="shrink-0">{icon}</span>
       {!isCollapsed && (
@@ -192,7 +191,7 @@ function SidebarLink({ href, icon, label, active = false, isCollapsed = false }:
           {label}
         </motion.span>
       )}
-      
+
       {/* Tooltip for Collapsed State */}
       {isCollapsed && (
         <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-[11px] font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:ml-3 transition-all z-[100] whitespace-nowrap shadow-xl">
