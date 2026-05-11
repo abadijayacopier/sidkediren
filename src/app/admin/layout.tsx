@@ -104,8 +104,26 @@ export default function AdminLayout({
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {children}
+        <div className="flex-1 overflow-y-auto p-8 relative flex flex-col">
+          <div className="flex-1">
+            {children}
+          </div>
+          
+          {/* Footer Static */}
+          <footer className="mt-8 pt-6 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400">
+            <div className="text-[10px] font-medium tracking-wide">
+              &copy; {new Date().getFullYear()} SID KEDIREN. ALL RIGHTS RESERVED.
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="text-[10px] font-medium tracking-wide flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                DEVELOPED BY <span className="font-black text-slate-600">SUPRIYANTO ABADI JAYA</span>
+              </div>
+              <div className="px-2 py-0.5 bg-slate-100 rounded text-[9px] font-black text-slate-500 border border-slate-200 uppercase tracking-tighter">
+                VERSION V2026.1.0.1
+              </div>
+            </div>
+          </footer>
         </div>
       </main>
     </div>
