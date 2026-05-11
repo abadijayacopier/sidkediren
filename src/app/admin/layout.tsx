@@ -98,7 +98,8 @@ export default function AdminLayout({
           <SidebarLink href="/admin/pkk" icon={<Users size={20} />} label="PKK & Posyandu" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} />
         </nav>
 
-        <div className="p-4 border-t border-slate-100 space-y-4 bg-white">
+        <div className="p-4 border-t border-slate-100 space-y-1 bg-white">
+          <SidebarLink href="/admin/settings" icon={<Settings size={20} />} label="Pengaturan" active={pathname.startsWith('/admin/settings')} isCollapsed={isCollapsed} />
           <button className="flex items-center gap-3 px-3 py-2.5 w-full text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all text-sm font-semibold">
             <LogOut size={20} className="shrink-0" />
             {!isCollapsed && <span>Keluar</span>}
