@@ -6,6 +6,7 @@ import DeletePenduduk from '@/components/DeletePenduduk';
 import ExportButton from '@/components/ExportButton';
 
 import MutasiButton from '@/components/MutasiButton';
+import PrintBiodata from '@/components/PrintBiodata';
 
 export default async function DataPendudukPage({
   searchParams,
@@ -173,13 +174,13 @@ export default async function DataPendudukPage({
                   <p className="text-xs text-slate-400 font-mono">RT {warga.keluarga?.rt}/{warga.keluarga?.rw}</p>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition-all">
-                    <Link href={`/admin/penduduk/view/${warga.nik}`} title="Preview" className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Eye size={16} /></Link>
-                    <Link href={`/admin/penduduk/cetak/${warga.nik}`} target="_blank" title="Cetak Biodata" className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Printer size={16} /></Link>
-                    <Link href={`/admin/penduduk/edit/${warga.nik}`} title="Edit" className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"><Edit size={16} /></Link>
-                    <MutasiButton warga={warga} />
-                    <DeletePenduduk nik={warga.nik} />
-                  </div>
+                    <div className="flex items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition-all">
+                      <Link href={`/admin/penduduk/view/${warga.nik}`} title="Preview" className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Eye size={16} /></Link>
+                      <PrintBiodata warga={warga} iconOnly={true} />
+                      <Link href={`/admin/penduduk/edit/${warga.nik}`} title="Edit" className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"><Edit size={16} /></Link>
+                      <MutasiButton warga={warga} />
+                      <DeletePenduduk nik={warga.nik} />
+                    </div>
                 </td>
               </tr>
             ))}

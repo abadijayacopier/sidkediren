@@ -10,9 +10,11 @@ import {
   GraduationCap, 
   Heart,
   Fingerprint,
-  Info
+  Info,
+  Printer
 } from 'lucide-react';
 import Link from 'next/link';
+import PrintBiodata from '@/components/PrintBiodata';
 
 export default async function ViewPendudukPage({
   params,
@@ -33,14 +35,18 @@ export default async function ViewPendudukPage({
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/admin/penduduk" className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500">
-          <ArrowLeft size={24} />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Biodata Warga</h1>
-          <p className="text-slate-500 text-sm">Menampilkan rincian data personal individu.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/penduduk" className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500">
+            <ArrowLeft size={24} />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Biodata Warga</h1>
+            <p className="text-slate-500 text-sm">Menampilkan rincian data personal individu.</p>
+          </div>
         </div>
+        
+        <PrintBiodata warga={warga} />
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
