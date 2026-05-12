@@ -15,11 +15,14 @@ import {
 import { useRouter } from 'next/navigation';
 import { generateNomorSurat, createRiwayatSurat } from '@/app/actions/surat';
 
+import DynamicForm from './DynamicForm';
+
 interface MasterSurat {
   id: number;
   kodeSurat: string;
   namaSurat: string;
   formatNomor: string;
+  formSchema?: string;
 }
 
 interface Penduduk {
@@ -28,6 +31,10 @@ interface Penduduk {
   alamat?: string;
   tempatLahir: string;
   tanggalLahir: string | Date;
+  jenisKelamin: string;
+  pekerjaan: string;
+  statusPerkawinan: string;
+  agama: string;
 }
 
 export default function SuratForm({ masterSurat, initialPenduduk }: { masterSurat: MasterSurat[], initialPenduduk: any[] }) {
@@ -42,6 +49,7 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
   const [selectedSurat, setSelectedSurat] = useState<MasterSurat | null>(null);
   const [nomorSurat, setNomorSurat] = useState('');
   const [keterangan, setKeterangan] = useState('');
+  const [dynamicValues, setDynamicValues] = useState<Record<string, any>>({});
 
   // Search logic
   useEffect(() => {
@@ -60,6 +68,7 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
   useEffect(() => {
     if (selectedSurat) {
       generateNomorSurat(selectedSurat.id).then(setNomorSurat);
+      setDynamicValues({}); // Reset dynamic values when surat type changes
     }
   }, [selectedSurat]);
 
@@ -74,10 +83,17 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
         nomorSurat: nomorSurat,
         keterangan: keterangan,
         metaData: JSON.stringify({
+          ...dynamicValues,
           nama: selectedPenduduk.namaLengkap,
           nik: selectedPenduduk.nik,
           tglLahir: selectedPenduduk.tanggalLahir,
-          tempatLahir: selectedPenduduk.tempatLahir
+          tempatLahir: selectedPenduduk.tempatLahir,
+          jk: selectedPenduduk.jenisKelamin,
+          pekerjaan: selectedPenduduk.pekerjaan,
+          status: selectedPenduduk.statusPerkawinan,
+          agama: selectedPenduduk.agama,
+          alamat: selectedPenduduk.alamat,
+          keterangan: keterangan
         })
       });
       
@@ -185,10 +201,10 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
         {/* Step 3: Detail & Finalisasi */}
         {step === 3 && (
           <div className="p-10 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 flex-1 flex flex-col">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="space-y-4">
-                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Informasi Surat</p>
+            <div className="flex flex-col gap-8">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 h-fit">
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Informasi Utama</p>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-xs text-slate-500 font-bold">Jenis:</span>
@@ -205,29 +221,43 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Nomor Surat (Otomatis)</label>
-                    <input 
-                      type="text" 
-                      readOnly 
-                      className="w-full p-5 bg-slate-50 border-none rounded-2xl text-slate-700 font-mono font-black text-sm shadow-inner cursor-not-allowed"
-                      value={nomorSurat}
-                    />
+                  <div className="md:col-span-2 space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Nomor Surat (Otomatis)</label>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        className="w-full p-5 bg-slate-50 border-none rounded-2xl text-slate-700 font-mono font-black text-sm shadow-inner cursor-not-allowed"
+                        value={nomorSurat}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Keperluan / Keterangan Dasar</label>
+                      <input 
+                        type="text" 
+                        placeholder="Contoh: Digunakan untuk persyaratan beasiswa..."
+                        className="w-full p-5 bg-slate-50 border-none rounded-2xl text-slate-700 font-bold placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm shadow-inner"
+                        value={keterangan}
+                        onChange={(e) => setKeterangan(e.target.value)}
+                      />
+                    </div>
                   </div>
                </div>
 
-               <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Keterangan / Keperluan</label>
-                    <textarea 
-                      rows={6}
-                      placeholder="Contoh: Digunakan untuk persyaratan beasiswa anak..."
-                      className="w-full p-5 bg-slate-50 border-none rounded-2xl text-slate-700 font-bold placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm shadow-inner"
-                      value={keterangan}
-                      onChange={(e) => setKeterangan(e.target.value)}
+               {selectedSurat?.formSchema && (
+                 <div className="space-y-6 pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Informasi Tambahan Khusus {selectedSurat.kodeSurat}</h3>
+                    </div>
+                    <DynamicForm 
+                      schema={selectedSurat.formSchema} 
+                      values={dynamicValues} 
+                      onChange={(name, val) => setDynamicValues(prev => ({ ...prev, [name]: val }))} 
                     />
-                  </div>
-               </div>
+                 </div>
+               )}
             </div>
 
             <div className="mt-auto pt-10 flex flex-col md:flex-row gap-4">

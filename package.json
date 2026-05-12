@@ -24,6 +24,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.13.3",
+    "sweetalert2": "^11.26.24",
     "tailwind-merge": "^2.5.4",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"

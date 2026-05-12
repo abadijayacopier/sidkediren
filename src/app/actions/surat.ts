@@ -11,25 +11,31 @@ export async function getProfilDesa() {
 
 export async function updateProfilDesa(formData: FormData) {
   const data = {
-    namaDesa: formData.get('namaDesa') as string,
-    kodeDesa: formData.get('kodeDesa') as string,
-    kecamatan: formData.get('kecamatan') as string,
-    kabupaten: formData.get('kabupaten') as string,
-    provinsi: formData.get('provinsi') as string,
-    alamat: formData.get('alamat') as string,
-    kodePos: formData.get('kodePos') as string,
-    telepon: formData.get('telepon') as string,
-    email: formData.get('email') as string,
-    website: formData.get('website') as string,
-    namaKepalaDesa: formData.get('namaKepalaDesa') as string,
-    nipKepalaDesa: formData.get('nipKepalaDesa') as string,
+    namaDesa: (formData.get('namaDesa') as string) || 'KEDIREN',
+    kodeDesa: (formData.get('kodeDesa') as string) || '',
+    kecamatan: (formData.get('kecamatan') as string) || 'LEMBEYAN',
+    kabupaten: (formData.get('kabupaten') as string) || 'MAGETAN',
+    provinsi: (formData.get('provinsi') as string) || 'JAWA TIMUR',
+    alamat: (formData.get('alamat') as string) || '',
+    kodePos: (formData.get('kodePos') as string) || '',
+    telepon: (formData.get('telepon') as string) || '',
+    email: (formData.get('email') as string) || '',
+    website: (formData.get('website') as string) || '',
+    sejarah: (formData.get('sejarah') as string) || '',
+    visi: (formData.get('visi') as string) || '',
+    misi: (formData.get('misi') as string) || '[]',
+    instagram: (formData.get('instagram') as string) || '',
+    facebook: (formData.get('facebook') as string) || '',
+    namaKepalaDesa: (formData.get('namaKepalaDesa') as string) || 'SUPRIYANTO',
   };
 
-  await prisma.profilDesa.update({
+  await prisma.profilDesa.upsert({
     where: { id: 1 },
-    data
+    update: data,
+    create: { id: 1, ...data }
   });
 
+  revalidatePath('/admin/settings/profil');
   revalidatePath('/admin/settings/desa');
 }
 

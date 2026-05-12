@@ -126,6 +126,14 @@ model ProfilDesa {
   nipKepalaDesa   String?  @map("nip_kepala_desa") @db.VarChar(30)
   logoDesa        String?  @map("logo_desa") @db.Text
   tandaTangan     String?  @map("tanda_tangan") @db.Text // Path ke image TTD
+  
+  // Field tambahan untuk profil lengkap
+  sejarah         String?  @db.LongText
+  visi            String?  @db.Text
+  misi            String?  @db.LongText // Simpan sebagai JSON string
+  instagram       String?  @db.VarChar(100)
+  facebook        String?  @db.VarChar(100)
+
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("profil_desa")
@@ -150,6 +158,7 @@ model MasterSurat {
   formatNomor     String   @map("format_nomor") @db.VarChar(100)
   templatePath    String?  @map("template_path") @db.Text
   templateContent String?  @map("template_content") @db.LongText // JSON/Markdown template
+  formSchema      String?  @map("form_schema") @db.LongText // JSON schema for dynamic fields
   isActive        Boolean  @default(true) @map("is_active")
 
   klasifikasi     KlasifikasiSurat? @relation(fields: [klasifikasiId], references: [id])
@@ -305,4 +314,37 @@ model PkkKegiatan {
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("pkk_kegiatan")
+}
+
+// --- MODUL STRUKTUR ORGANISASI ---
+model Jabatan {
+  id            Int      @id @default(autoincrement())
+  namaJabatan   String   @map("nama_jabatan") @db.VarChar(100)
+  kategori      String   @default("PEMERINTAH") @db.VarChar(50) // PEMERINTAH, BPD, LSM
+  level         Int      @default(1) // 1: Kades, 2: Sekdes/BPD, 3: Kaur/Kasi
+  urutan        Int      @default(1)
+  parentId      Int?     @map("parent_id")
+  
+  parent        Jabatan?  @relation("HierarkiJabatan", fields: [parentId], references: [id])
+  children      Jabatan[] @relation("HierarkiJabatan")
+  perangkat     PerangkatDesa[]
+
+  @@map("jabatan")
+}
+
+model PerangkatDesa {
+  id                Int      @id @default(autoincrement())
+  jabatanId         Int      @map("jabatan_id")
+  nik               String   @db.VarChar(16) // Hilangkan @unique agar bisa fleksibel jika satu orang pindah jabatan
+  nama              String?  @db.VarChar(150) // Input manual Nama
+  fotoProfil        String?  @map("foto_profil") @db.Text
+  tandaTanganDigital String? @map("tanda_tangan_digital") @db.Text
+  status            String   @default("AKTIF") @db.VarChar(20)
+  periodeMulai      DateTime? @map("periode_mulai") @db.Date
+  periodeSelesai    DateTime? @map("periode_selesai") @db.Date
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  jabatan           Jabatan  @relation(fields: [jabatanId], references: [id])
+
+  @@map("perangkat_desa")
 }

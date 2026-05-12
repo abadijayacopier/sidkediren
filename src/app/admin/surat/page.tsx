@@ -56,94 +56,78 @@ export default async function SuratDashboard() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Menu */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <Settings size={20} className="text-emerald-500" />
-              Menu Navigasi
-            </h2>
-            <div className="space-y-3">
-              <MenuLink 
-                href="/admin/surat/riwayat" 
-                icon={<History size={18} />} 
-                label="Arsip Surat Keluar" 
-                desc="Lihat semua riwayat surat"
-              />
-              <MenuLink 
-                href="/admin/surat/master" 
-                icon={<FileText size={18} />} 
-                label="Master Surat" 
-                desc="Kelola template & kode"
-              />
-              <MenuLink 
-                href="/admin/settings/desa" 
-                icon={<Settings size={18} />} 
-                label="Pengaturan Kop Surat" 
-                desc="Identitas & TTD Kades"
-              />
-            </div>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 gap-8">
         {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+        <div className="w-full">
+          <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl overflow-hidden">
+            <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-white">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <Clock size={20} className="text-blue-500" />
-                Surat Terbaru
+                Daftar Riwayat Surat Keluar Terbaru
               </h2>
-              <Link href="/admin/surat/riwayat" className="text-emerald-600 text-sm font-bold hover:underline flex items-center gap-1">
-                Lihat Semua
+              <Link href="/admin/surat/riwayat" className="px-4 py-2 bg-slate-50 text-emerald-600 text-xs font-black rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 uppercase tracking-tighter">
+                Lihat Semua Arsip
                 <ArrowRight size={14} />
               </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50">
-                    <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-wider">No. Surat</th>
-                    <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-wider">Jenis Surat</th>
-                    <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-wider">Pemohon</th>
-                    <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-wider text-right">Aksi</th>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Nomor Surat & Tanggal</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Jenis & Kode</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Nama Pemohon / Warga</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {riwayat.slice(0, 5).map((r) => (
-                    <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-8 py-5">
-                        <p className="text-sm font-bold text-slate-800">{r.nomorSurat}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">{new Date(r.createdAt).toLocaleDateString('id-ID')}</p>
+                  {riwayat.slice(0, 10).map((r) => (
+                    <tr key={r.id} className="hover:bg-slate-50/50 transition-all group">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-emerald-600 transition-all shadow-sm">
+                              <FileText size={18} />
+                           </div>
+                           <div>
+                              <p className="text-sm font-black text-slate-800 group-hover:text-emerald-700 transition-colors">{r.nomorSurat}</p>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(r.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                           </div>
+                        </div>
                       </td>
-                      <td className="px-8 py-5">
-                        <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-100 uppercase">
-                          {r.masterSurat.kodeSurat}
-                        </span>
+                      <td className="px-8 py-6">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-black text-slate-700">{r.masterSurat.namaSurat}</span>
+                          <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 w-fit uppercase tracking-tighter">
+                            {r.masterSurat.kodeSurat}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-8 py-5">
+                      <td className="px-8 py-6">
                         <p className="text-sm font-bold text-slate-700">{r.penduduk.namaLengkap}</p>
                         <p className="text-[10px] text-slate-400 font-mono tracking-tighter">{r.penduduk.nik}</p>
                       </td>
-                      <td className="px-8 py-5 text-right">
+                      <td className="px-8 py-6 text-right">
                         <Link 
                           href={`/admin/surat/preview/${r.id}`}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-emerald-200 transition-all text-[10px] font-black uppercase tracking-widest"
                         >
                           <Search size={14} />
+                          <span>Preview</span>
                         </Link>
                       </td>
                     </tr>
                   ))}
                   {riwayat.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-8 py-12 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
-                            <FileText size={24} />
+                      <td colSpan={4} className="px-8 py-20 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-20 h-20 bg-slate-50 rounded-[30px] flex items-center justify-center text-slate-200 shadow-inner">
+                            <FileText size={40} />
                           </div>
-                          <p className="text-slate-400 text-sm font-medium">Belum ada riwayat surat.</p>
+                          <div>
+                            <p className="text-slate-800 font-black text-lg">Belum Ada Riwayat</p>
+                            <p className="text-slate-400 text-sm font-medium">Silakan buat surat pertama Anda melalui tombol di atas.</p>
+                          </div>
                         </div>
                       </td>
                     </tr>

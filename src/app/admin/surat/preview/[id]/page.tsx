@@ -101,14 +101,43 @@ export default async function SuratPreviewPage({ params }: { params: { id: strin
           </div>
 
           {/* Keterangan */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <p className="indent-12">
               Berdasarkan keterangan yang ada pada kami benar bahwa orang tersebut di atas adalah warga Desa {profil.namaDesa} dan sepanjang pengetahuan kami hingga saat ini orang tersebut :
             </p>
-            <div className="px-8 font-black italic">
+            
+            {/* Area Keterangan Utama */}
+            <div className="px-8 py-4 bg-slate-50/50 rounded-xl border border-slate-100 font-bold italic leading-relaxed text-center relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/20" />
                " {surat.keterangan || 'Berkelakuan baik dan benar-benar penduduk Desa Kediren yang tidak mampu.'} "
             </div>
-            <p className="indent-12">
+
+            {/* Area Data Dinamis (Meta) */}
+            {Object.keys(meta).length > 0 && (
+              <div className="px-8 space-y-4">
+                <p>Adapun keterangan tambahan mengenai surat ini adalah sebagai berikut:</p>
+                <div className="space-y-2 border-l-2 border-slate-200 pl-6 ml-6">
+                  {Object.entries(meta).map(([key, val]) => {
+                    // Filter out standard keys that are already shown or internal
+                    const internalKeys = ['nama', 'nik', 'tglLahir', 'tempatLahir', 'jk', 'pekerjaan', 'status', 'agama', 'alamat', 'keterangan'];
+                    if (internalKeys.includes(key)) return null;
+                    
+                    // Format key to human readable label
+                    const label = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    
+                    return (
+                      <div key={key} className="grid grid-cols-12 gap-2 text-[12pt]">
+                        <div className="col-span-4 font-medium italic text-slate-600">{label}</div>
+                        <div className="col-span-1 text-center">:</div>
+                        <div className="col-span-7 font-black">{val as string}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p className="indent-12 mt-4">
               Demikian surat keterangan ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya.
             </p>
           </div>

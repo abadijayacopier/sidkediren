@@ -83,7 +83,21 @@ export default function AdminLayout({
           ) : (
             <div className="h-px bg-slate-100 my-4 mx-2" />
           )}
-          <SidebarLink href="/admin/surat" icon={<FileText size={20} />} label="Persuratan" active={pathname.startsWith('/admin/surat')} isCollapsed={isCollapsed} />
+          {/* Persuratan dengan Submenu */}
+          <div className="space-y-1">
+            <SidebarCollapse 
+              icon={<FileText size={20} />} 
+              label="Persuratan" 
+              active={pathname.startsWith('/admin/surat')} 
+              isCollapsed={isCollapsed}
+              subItems={[
+                { href: '/admin/surat/buat', label: 'Buat Surat' },
+                { href: '/admin/surat/riwayat', label: 'Arsip Surat' },
+                { href: '/admin/surat/master', label: 'Master Surat' },
+              ]}
+            />
+          </div>
+
           <SidebarLink href="/admin/apbdes" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/apbdes')} isCollapsed={isCollapsed} />
           <SidebarLink href="/admin/gis" icon={<Map size={20} />} label="Pemetaan GIS" active={pathname.startsWith('/admin/gis')} isCollapsed={isCollapsed} />
 
@@ -169,6 +183,68 @@ export default function AdminLayout({
           </footer>
         </div>
       </main>
+    </div>
+  );
+}
+
+function SidebarCollapse({ icon, label, active = false, isCollapsed = false, subItems }: { icon: React.ReactNode, label: string, active?: boolean, isCollapsed?: boolean, subItems: { href: string, label: string }[] }) {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(active);
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => !isCollapsed && setIsOpen(!isOpen)}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm w-full group ${active
+            ? 'bg-emerald-50 text-emerald-700'
+            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+          } ${isCollapsed ? 'justify-center' : ''}`}
+      >
+        <span className="shrink-0">{icon}</span>
+        {!isCollapsed && (
+          <>
+            <span className="flex-1 text-left">{label}</span>
+            <motion.span
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              className="text-slate-400"
+            >
+              <ChevronLeft size={14} className="-rotate-90" />
+            </motion.span>
+          </>
+        )}
+        
+        {isCollapsed && (
+          <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-[11px] font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:ml-3 transition-all z-[100] whitespace-nowrap shadow-xl">
+            {label}
+          </div>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && !isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden pl-10 pr-2 space-y-1"
+          >
+            {subItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                  pathname === item.href 
+                    ? 'text-emerald-600 bg-emerald-50/50' 
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${pathname === item.href ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                {item.label}
+              </Link>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
