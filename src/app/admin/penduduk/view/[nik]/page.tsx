@@ -33,7 +33,7 @@ export default async function ViewPendudukPage({
   if (!warga) return notFound();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">

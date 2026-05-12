@@ -14,12 +14,7 @@ export default async function BuatSuratPage() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
-      <div>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Buat Surat Baru</h1>
-        <p className="text-slate-500 mt-1 font-medium italic">Silakan cari penduduk dan pilih jenis surat yang akan diterbitkan.</p>
-      </div>
-
+    <div className="space-y-8 pb-20">
       <SuratForm 
         masterSurat={JSON.parse(JSON.stringify(masterSurat))} 
         initialPenduduk={JSON.parse(JSON.stringify(penduduk))} 

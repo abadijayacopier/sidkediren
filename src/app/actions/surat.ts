@@ -109,3 +109,22 @@ export async function createRiwayatSurat(data: {
   revalidatePath('/admin/surat/riwayat');
   return res;
 }
+export async function deleteRiwayatSurat(id: string) {
+  const res = await prisma.riwayatSurat.delete({
+    where: { id }
+  });
+
+  revalidatePath('/admin/surat/riwayat');
+  revalidatePath('/admin/surat');
+  return res;
+}
+export async function updateRiwayatSurat(id: string, data: { keterangan: string, metaData: string }) {
+  const res = await prisma.riwayatSurat.update({
+    where: { id },
+    data
+  });
+
+  revalidatePath('/admin/surat/riwayat');
+  revalidatePath(`/admin/surat/preview/${id}`);
+  return res;
+}
