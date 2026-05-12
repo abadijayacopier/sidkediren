@@ -110,15 +110,50 @@ model Mutasi {
 }
 
 // --- MODUL PERSURATAN ---
-model MasterSurat {
-  id           Int      @id @default(autoincrement())
-  kodeSurat    String   @unique @map("kode_surat") @db.VarChar(20)
-  namaSurat    String   @map("nama_surat") @db.VarChar(100)
-  formatNomor  String   @map("format_nomor") @db.VarChar(100)
-  templatePath String?  @map("template_path") @db.Text
-  isActive     Boolean  @default(true) @map("is_active")
+model ProfilDesa {
+  id              Int      @id @default(1)
+  namaDesa        String   @map("nama_desa") @db.VarChar(100)
+  kodeDesa        String   @map("kode_desa") @db.VarChar(20)
+  kecamatan       String   @db.VarChar(100)
+  kabupaten       String   @db.VarChar(100)
+  provinsi        String   @db.VarChar(100)
+  alamat          String   @db.Text
+  kodePos         String   @map("kode_pos") @db.VarChar(10)
+  telepon         String?  @db.VarChar(20)
+  email           String?  @db.VarChar(100)
+  website         String?  @db.VarChar(100)
+  namaKepalaDesa  String   @map("nama_kepala_desa") @db.VarChar(150)
+  nipKepalaDesa   String?  @map("nip_kepala_desa") @db.VarChar(30)
+  logoDesa        String?  @map("logo_desa") @db.Text
+  tandaTangan     String?  @map("tanda_tangan") @db.Text // Path ke image TTD
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  riwayatSurat RiwayatSurat[]
+  @@map("profil_desa")
+}
+
+model KlasifikasiSurat {
+  id              Int      @id @default(autoincrement())
+  kode            String   @unique @db.VarChar(20)
+  nama            String   @db.VarChar(200)
+  deskripsi       String?  @db.Text
+
+  masterSurat     MasterSurat[]
+
+  @@map("klasifikasi_surat")
+}
+
+model MasterSurat {
+  id              Int      @id @default(autoincrement())
+  klasifikasiId   Int?     @map("klasifikasi_id")
+  kodeSurat       String   @unique @map("kode_surat") @db.VarChar(20)
+  namaSurat       String   @map("nama_surat") @db.VarChar(100)
+  formatNomor     String   @map("format_nomor") @db.VarChar(100)
+  templatePath    String?  @map("template_path") @db.Text
+  templateContent String?  @map("template_content") @db.LongText // JSON/Markdown template
+  isActive        Boolean  @default(true) @map("is_active")
+
+  klasifikasi     KlasifikasiSurat? @relation(fields: [klasifikasiId], references: [id])
+  riwayatSurat    RiwayatSurat[]
 
   @@map("master_surat")
 }
@@ -130,7 +165,9 @@ model RiwayatSurat {
   nomorSurat      String   @map("nomor_surat") @db.VarChar(100)
   tanggalPengajuan DateTime @default(now()) @map("tanggal_pengajuan")
   keterangan      String?  @map("keterangan_keperluan") @db.Text
+  metaData        String?  @map("meta_data") @db.LongText // Simpan variabel dinamis surat (JSON)
   statusSurat     String   @default("Selesai") @map("status_surat") @db.VarChar(20)
+  qrCodeData      String?  @map("qr_code_data") @db.Text
   dicetakOleh     String?  @map("dicetak_oleh") @db.VarChar(100)
   createdAt       DateTime @default(now()) @map("created_at")
 

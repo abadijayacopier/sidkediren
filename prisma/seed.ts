@@ -91,6 +91,63 @@ async function main() {
     ]
   });
 
+  // 1. Profil Desa Default
+  await prisma.profilDesa.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      namaDesa: 'KEDIREN',
+      kodeDesa: '35.20.03.2001',
+      kecamatan: 'LEMBEYAN',
+      kabupaten: 'MAGETAN',
+      provinsi: 'JAWA TIMUR',
+      alamat: 'Jl. Raya Kediren No. 01',
+      kodePos: '63372',
+      namaKepalaDesa: 'DJAZULI',
+      nipKepalaDesa: '-',
+    }
+  });
+
+  // 2. Klasifikasi Surat (Permendagri 83/2022)
+  const klasifikasi = [
+    { kode: '400.7.2.1', nama: 'Kesejahteraan Sosial (SKTM)' },
+    { kode: '470', nama: 'Kependudukan & Pencatatan Sipil' },
+    { kode: '140', nama: 'Pemerintahan Desa' },
+  ];
+
+  for (const k of klasifikasi) {
+    await prisma.klasifikasiSurat.upsert({
+      where: { kode: k.kode },
+      update: { nama: k.nama },
+      create: k
+    });
+  }
+
+  // 3. Master Surat
+  const masterSurat = [
+    { 
+      kodeSurat: 'SKTM', 
+      namaSurat: 'Surat Keterangan Tidak Mampu', 
+      formatNomor: '400.7.2.1/[NOMOR]/35.20.03.2001/[BULAN]/[TAHUN]',
+      klasifikasiId: (await prisma.klasifikasiSurat.findUnique({ where: { kode: '400.7.2.1' } }))?.id
+    },
+    { 
+      kodeSurat: 'SKD', 
+      namaSurat: 'Surat Keterangan Domisili', 
+      formatNomor: '470/[NOMOR]/35.20.03.2001/[BULAN]/[TAHUN]',
+      klasifikasiId: (await prisma.klasifikasiSurat.findUnique({ where: { kode: '470' } }))?.id
+    },
+  ];
+
+  for (const m of masterSurat) {
+    await prisma.masterSurat.upsert({
+      where: { kodeSurat: m.kodeSurat },
+      update: { namaSurat: m.namaSurat, formatNomor: m.formatNomor, klasifikasiId: m.klasifikasiId },
+      create: m
+    });
+  }
+
   // Hidupkan kembali check foreign key
   await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');
 
