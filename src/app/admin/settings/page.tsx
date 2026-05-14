@@ -13,6 +13,7 @@ import {
   RefreshCw,
   ChevronRight,
   ArrowUpCircle,
+  TrendingUp,
   Cloud,
   QrCode,
   Fingerprint,
@@ -28,6 +29,14 @@ const settingMenus = [
     icon: <Building className="text-emerald-600" />,
     href: '/admin/settings/profil',
     status: 'Lengkap',
+    color: 'bg-emerald-50'
+  },
+  {
+    title: 'Transparansi & APBDes',
+    description: 'Manajemen data anggaran desa, realisasi belanja, dan monitoring program kerja.',
+    icon: <TrendingUp className="text-emerald-600" />,
+    href: '/admin/settings/transparansi',
+    status: 'Aktif',
     color: 'bg-emerald-50'
   },
   {

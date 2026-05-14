@@ -128,3 +128,23 @@ export async function updateRiwayatSurat(id: string, data: { keterangan: string,
   revalidatePath(`/admin/surat/preview/${id}`);
   return res;
 }
+export async function upsertMasterSurat(data: { 
+  id?: number, 
+  namaSurat: string, 
+  kodeSurat: string, 
+  klasifikasiId: number, 
+  formatNomor: string, 
+  formSchema: string, 
+  templateContent: string,
+  isActive: boolean
+}) {
+  const { id, ...payload } = data;
+  
+  const res = id 
+    ? await prisma.masterSurat.update({ where: { id }, data: payload })
+    : await prisma.masterSurat.create({ data: payload });
+
+  revalidatePath('/admin/surat/master');
+  revalidatePath('/admin/surat/buat');
+  return res;
+}

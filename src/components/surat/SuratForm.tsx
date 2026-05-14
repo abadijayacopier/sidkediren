@@ -177,13 +177,16 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {masterSurat.map((s, idx) => (
-                  <motion.button
+                  <motion.div
                     key={s.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     onClick={() => { setSelectedSurat(s); setStep(2); }}
-                    className="group relative bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-300 transition-all text-left overflow-hidden"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedSurat(s); setStep(2); } }}
+                    className="group relative bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-300 transition-all text-left overflow-hidden cursor-pointer"
                   >
                     <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-20">
                        <button 
@@ -217,7 +220,7 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
                          <ChevronRight size={16} className="text-slate-300 group-hover:text-blue-600 transform group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
-                  </motion.button>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>

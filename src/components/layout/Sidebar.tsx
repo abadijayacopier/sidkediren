@@ -40,13 +40,18 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: 
             <LayoutDashboard size={18} />
           </div>
           {!isCollapsed && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="font-black text-slate-800 text-lg tracking-tight"
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col"
             >
-              SID Kediren
-            </motion.span>
+              <span className="font-black text-slate-800 text-lg tracking-tight leading-none">
+                SID Kediren
+              </span>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1.5">
+                Sistem Informasi Desa
+              </p>
+            </motion.div>
           )}
         </div>
       </div>
@@ -74,13 +79,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: 
         ) : (
           <div className="h-px bg-slate-100 my-4 mx-2" />
         )}
-        
+
         {/* Persuratan */}
         <div className="space-y-1">
-          <SidebarCollapse 
-            icon={<FileText size={20} />} 
-            label="Persuratan" 
-            active={pathname.startsWith('/admin/surat')} 
+          <SidebarCollapse
+            icon={<FileText size={20} />}
+            label="Manajemen Surat"
+            active={pathname.startsWith('/admin/surat')}
             isCollapsed={isCollapsed}
             subItems={[
               { href: '/admin/surat/buat', label: 'Buat Surat' },
@@ -124,8 +129,8 @@ function SidebarCollapse({ icon, label, active = false, isCollapsed = false, sub
       <button
         onClick={() => !isCollapsed && setIsOpen(!isOpen)}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm w-full group ${active
-            ? 'bg-emerald-50 text-emerald-700'
-            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+          ? 'bg-emerald-50 text-emerald-700'
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
           } ${isCollapsed ? 'justify-center' : ''}`}
       >
         <span className="shrink-0">{icon}</span>
@@ -140,7 +145,7 @@ function SidebarCollapse({ icon, label, active = false, isCollapsed = false, sub
             </motion.span>
           </>
         )}
-        
+
         {isCollapsed && (
           <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-[11px] font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:ml-3 transition-all z-[100] whitespace-nowrap shadow-xl">
             {label}
@@ -160,11 +165,10 @@ function SidebarCollapse({ icon, label, active = false, isCollapsed = false, sub
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                  pathname === item.href 
-                    ? 'text-emerald-600 bg-emerald-50/50' 
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${pathname === item.href
+                  ? 'text-emerald-600 bg-emerald-50/50'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                  }`}
               >
                 <div className={`w-1.5 h-1.5 rounded-full ${pathname === item.href ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                 {item.label}
@@ -182,8 +186,8 @@ function SidebarLink({ href, icon, label, active = false, isCollapsed = false }:
     <Link
       href={href}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm relative group ${active
-          ? 'bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+        ? 'bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50'
+        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
         } ${isCollapsed ? 'justify-center' : ''}`}
     >
       <span className="shrink-0">{icon}</span>

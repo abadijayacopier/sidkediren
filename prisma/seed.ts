@@ -315,6 +315,24 @@ async function main() {
     update: {},
     create: { id: 11, namaJabatan: 'KEPALA DUSUN', kategori: 'PEMERINTAH', level: 4, urutan: 1, parentId: 8 } // Bawah Kasi Pemerintahan biasanya
   });
+  
+  // 5. APBDes Kategori (Standar Kemendesa)
+  console.log("Memasukkan Kategori APBDes...");
+  const apbdesKategori = [
+    "Bidang Penyelenggaraan Pemerintahan Desa",
+    "Bidang Pelaksanaan Pembangunan Desa",
+    "Bidang Pembinaan Kemasyarakatan Desa",
+    "Bidang Pemberdayaan Masyarakat Desa",
+    "Bidang Penanggulangan Bencana, Keadaan Darurat dan Mendesak Desa"
+  ];
+
+  for (const nama of apbdesKategori) {
+    await prisma.apbdesKategori.upsert({
+      where: { id: apbdesKategori.indexOf(nama) + 1 },
+      update: { namaKategori: nama },
+      create: { id: apbdesKategori.indexOf(nama) + 1, namaKategori: nama }
+    });
+  }
 
   // Hidupkan kembali check foreign key
   await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');

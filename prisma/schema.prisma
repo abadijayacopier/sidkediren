@@ -189,7 +189,7 @@ model RiwayatSurat {
 // --- MODUL TRANSPARANSI APBDES ---
 model ApbdesKategori {
   id           Int          @id @default(autoincrement())
-  namaKategori String       @map("nama_kategori") @db.VarChar(50)
+  namaKategori String       @map("nama_kategori") @db.VarChar(200)
   items        ApbdesItem[]
 
   @@map("apbdes_kategori")
@@ -198,13 +198,16 @@ model ApbdesKategori {
 model ApbdesItem {
   id           Int      @id @default(autoincrement())
   tahun        Int
+  status       String   @default("MURNI") @db.VarChar(20) // MURNI, PERUBAHAN
   kategoriId   Int      @map("kategori_id")
   kodeRekening String?  @map("kode_rekening") @db.VarChar(20)
   namaItem     String   @map("nama_item") @db.VarChar(200)
   anggaran     Decimal  @default(0) @db.Decimal(15, 2)
   realisasi    Decimal  @default(0) @db.Decimal(15, 2)
+  sumberDana   String?  @map("sumber_dana") @db.VarChar(50)
   keterangan   String?  @db.Text
   createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   kategori     ApbdesKategori @relation(fields: [kategoriId], references: [id])
 
@@ -217,15 +220,16 @@ model ProgramKerja {
   tahun        Int
   namaProgram  String   @map("nama_program") @db.VarChar(200)
   deskripsi    String?  @db.Text
+  lokasi       String?  @db.VarChar(200)
   anggaran     Decimal? @db.Decimal(15, 2)
   sumberDana   String?  @map("sumber_dana") @db.VarChar(100)
   status       String   @db.VarChar(50) // Rencana, Berjalan, Selesai, Tertunda
-  fotoProgres  String?  @map("foto_progres") @db.Text
-  updatedAt    DateTime @default(now()) @map("updated_at")
+  fotoProgres  String?  @map("foto_progres") @db.LongText
+  latitude     Decimal? @db.Decimal(10, 8)
+  longitude    Decimal? @db.Decimal(11, 8)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
   
-  // GIS data handled via raw SQL or extensions if using Geometry
-  // location      Unsupported("geometry(Point, 4326)")?
-
   @@map("program_kerja")
 }
 
