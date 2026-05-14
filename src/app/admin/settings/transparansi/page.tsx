@@ -17,9 +17,15 @@ import {
   MapPin,
   Image as ImageIcon,
   Camera,
+  Navigation,
   Landmark,
   ClipboardList,
-  Navigation
+  PieChart as PieChartIcon,
+  Activity,
+  Layers,
+  CheckCircle2,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -30,12 +36,25 @@ import {
   upsertProgramKerja,
   initializeTransparansi
 } from '@/app/actions/transparansi';
+import { 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  Tooltip, 
+  Legend, 
+  BarChart as ReBarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid 
+} from 'recharts';
 import { getProfilDesa } from '@/app/actions/surat';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
 export default function AdminTransparansiPage() {
-  const [activeTab, setActiveTab] = useState<'apbdes' | 'program'>('apbdes');
+  const [activeTab, setActiveTab] = useState<'apbdes' | 'program' | 'infografis'>('apbdes');
   const [tahun, setTahun] = useState(new Date().getFullYear());
   const [status, setStatus] = useState('MURNI');
   const [items, setItems] = useState<any[]>([]);
@@ -92,32 +111,39 @@ export default function AdminTransparansiPage() {
   const [formattedAnggaran, setFormattedAnggaran] = useState('');
   const [formattedRealisasi, setFormattedRealisasi] = useState('');
   const [coords, setCoords] = useState<{lat: number | null, lng: number | null}>({lat: null, lng: null});
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewImages, setPreviewImages] = useState<(string | null)[]>([null, null, null]); // 0%, 50%, 100%
 
   useEffect(() => {
     if (editingItem) {
       setFormattedAnggaran(new Intl.NumberFormat('id-ID').format(Number(editingItem.anggaran)));
       setFormattedRealisasi(new Intl.NumberFormat('id-ID').format(Number(editingItem.realisasi || 0)));
       setCoords({lat: editingItem.latitude, lng: editingItem.longitude});
-      setPreviewImage(editingItem.fotoProgres);
+      try {
+        const imgs = JSON.parse(editingItem.fotoProgres || '[null, null, null]');
+        setPreviewImages(imgs);
+      } catch {
+        setPreviewImages([editingItem.fotoProgres || null, null, null]);
+      }
     } else {
       setFormattedAnggaran('');
       setFormattedRealisasi('');
       setCoords({lat: null, lng: null});
-      setPreviewImage(null);
+      setPreviewImages([null, null, null]);
     }
   }, [editingItem]);
 
-  const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>, stage: number) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
+        const newImages = [...(previewImages || [])];
+        newImages[stage] = reader.result as string;
+        setPreviewImages(newImages);
       };
       reader.readAsDataURL(file);
 
-      // Get Location
+      // Get Location (only for first photo or every photo)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
           setCoords({lat: pos.coords.latitude, lng: pos.coords.longitude});
@@ -319,6 +345,17 @@ export default function AdminTransparansiPage() {
             <ClipboardList size={18} className={activeTab === 'program' ? 'text-blue-400' : 'text-slate-300'} />
             Program Kerja
           </button>
+          <button 
+            onClick={() => setActiveTab('infografis')}
+            className={`flex items-center gap-2.5 px-8 py-3 rounded-[20px] text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+              activeTab === 'infografis' 
+                ? 'bg-slate-800 text-white shadow-lg shadow-slate-200' 
+                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+            }`}
+          >
+            <PieChartIcon size={18} className={activeTab === 'infografis' ? 'text-amber-400' : 'text-slate-300'} />
+            Infografis
+          </button>
         </div>
       </div>
 
@@ -342,39 +379,43 @@ export default function AdminTransparansiPage() {
                   Setup Kategori
                 </button>
               )}
-              <button 
-                onClick={handleExportExcel}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-700 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-emerald-100 transition-all"
-              >
-                <div className="w-5 h-5 bg-emerald-600 text-white rounded flex items-center justify-center font-bold text-[10px]">X</div> Ekspor Excel
-              </button>
-              <div className="relative">
-                <input type="file" onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" id="excel-import" />
-                <button 
-                  onClick={() => document.getElementById('excel-import')?.click()}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-700 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-blue-100 transition-all"
-                >
-                  <div className="w-5 h-5 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-[10px]">I</div> Impor Excel
-                </button>
-              </div>
-              <button 
-                onClick={() => {
-                  setIsPreviewOpen(true);
-                }}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-slate-100"
-              >
-                <FileText size={20} /> Cetak Laporan
-              </button>
-              <button 
-                onClick={() => {
-                  setEditingItem(null);
-                  setModalType(activeTab);
-                  setIsModalOpen(true);
-                }}
-                className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-              >
-                <PlusCircle size={20} /> Tambah Data
-              </button>
+              {activeTab !== 'infografis' && (
+                <>
+                  <button 
+                    onClick={handleExportExcel}
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-700 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-emerald-100 transition-all"
+                  >
+                    <div className="w-5 h-5 bg-emerald-600 text-white rounded flex items-center justify-center font-bold text-[10px]">X</div> Ekspor Excel
+                  </button>
+                  <div className="relative">
+                    <input type="file" onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" id="excel-import" />
+                    <button 
+                      onClick={() => document.getElementById('excel-import')?.click()}
+                      className="flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-700 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-blue-100 transition-all"
+                    >
+                      <div className="w-5 h-5 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-[10px]">I</div> Impor Excel
+                    </button>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setIsPreviewOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-slate-100"
+                  >
+                    <FileText size={20} /> Cetak Laporan
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setEditingItem(null);
+                      setModalType(activeTab as 'apbdes' | 'program');
+                      setIsModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+                  >
+                    <PlusCircle size={20} /> Tambah Data
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -401,9 +442,26 @@ export default function AdminTransparansiPage() {
                       <td className="px-8 py-5">
                         <div className="text-sm font-bold text-slate-800">{item.namaItem}</div>
                         <div className="text-[10px] font-mono font-bold text-slate-400">{item.kodeRekening}</div>
+                        {/* Realization Progress Bar */}
+                        <div className="mt-2 w-full max-w-[150px] space-y-1">
+                          <div className="flex justify-between items-center text-[8px] font-bold text-slate-400 uppercase">
+                            <span>Realisasi</span>
+                            <span>{Math.round((Number(item.realisasi) / Number(item.anggaran)) * 100) || 0}%</span>
+                          </div>
+                          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-1000 ${
+                                (Number(item.realisasi) / Number(item.anggaran)) >= 1 ? 'bg-emerald-500' : 
+                                (Number(item.realisasi) / Number(item.anggaran)) >= 0.5 ? 'bg-blue-500' : 'bg-amber-500'
+                              }`}
+                              style={{ width: `${Math.min(100, (Number(item.realisasi) / Number(item.anggaran)) * 100) || 0}%` }}
+                            ></div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-8 py-5 text-right font-bold text-emerald-600 text-sm">
-                        {formatIDR(Number(item.anggaran))}
+                      <td className="px-8 py-5 text-right space-y-1">
+                        <div className="text-sm font-bold text-emerald-600">{formatIDR(Number(item.anggaran))}</div>
+                        <div className="text-[10px] font-bold text-slate-400">Terpakai: {formatIDR(Number(item.realisasi))}</div>
                       </td>
                       <td className="px-8 py-5">
                         <span className="text-[10px] font-bold text-slate-400">{item.sumberDana}</span>
@@ -429,8 +487,9 @@ export default function AdminTransparansiPage() {
                   ))}
                 </tbody>
               </table>
-            ) : (
+            ) : activeTab === 'program' ? (
               <table className="w-full text-left">
+                {/* ... existing table code for program ... */}
                 <thead>
                   <tr className="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     <th className="px-8 py-6">Nama Program</th>
@@ -484,6 +543,126 @@ export default function AdminTransparansiPage() {
                   ))}
                 </tbody>
               </table>
+            ) : (
+              /* Infografis Content */
+              <div className="p-10 space-y-12 bg-slate-50/30">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                  {/* Alokasi Dana per Bidang */}
+                  <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                        <Layers size={20} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800">Alokasi Dana per Bidang</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Persentase Pengeluaran</p>
+                      </div>
+                    </div>
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categories.filter(c => !c.namaKategori.toLowerCase().includes('pendapatan')).map(c => ({
+                              name: c.namaKategori.split(' ')[0],
+                              value: items.filter(i => i.kategoriId === c.id).reduce((acc, curr) => acc + Number(curr.anggaran), 0)
+                            })).filter(d => d.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {[ '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6' ].map((color, index) => (
+                              <Cell key={`cell-${index}`} fill={color} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                            formatter={(value: number) => formatIDR(value)}
+                          />
+                          <Legend verticalAlign="bottom" height={36}/>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Perbandingan Pendapatan vs Belanja */}
+                  <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                        <Activity size={20} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800">Kesehatan Anggaran</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Pendapatan vs Pengeluaran</p>
+                      </div>
+                    </div>
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ReBarChart data={[
+                          {
+                            name: 'Anggaran',
+                            Pendapatan: items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('pendapatan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0),
+                            Belanja: items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('bidang')).reduce((acc, curr) => acc + Number(curr.anggaran), 0)
+                          }
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700 }} />
+                          <YAxis hide />
+                          <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} formatter={(value: number) => formatIDR(value)} />
+                          <Bar dataKey="Pendapatan" fill="#10b981" radius={[10, 10, 0, 0]} barSize={60} />
+                          <Bar dataKey="Belanja" fill="#334155" radius={[10, 10, 0, 0]} barSize={60} />
+                        </ReBarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Status Program Kerja */}
+                  <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6 lg:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                          <CheckCircle2 size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-800">Monitoring Program Kerja</h4>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Status Pelaksanaan Kegiatan</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Selesai: {programs.filter(p => p.status === 'Selesai').length}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Berjalan: {programs.filter(p => p.status === 'Berjalan').length}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Rencana: {programs.filter(p => p.status === 'Rencana').length}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                      {[
+                        { label: 'Selesai', count: programs.filter(p => p.status === 'Selesai').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                        { label: 'Sedang Berjalan', count: programs.filter(p => p.status === 'Berjalan').length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+                        { label: 'Rencana', count: programs.filter(p => p.status === 'Rencana').length, icon: AlertCircle, color: 'text-slate-400', bg: 'bg-slate-50' }
+                      ].map((stat, idx) => (
+                        <div key={idx} className={`${stat.bg} p-6 rounded-2xl flex items-center justify-between group hover:scale-[1.02] transition-all cursor-default`}>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                            <h5 className={`text-2xl font-bold ${stat.color}`}>{stat.count} <span className="text-xs font-medium text-slate-400 italic">Proyek</span></h5>
+                          </div>
+                          <stat.icon className={`${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`} size={32} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -497,7 +676,9 @@ export default function AdminTransparansiPage() {
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center font-bold">SID</div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Pratinjau Laporan APBDes</h3>
+                  <h3 className="text-lg font-bold text-slate-800">
+                    {activeTab === 'apbdes' ? 'Pratinjau Laporan APBDes' : 'Pratinjau Monitoring Program Kerja'}
+                  </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tahun {tahun} - Status {status}</p>
                 </div>
               </div>
@@ -509,7 +690,7 @@ export default function AdminTransparansiPage() {
                   Tutup
                 </button>
                 <button 
-                  onClick={() => window.open(`/print/apbdes?tahun=${tahun}&status=${status}`, '_blank')}
+                  onClick={() => window.open(activeTab === 'apbdes' ? `/print/apbdes?tahun=${tahun}&status=${status}` : `/print/program?tahun=${tahun}`, '_blank')}
                   className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-100"
                 >
                   <Save size={18} /> Cetak / PDF Resmi
@@ -526,41 +707,68 @@ export default function AdminTransparansiPage() {
                 </div>
                 
                 <div className="text-center mb-10 space-y-1 font-serif">
-                  <h1 className="text-sm font-bold">ANGGARAN PENDAPATAN DAN BELANJA DESA</h1>
+                  <h1 className="text-sm font-bold">
+                    {activeTab === 'apbdes' ? 'ANGGARAN PENDAPATAN DAN BELANJA DESA' : 'LAPORAN MONITORING PROGRAM KERJA FISIK'}
+                  </h1>
                   <h1 className="text-sm font-bold">PEMERINTAH DESA {profil?.namaDesa?.toUpperCase()}</h1>
                   <h1 className="text-sm font-bold">TAHUN ANGGARAN {tahun}</h1>
                 </div>
 
-                <table className="w-full border-collapse border border-black text-[10px] font-serif">
-                  <thead>
-                    <tr className="border border-black font-bold text-center">
-                      <th className="border border-black p-1 w-20">KODE</th>
-                      <th className="border border-black p-1">URAIAN</th>
-                      <th className="border border-black p-1 w-32">ANGGARAN (Rp)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="font-bold bg-slate-50">
-                      <td className="border border-black p-1 text-center">4</td>
-                      <td className="border border-black p-1">PENDAPATAN</td>
-                      <td className="border border-black p-1 text-right">{formatIDR(items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('pendapatan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0))}</td>
-                    </tr>
-                    <tr className="font-bold bg-slate-50">
-                      <td className="border border-black p-1 text-center">5</td>
-                      <td className="border border-black p-1">BELANJA</td>
-                      <td className="border border-black p-1 text-right">{formatIDR(items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('bidang')).reduce((acc, curr) => acc + Number(curr.anggaran), 0))}</td>
-                    </tr>
-                    <tr className="font-bold">
-                      <td className="border border-black p-2 text-center" colSpan={2}>SURPLUS / (DEFISIT)</td>
-                      <td className="border border-black p-2 text-right">
-                        {formatIDR(
-                          items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('pendapatan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0) -
-                          items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('bidang')).reduce((acc, curr) => acc + Number(curr.anggaran), 0)
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                {activeTab === 'apbdes' ? (
+                  <table className="w-full border-collapse border border-black text-[10px] font-serif">
+                    <thead>
+                      <tr className="border border-black font-bold text-center">
+                        <th className="border border-black p-1 w-20">KODE</th>
+                        <th className="border border-black p-1">URAIAN</th>
+                        <th className="border border-black p-1 w-32">ANGGARAN (Rp)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="font-bold bg-slate-50">
+                        <td className="border border-black p-1 text-center">4</td>
+                        <td className="border border-black p-1">PENDAPATAN</td>
+                        <td className="border border-black p-1 text-right">{formatIDR(items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('pendapatan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0))}</td>
+                      </tr>
+                      <tr className="font-bold bg-slate-50">
+                        <td className="border border-black p-1 text-center">5</td>
+                        <td className="border border-black p-1">BELANJA</td>
+                        <td className="border border-black p-1 text-right">{formatIDR(items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('bidang')).reduce((acc, curr) => acc + Number(curr.anggaran), 0))}</td>
+                      </tr>
+                      <tr className="font-bold">
+                        <td className="border border-black p-2 text-center" colSpan={2}>SURPLUS / (DEFISIT)</td>
+                        <td className="border border-black p-2 text-right">
+                          {formatIDR(
+                            items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('pendapatan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0) -
+                            items.filter(i => i.kategori?.namaKategori.toLowerCase().includes('bidang')).reduce((acc, curr) => acc + Number(curr.anggaran), 0)
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                ) : (
+                  <table className="w-full border-collapse border border-black text-[10px] font-serif">
+                    <thead>
+                      <tr className="border border-black font-bold text-center bg-slate-50">
+                        <th className="border border-black p-1 w-10">NO</th>
+                        <th className="border border-black p-1">KEGIATAN / PROGRAM</th>
+                        <th className="border border-black p-1">LOKASI</th>
+                        <th className="border border-black p-1 w-28">ANGGARAN</th>
+                        <th className="border border-black p-1 w-20">STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {programs.map((p, idx) => (
+                        <tr key={p.id}>
+                          <td className="border border-black p-1 text-center">{idx + 1}</td>
+                          <td className="border border-black p-1 font-bold">{p.namaProgram}</td>
+                          <td className="border border-black p-1">{p.lokasi}</td>
+                          <td className="border border-black p-1 text-right">{formatIDR(Number(p.anggaran))}</td>
+                          <td className="border border-black p-1 text-center">{p.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
 
                 <div className="mt-20 flex justify-end">
                   <div className="text-center font-serif text-[10px]">
@@ -698,38 +906,62 @@ export default function AdminTransparansiPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Foto Progres & Lokasi GPS</label>
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-300 overflow-hidden border-2 border-dashed border-slate-200">
-                          {previewImage ? (
-                            <img src={previewImage} className="w-full h-full object-cover" alt="Preview" />
-                          ) : (
-                            <ImageIcon size={32} />
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <input 
-                            type="file" 
-                            id="camera-input"
-                            accept="image/*" 
-                            capture="environment"
-                            onChange={handleCapture}
-                            className="hidden"
-                          />
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-3 gap-4">
+                        {[
+                          { label: 'Progres 0%', icon: Activity },
+                          { label: 'Progres 50%', icon: Layers },
+                          { label: 'Progres 100%', icon: CheckCircle2 }
+                        ].map((stage, idx) => (
+                          <div key={idx} className="space-y-2">
+                            <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center block">{stage.label}</label>
+                            <div className="relative group">
+                              <div className="w-full aspect-square bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 overflow-hidden border-2 border-dashed border-slate-200 group-hover:border-emerald-300 transition-all">
+                                {previewImages[idx] ? (
+                                  <img src={previewImages[idx] as string} className="w-full h-full object-cover" alt={`Stage ${idx}`} />
+                                ) : (
+                                  <stage.icon size={24} className="opacity-30" />
+                                )}
+                              </div>
+                              <input 
+                                type="file" 
+                                accept="image/*"
+                                capture="environment"
+                                onChange={(e) => handleCapture(e, idx)}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-slate-50 p-4 rounded-2xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Data Lokasi (GIS)</label>
                           <button 
                             type="button"
-                            onClick={() => document.getElementById('camera-input')?.click()}
-                            className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all"
+                            onClick={() => {
+                              if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition((pos) => {
+                                  setCoords({lat: pos.coords.latitude, lng: pos.coords.longitude});
+                                  Swal.fire({ icon: 'success', title: 'Koordinat Diperbarui', timer: 1000 });
+                                });
+                              }
+                            }}
+                            className="text-[10px] font-bold text-emerald-600 hover:underline"
                           >
-                            <Camera size={16} /> Ambil Foto / Kamera
+                            Ambil Koordinat Sekarang
                           </button>
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
-                            <Navigation size={12} className={coords?.lat ? 'text-emerald-500' : ''} />
-                            {coords?.lat ? `${coords.lat.toFixed(6)}, ${coords.lng?.toFixed(6)}` : 'GPS Belum Terdeteksi'}
-                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 bg-white p-3 rounded-xl border border-slate-100">
+                          <Navigation size={14} className={coords?.lat ? 'text-emerald-500' : 'text-slate-300'} />
+                          {coords?.lat ? (
+                            <span className="font-mono">{coords.lat.toFixed(6)}, {coords.lng?.toFixed(6)}</span>
+                          ) : (
+                            <span className="italic text-slate-300">Koordinat belum terdeteksi...</span>
+                          )}
                         </div>
                       </div>
-                      <input type="hidden" name="fotoProgres" value={previewImage || ''} />
+                      <input type="hidden" name="fotoProgres" value={JSON.stringify(previewImages)} />
                       <input type="hidden" name="latitude" value={coords?.lat || ''} />
                       <input type="hidden" name="longitude" value={coords?.lng || ''} />
                     </div>

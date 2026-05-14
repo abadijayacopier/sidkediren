@@ -24,7 +24,7 @@ export async function getApbdesSummary(tahun: number, status: string = 'MURNI') 
 }
 
 export async function getApbdesItems(tahun: number, status: string = 'MURNI') {
-  return await prisma.apbdesItem.findMany({
+  const items = await prisma.apbdesItem.findMany({
     where: { tahun, status } as any,
     include: { kategori: true },
     orderBy: [
@@ -32,19 +32,24 @@ export async function getApbdesItems(tahun: number, status: string = 'MURNI') {
       { kodeRekening: 'asc' }
     ]
   });
+
+  return JSON.parse(JSON.stringify(items));
 }
 
 export async function getApbdesKategori() {
-  return await prisma.apbdesKategori.findMany({
+  const categories = await prisma.apbdesKategori.findMany({
     orderBy: { id: 'asc' }
   });
+  return JSON.parse(JSON.stringify(categories));
 }
 
 export async function getProgramKerja(tahun: number) {
-  return await prisma.programKerja.findMany({
+  const programs = await prisma.programKerja.findMany({
     where: { tahun },
     orderBy: { updatedAt: 'desc' }
   });
+
+  return JSON.parse(JSON.stringify(programs));
 }
 
 export async function upsertApbdesItem(formData: FormData) {
