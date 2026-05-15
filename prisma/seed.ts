@@ -316,23 +316,101 @@ async function main() {
     create: { id: 11, namaJabatan: 'KEPALA DUSUN', kategori: 'PEMERINTAH', level: 4, urutan: 1, parentId: 8 } // Bawah Kasi Pemerintahan biasanya
   });
   
-  // 5. APBDes Kategori (Standar Kemendesa)
-  console.log("Memasukkan Kategori APBDes...");
-  const apbdesKategori = [
-    "Bidang Penyelenggaraan Pemerintahan Desa",
-    "Bidang Pelaksanaan Pembangunan Desa",
-    "Bidang Pembinaan Kemasyarakatan Desa",
-    "Bidang Pemberdayaan Masyarakat Desa",
-    "Bidang Penanggulangan Bencana, Keadaan Darurat dan Mendesak Desa"
+  // 5. APBDes Kategori & Item (Standar Kemendesa/Kemendagri)
+  console.log("Memasukkan Kategori & Item APBDes...");
+  
+  // PENDAPATAN
+  const catPendapatan = [
+    { id: 20, nama: "Pendapatan Asli Desa (PADes)", jenis: "PENDAPATAN" },
+    { id: 21, nama: "Dana Desa (DD)", jenis: "PENDAPATAN" },
+    { id: 22, nama: "Alokasi Dana Desa (ADD)", jenis: "PENDAPATAN" },
+    { id: 23, nama: "Bagi Hasil Pajak & Retribusi", jenis: "PENDAPATAN" },
+    { id: 24, nama: "Bantuan Keuangan Provinsi/Kabupaten", jenis: "PENDAPATAN" },
   ];
 
-  for (const nama of apbdesKategori) {
+  // BELANJA (Sudah ada Bidang 1-5)
+  const catBelanja = [
+    { id: 1, nama: "Bidang Penyelenggaraan Pemerintahan Desa", jenis: "BELANJA" },
+    { id: 2, nama: "Bidang Pelaksanaan Pembangunan Desa", jenis: "BELANJA" },
+    { id: 3, nama: "Bidang Pembinaan Kemasyarakatan Desa", jenis: "BELANJA" },
+    { id: 4, nama: "Bidang Pemberdayaan Masyarakat Desa", jenis: "BELANJA" },
+    { id: 5, nama: "Bidang Penanggulangan Bencana, Keadaan Darurat dan Mendesak Desa", jenis: "BELANJA" },
+  ];
+
+  // PEMBIAYAAN
+  const catPembiayaan = [
+    { id: 30, nama: "Penerimaan Pembiayaan (SiLPA)", jenis: "PEMBIAYAAN" },
+    { id: 31, nama: "Pengeluaran Pembiayaan (Penyertaan Modal)", jenis: "PEMBIAYAAN" },
+  ];
+
+  const allCats = [...catPendapatan, ...catBelanja, ...catPembiayaan];
+
+  for (const c of allCats) {
     await prisma.apbdesKategori.upsert({
-      where: { id: apbdesKategori.indexOf(nama) + 1 },
-      update: { namaKategori: nama },
-      create: { id: apbdesKategori.indexOf(nama) + 1, namaKategori: nama }
+      where: { id: c.id },
+      update: { namaKategori: c.nama, jenis: c.jenis as any },
+      create: { id: c.id, namaKategori: c.nama, jenis: c.jenis as any }
     });
   }
+
+  // --- Tambahkan Contoh Item APBDes ---
+  const currentYear = new Date().getFullYear();
+  await prisma.apbdesItem.deleteMany({}); // Bersihkan item lama agar seed bersih
+  
+  await prisma.apbdesItem.createMany({
+    data: [
+      // PENDAPATAN (4.)
+      { tahun: currentYear, kategoriId: 21, namaItem: "Dana Desa Tahap I", anggaran: 450000000, realisasi: 450000000, sumberDana: "APBN", kodeRekening: "4.2.1.01" },
+      { tahun: currentYear, kategoriId: 21, namaItem: "Dana Desa Tahap II", anggaran: 350000000, realisasi: 0, sumberDana: "APBN", kodeRekening: "4.2.1.02" },
+      { tahun: currentYear, kategoriId: 22, namaItem: "Alokasi Dana Desa (ADD)", anggaran: 250000000, realisasi: 125000000, sumberDana: "APBD", kodeRekening: "4.2.2.01" },
+      { tahun: currentYear, kategoriId: 20, namaItem: "Laba BUMDes", anggaran: 50000000, realisasi: 50000000, sumberDana: "PADes", kodeRekening: "4.1.1.01" },
+      
+      // BELANJA (5.)
+      { tahun: currentYear, kategoriId: 1, namaItem: "Siltap Kades & Perangkat", anggaran: 300000000, realisasi: 150000000, sumberDana: "ADD", kodeRekening: "5.1.1.01" },
+      { tahun: currentYear, kategoriId: 2, namaItem: "Pembangunan Jalan Lingkungan", anggaran: 200000000, realisasi: 200000000, sumberDana: "DD", kodeRekening: "5.2.1.01" },
+      { tahun: currentYear, kategoriId: 2, namaItem: "Pembangunan Drainase", anggaran: 100000000, realisasi: 0, sumberDana: "DD", kodeRekening: "5.2.2.01" },
+      { tahun: currentYear, kategoriId: 5, namaItem: "BLT Dana Desa (Jan-Jun)", anggaran: 108000000, realisasi: 108000000, sumberDana: "DD", kodeRekening: "5.5.2.01" },
+
+      // PEMBIAYAAN (6.)
+      { tahun: currentYear, kategoriId: 30, namaItem: "SiLPA Tahun 2023", anggaran: 75000000, realisasi: 75000000, sumberDana: "SiLPA", kodeRekening: "6.1.1.01" },
+      { tahun: currentYear, kategoriId: 31, namaItem: "Penyertaan Modal BUMDes", anggaran: 50000000, realisasi: 50000000, sumberDana: "PADes", kodeRekening: "6.2.1.01" },
+    ]
+  });
+
+  console.log("Memasukkan Contoh Program Kerja Fisik...");
+  await prisma.programKerja.deleteMany({});
+  await prisma.programKerja.createMany({
+    data: [
+      {
+        tahun: currentYear,
+        namaProgram: "Pembangunan Jalan Lingkungan Dusun Kediren",
+        lokasi: "Dusun Kediren RT 06",
+        anggaran: 200000000,
+        sumberDana: "DANA DESA (DD)",
+        status: "Selesai",
+        latitude: -7.6789,
+        longitude: 111.4567,
+      },
+      {
+        tahun: currentYear,
+        namaProgram: "Pembangunan Drainase Jalan Utama",
+        lokasi: "Dusun Krajan",
+        anggaran: 100000000,
+        sumberDana: "DANA DESA (DD)",
+        status: "Berjalan",
+        latitude: -7.6800,
+        longitude: 111.4580,
+      },
+      {
+        tahun: currentYear,
+        namaProgram: "Rehabilitasi Gedung Posyandu",
+        lokasi: "Dusun Ngrayung",
+        anggaran: 50000000,
+        sumberDana: "ADD",
+        status: "Rencana",
+      }
+    ]
+  });
 
   // Hidupkan kembali check foreign key
   await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');

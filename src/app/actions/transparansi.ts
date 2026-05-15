@@ -15,9 +15,9 @@ export async function getApbdesSummary(tahun: number, status: string = 'MURNI') 
   // We might need to add "Pendapatan" and "Pembiayaan" as categories too if they aren't there
   
   const summary = {
-    totalPendapatan: items.filter(i => (i as any).kategori?.namaKategori.toLowerCase().includes('pendapatan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0),
-    totalBelanja: items.filter(i => (i as any).kategori?.namaKategori.toLowerCase().includes('bidang')).reduce((acc, curr) => acc + Number(curr.anggaran), 0),
-    totalPembiayaan: items.filter(i => (i as any).kategori?.namaKategori.toLowerCase().includes('pembiayaan')).reduce((acc, curr) => acc + Number(curr.anggaran), 0),
+    totalPendapatan: items.filter(i => (i as any).kategori?.jenis === 'PENDAPATAN').reduce((acc, curr) => acc + Number(curr.anggaran), 0),
+    totalBelanja: items.filter(i => (i as any).kategori?.jenis === 'BELANJA').reduce((acc, curr) => acc + Number(curr.anggaran), 0),
+    totalPembiayaan: items.filter(i => (i as any).kategori?.jenis === 'PEMBIAYAAN').reduce((acc, curr) => acc + Number(curr.anggaran), 0),
   };
 
   return summary;
@@ -129,21 +129,36 @@ export async function initializeTransparansi() {
   const count = await prisma.apbdesKategori.count();
   if (count === 0) {
     const categories = [
-      "Bidang Penyelenggaraan Pemerintahan Desa",
-      "Bidang Pelaksanaan Pembangunan Desa",
-      "Bidang Pembinaan Kemasyarakatan Desa",
-      "Bidang Pemberdayaan Masyarakat Desa",
-      "Bidang Penanggulangan Bencana, Keadaan Darurat dan Mendesak Desa",
-      "Pendapatan Desa",
-      "Pembiayaan Desa"
+      { nama: "Bidang Penyelenggaraan Pemerintahan Desa", jenis: "BELANJA" },
+      { nama: "Bidang Pelaksanaan Pembangunan Desa", jenis: "BELANJA" },
+      { nama: "Bidang Pembinaan Kemasyarakatan Desa", jenis: "BELANJA" },
+      { nama: "Bidang Pemberdayaan Masyarakat Desa", jenis: "BELANJA" },
+      { nama: "Bidang Penanggulangan Bencana, Keadaan Darurat dan Mendesak Desa", jenis: "BELANJA" },
+      { nama: "Pendapatan Desa", jenis: "PENDAPATAN" },
+      { nama: "Pembiayaan Desa", jenis: "PEMBIAYAAN" }
     ];
 
-    for (const name of categories) {
+    for (const cat of categories) {
       await prisma.apbdesKategori.create({
-        data: { namaKategori: name }
+        data: { 
+          namaKategori: cat.nama,
+          jenis: cat.jenis as any
+        }
       });
     }
     return { success: true, message: "Kategori berhasil diinisialisasi" };
   }
   return { success: false, message: "Kategori sudah ada" };
+}
+
+export async function deleteApbdesItem(id: number) {
+  await prisma.apbdesItem.delete({ where: { id } });
+  revalidatePath('/admin/settings/transparansi');
+  revalidatePath('/transparansi');
+}
+
+export async function deleteProgramKerja(id: number) {
+  await prisma.programKerja.delete({ where: { id } });
+  revalidatePath('/admin/settings/transparansi');
+  revalidatePath('/transparansi');
 }

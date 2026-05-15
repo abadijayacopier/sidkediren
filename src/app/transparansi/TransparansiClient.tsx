@@ -66,10 +66,10 @@ export default function TransparansiClient({
     minimumFractionDigits: 0 
   }).format(val);
 
-  // Data for Charts
+  // Data for Charts (Belanja)
   const chartData = useMemo(() => {
     return categories
-      .filter(cat => cat.namaKategori.toLowerCase().includes('bidang'))
+      .filter(cat => cat.jenis === 'BELANJA' || cat.namaKategori.toLowerCase().includes('bidang'))
       .map(cat => {
         const total = items
           .filter(item => item.kategoriId === cat.id)
@@ -80,6 +80,36 @@ export default function TransparansiClient({
         };
       })
       .filter(d => d.value > 0);
+  }, [items, categories]);
+
+  // Data for Charts (Pendapatan)
+  const pendapatanChartData = useMemo(() => {
+    return categories
+      .filter(cat => cat.jenis === 'PENDAPATAN')
+      .map(cat => {
+        const total = items
+          .filter(item => item.kategoriId === cat.id)
+          .reduce((acc, curr) => acc + Number(curr.anggaran), 0);
+        return {
+          name: cat.namaKategori.replace('Pendapatan ', ''),
+          value: total
+        };
+      })
+      .filter(d => d.value > 0);
+  }, [items, categories]);
+
+  const totalPenerimaanPembiayaan = useMemo(() => {
+    return items
+      .filter(item => categories.find(c => c.id === item.kategoriId)?.jenis === 'PEMBIAYAAN' && Number(item.anggaran) > 0)
+      .reduce((acc, curr) => acc + Number(curr.anggaran), 0);
+  }, [items, categories]);
+
+  const totalPengeluaranPembiayaan = useMemo(() => {
+    // Biasanya pengeluaran pembiayaan diinput sebagai nilai positif di anggaran tapi sifatnya mengurangi kas
+    // Kita filter berdasarkan kategori spesifik jika ada
+    return items
+      .filter(item => categories.find(c => c.id === item.kategoriId)?.namaKategori.toLowerCase().includes('pengeluaran pembiayaan'))
+      .reduce((acc, curr) => acc + Number(curr.anggaran), 0);
   }, [items, categories]);
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444'];
@@ -157,10 +187,10 @@ export default function TransparansiClient({
                 isDark
               />
               <SummaryCard 
-                title="Sisa Anggaran" 
-                value={summary.totalPendapatan - summary.totalBelanja} 
+                title="Sisa Anggaran (Silpa)" 
+                value={(summary.totalPendapatan + totalPenerimaanPembiayaan) - (summary.totalBelanja + totalPengeluaranPembiayaan)} 
                 icon={Wallet} 
-                desc="Saldo Kas Desa saat ini"
+                desc="Estimasi Saldo Kas Akhir"
                 color="text-blue-600"
                 bgColor="bg-blue-50"
               />
@@ -190,15 +220,67 @@ export default function TransparansiClient({
 
         {activeTab === 'apbdes' ? (
           <>
-            {/* Infografis Section */}
+            {/* Section 1: Pendapatan (NEW) */}
+            <section className="py-20 bg-white">
+              <div className="max-w-[1280px] mx-auto px-6">
+                <div className="flex flex-col items-center text-center mb-16">
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mb-6">
+                    <TrendingUp size={32} />
+                  </div>
+                  <h3 className="text-3xl font-black text-[#0b1c30] mb-4 tracking-tight">Sumber Pendapatan Desa</h3>
+                  <p className="text-slate-500 max-w-2xl">Transparansi asal usul dana desa, baik dari PADes, Transfer Pusat (Dana Desa), maupun Alokasi Dana Daerah.</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div className="h-[400px] bg-[#f8f9ff] rounded-[40px] p-8 border border-slate-100 shadow-xl shadow-emerald-900/5">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pendapatanChartData}
+                          innerRadius={80}
+                          outerRadius={120}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {pendapatanChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => formatIDR(value)}
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-4">
+                    {pendapatanChartData.map((d, i) => (
+                      <div key={i} className="flex items-center justify-between p-6 bg-white rounded-3xl border border-slate-100 hover:border-emerald-200 transition-all shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[(i + 2) % COLORS.length] }}></div>
+                          <span className="text-sm font-bold text-[#0b1c30]">{d.name}</span>
+                        </div>
+                        <span className="text-lg font-black text-emerald-600">{formatIDR(d.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 2: Belanja (Existing but adjusted) */}
             <section className="py-20 bg-[#f8f9ff]">
               <div className="max-w-[1280px] mx-auto px-6">
+                <div className="flex flex-col items-center text-center mb-16">
+                  <div className="w-16 h-16 bg-[#154212] text-white rounded-3xl flex items-center justify-center mb-6">
+                    <PieChartIcon size={32} />
+                  </div>
+                  <h3 className="text-3xl font-black text-[#0b1c30] mb-4 tracking-tight">Distribusi Belanja Desa</h3>
+                  <p className="text-slate-500 max-w-2xl">Visualisasi pembagian anggaran berdasarkan 5 bidang utama penyelenggaraan dan pembangunan desa.</p>
+                </div>
+                
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                  <div className="space-y-8">
-                    <div>
-                      <h3 className="text-3xl font-black text-[#0b1c30] mb-4 tracking-tight italic">Distribusi Belanja Desa</h3>
-                      <p className="text-slate-500">Visualisasi pembagian anggaran berdasarkan bidang penyelenggaraan, pembangunan, dan pembinaan desa.</p>
-                    </div>
+                  <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {chartData.map((d, i) => (
                         <div key={i} className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100">
@@ -234,6 +316,55 @@ export default function TransparansiClient({
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* Section 3: Pembiayaan Summary (NEW) */}
+            <section className="py-20 bg-white border-y border-slate-100">
+               <div className="max-w-[1280px] mx-auto px-6">
+                 <div className="bg-[#0b1c30] rounded-[40px] p-12 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                      <div>
+                        <h3 className="text-3xl font-black mb-4">Pembiayaan Desa (SiLPA)</h3>
+                        <p className="text-slate-400 leading-relaxed mb-8">
+                          Pembiayaan desa digunakan untuk menyeimbangkan defisit atau memanfaatkan surplus anggaran tahun sebelumnya. 
+                          SiLPA (Sisa Lebih Perhitungan Anggaran) dipastikan dikelola kembali untuk kepentingan warga.
+                        </p>
+                        <div className="flex gap-4">
+                           <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex-1">
+                              <span className="text-[10px] font-black text-emerald-400 uppercase block mb-1">Penerimaan Pembiayaan</span>
+                              <span className="text-xl font-black">{formatIDR(totalPenerimaanPembiayaan)}</span>
+                           </div>
+                           <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex-1">
+                              <span className="text-[10px] font-black text-blue-400 uppercase block mb-1">Pengeluaran Pembiayaan</span>
+                              <span className="text-xl font-black">{formatIDR(totalPengeluaranPembiayaan)}</span>
+                           </div>
+                        </div>
+                      </div>
+                      <div className="bg-white/5 backdrop-blur-md rounded-[32px] p-8 border border-white/10">
+                         <div className="space-y-6">
+                            <div className="flex justify-between items-end border-b border-white/10 pb-4">
+                               <span className="text-slate-400 text-sm">Total Pendapatan + Penerimaan</span>
+                               <span className="text-lg font-bold text-emerald-400">{formatIDR(summary.totalPendapatan + totalPenerimaanPembiayaan)}</span>
+                            </div>
+                            <div className="flex justify-between items-end border-b border-white/10 pb-4">
+                               <span className="text-slate-400 text-sm">Total Belanja + Pengeluaran</span>
+                               <span className="text-lg font-bold text-red-400">{formatIDR(summary.totalBelanja + totalPengeluaranPembiayaan)}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2">
+                               <span className="font-black text-xl">SALDO AKHIR</span>
+                               <div className="text-right">
+                                  <span className="text-2xl font-black text-emerald-500 block">
+                                    {formatIDR((summary.totalPendapatan + totalPenerimaanPembiayaan) - (summary.totalBelanja + totalPengeluaranPembiayaan))}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-emerald-500/50 uppercase tracking-widest">Balanced & Akuntabel</span>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                 </div>
+               </div>
             </section>
 
             {/* Table Section */}

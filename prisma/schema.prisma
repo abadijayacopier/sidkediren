@@ -133,6 +133,12 @@ model ProfilDesa {
   misi            String?  @db.LongText // Simpan sebagai JSON string
   instagram       String?  @db.VarChar(100)
   facebook        String?  @db.VarChar(100)
+  
+  // Landing Page Settings
+  heroTitle       String?  @map("hero_title") @db.VarChar(200)
+  heroSubtitle    String?  @map("hero_subtitle") @db.VarChar(200)
+  welcomeTitle    String?  @map("welcome_title") @db.VarChar(200)
+  welcomeMessage  String?  @map("welcome_message") @db.Text
 
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -187,9 +193,16 @@ model RiwayatSurat {
 }
 
 // --- MODUL TRANSPARANSI APBDES ---
+enum ApbdesJenis {
+  PENDAPATAN
+  BELANJA
+  PEMBIAYAAN
+}
+
 model ApbdesKategori {
-  id           Int          @id @default(autoincrement())
-  namaKategori String       @map("nama_kategori") @db.VarChar(200)
+  id           Int           @id @default(autoincrement())
+  namaKategori String        @map("nama_kategori") @db.VarChar(200)
+  jenis        ApbdesJenis   @default(BELANJA)
   items        ApbdesItem[]
 
   @@map("apbdes_kategori")
