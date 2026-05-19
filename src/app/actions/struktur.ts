@@ -2,19 +2,44 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { join } from 'path';
+import { writeFile, mkdir } from 'fs/promises';
+
+import { syncDatabaseStructure } from './system';
 
 
 export async function getStrukturOrganisasi() {
-  return await prisma.jabatan.findMany({
-    include: {
-      perangkat: true,
-      children: true
-    },
-    orderBy: [
-      { level: 'asc' },
-      { urutan: 'asc' }
-    ]
-  });
+  try {
+    return await prisma.jabatan.findMany({
+      include: {
+        perangkatDesa: true
+      } as any,
+      orderBy: [
+        { level: 'asc' },
+        { urutan: 'asc' }
+      ]
+    });
+  } catch (error: any) {
+    const isDrift = error.message?.includes('does not exist') || 
+                    error.message?.includes('Unknown column') || 
+                    error.message?.includes('is_active') || 
+                    error.message?.includes('created_at') || 
+                    error.message?.includes('updated_at');
+    if (isDrift) {
+      console.log('Detected missing columns in perangkat_desa or jabatan. Attempting auto-fix...');
+      await syncDatabaseStructure();
+      return await prisma.jabatan.findMany({
+        include: {
+          perangkatDesa: true
+        } as any,
+        orderBy: [
+          { level: 'asc' },
+          { urutan: 'asc' }
+        ]
+      });
+    }
+    throw error;
+  }
 }
 
 export async function updatePerangkatDesa(formData: FormData) {
@@ -22,6 +47,7 @@ export async function updatePerangkatDesa(formData: FormData) {
   const nik = formData.get('nik') as string;
   const nama = formData.get('nama') as string;
   const status = formData.get('status') as string || 'AKTIF';
+  const isActive = status === 'AKTIF';
   
   const fotoFile = formData.get('fotoProfil') as File;
   const ttdFile = formData.get('tandaTanganDigital') as File;
@@ -56,7 +82,7 @@ export async function updatePerangkatDesa(formData: FormData) {
       console.error("Error uploading TTD:", e);
     }
   }
-
+  
   // Cek apakah sudah ada pejabat di jabatan ini
   const existing = await prisma.perangkatDesa.findFirst({
     where: { jabatanId }
@@ -68,7 +94,7 @@ export async function updatePerangkatDesa(formData: FormData) {
       data: {
         nik,
         nama,
-        status,
+        isActive,
         fotoProfil: fotoPath,
         tandaTanganDigital: ttdPath
       }
@@ -79,7 +105,7 @@ export async function updatePerangkatDesa(formData: FormData) {
         jabatanId,
         nik,
         nama,
-        status,
+        isActive,
         fotoProfil: fotoPath,
         tandaTanganDigital: ttdPath
       }

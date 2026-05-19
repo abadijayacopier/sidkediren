@@ -12,13 +12,13 @@ export default async function EditPejabatPage({ params }: { params: Promise<{ id
   const jabatan = await prisma.jabatan.findUnique({
     where: { id: jabatanId },
     include: {
-      perangkat: true
-    }
+      perangkatDesa: true
+    } as any
   });
 
   if (!jabatan) return notFound();
 
-  const perangkat = jabatan.perangkat[0]; // Ambil pejabat aktif jika ada
+  const perangkat = (jabatan as any).perangkatDesa[0]; // Ambil pejabat aktif jika ada
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20">

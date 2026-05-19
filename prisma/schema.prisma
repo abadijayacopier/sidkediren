@@ -26,173 +26,162 @@ model Pengguna {
 
 // --- MODUL KEPENDUDUKAN ---
 model Keluarga {
-  noKk              String     @id @map("no_kk") @db.VarChar(16)
-  kepalaKeluargaNik String     @unique @map("kepala_keluarga_nik") @db.VarChar(16)
-  alamat            String     @db.Text
-  dusun             String?    @db.VarChar(100)
-  rt                String     @db.VarChar(3)
-  rw                String     @db.VarChar(3)
-  kodePos           String?    @map("kode_pos") @db.VarChar(10)
-  kecamatan         String?    @default("LEMBEYAN") @db.VarChar(100)
-  kabupaten         String?    @default("MAGETAN") @db.VarChar(100)
-  provinsi          String?    @default("JAWA TIMUR") @db.VarChar(100)
-  tanggalDiterbitkan DateTime? @map("tanggal_diterbitkan") @db.Date
-  fotoKk            String?    @map("foto_kk") @db.Text
-  createdAt         DateTime   @default(now()) @map("created_at")
-  updatedAt         DateTime   @updatedAt @map("updated_at")
+  noKk               String     @id @map("no_kk") @db.VarChar(16)
+  kepalaKeluargaNik  String     @map("kepala_keluarga_nik") @db.VarChar(16)
+  alamat             String?    @db.Text
+  dusun              String?    @db.VarChar(50)
+  rt                 String?    @db.VarChar(3)
+  rw                 String?    @db.VarChar(3)
+  kodePos            String?    @map("kode_pos") @db.VarChar(10)
+  tanggalDiterbitkan String?    @map("tanggal_diterbitkan") @db.VarChar(20)
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
 
-  penduduk          Penduduk[] @relation("AnggotaKeluarga")
-  kepalaKeluarga    Penduduk   @relation("KepalaKeluarga", fields: [kepalaKeluargaNik], references: [nik])
+  penduduk           Penduduk[]
 
   @@map("keluarga")
 }
 
 model Penduduk {
-  nik               String    @id @db.VarChar(16)
-  noKk              String    @map("no_kk") @db.VarChar(16)
-  namaLengkap       String    @map("nama_lengkap") @db.VarChar(150)
-  tempatLahir       String    @map("tempat_lahir") @db.VarChar(100)
-  tanggalLahir      DateTime  @map("tanggal_lahir") @db.Date
-  jenisKelamin      String    @map("jenis_kelamin") @db.VarChar(1) // L, P
-  golonganDarah     String?   @map("golongan_darah") @db.VarChar(20)
-  agama             String?   @db.VarChar(50)
-  pendidikanTerakhir String?  @map("pendidikan_terakhir") @db.VarChar(100)
-  pekerjaan         String?   @db.VarChar(100)
-  statusPerkawinan  String?   @map("status_perkawinan") @db.VarChar(50)
-  statusDalamKeluarga String  @map("status_dalam_keluarga") @db.VarChar(50)
-  kewarganegaraan   String    @default("WNI") @db.VarChar(50)
-  noPaspor          String?   @map("no_paspor") @db.VarChar(50)
-  noKitas           String?   @map("no_kitas") @db.VarChar(50)
-  namaAyah          String?   @map("nama_ayah") @db.VarChar(150)
-  namaIbu           String?   @map("nama_ibu") @db.VarChar(150)
-  foto              String?   @db.Text
-  statusRekam       String    @default("BELUM REKAM") @map("status_rekam") @db.VarChar(50)
-  statusDasar       String    @default("Hidup") @map("status_dasar") @db.VarChar(50)
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  nik                 String         @id @db.VarChar(16)
+  noKk                String         @map("no_kk") @db.VarChar(16)
+  namaLengkap         String         @map("nama_lengkap") @db.VarChar(150)
+  tempatLahir         String?        @map("tempat_lahir") @db.VarChar(100)
+  tanggalLahir        DateTime?      @map("tanggal_lahir")
+  jenisKelamin        String?        @map("jenis_kelamin") @db.VarChar(1)
+  agama               String?        @db.VarChar(20)
+  pendidikanTerakhir  String?        @map("pendidikan_terakhir") @db.VarChar(100)
+  pekerjaan           String?        @db.VarChar(100)
+  statusPerkawinan    String?        @map("status_perkawinan") @db.VarChar(50)
+  statusDalamKeluarga String?        @map("status_dalam_keluarga") @db.VarChar(50)
+  golonganDarah       String?        @map("golongan_darah") @db.VarChar(20)
+  namaAyah            String?        @map("nama_ayah") @db.VarChar(150)
+  namaIbu             String?        @map("nama_ibu") @db.VarChar(150)
+  kewarganegaraan     String?        @default("WNI") @db.VarChar(50)
+  foto                String?        @db.Text
+  isHidup             Boolean        @default(true) @map("is_hidup")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
 
-  keluarga          Keluarga  @relation("AnggotaKeluarga", fields: [noKk], references: [noKk])
-  kepalaDariKeluarga Keluarga? @relation("KepalaKeluarga")
-  riwayatSurat      RiwayatSurat[]
-  umkm              Umkm[]
-  mutasi            Mutasi[]
+  keluarga            Keluarga       @relation(fields: [noKk], references: [noKk])
+  riwayatSurat        RiwayatSurat[]
 
   @@map("penduduk")
 }
 
-model Mutasi {
-  id              Int      @id @default(autoincrement())
-  nik             String   @db.VarChar(16)
-  jenisMutasi     String   @map("jenis_mutasi") @db.VarChar(50) // KELAHIRAN, KEMATIAN, PINDAH MASUK, PINDAH KELUAR, PECAH KK
-  nikKepalaLama   String?  @map("nik_kepala_lama") @db.VarChar(16)
-  tanggalMutasi   DateTime @map("tanggal_mutasi") @db.Date
-  keterangan      String?  @db.Text
-  petugasInput    String?  @map("petugas_input") @db.VarChar(100)
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  alamatTujuan    String?  @map("alamat_tujuan") @db.Text
-  desaTujuan      String?  @map("desa_tujuan") @db.VarChar(100)
-  kecamatanTujuan String?  @map("kecamatan_tujuan") @db.VarChar(100)
-  kabupatenTujuan String?  @map("kabupaten_tujuan") @db.VarChar(100)
-  provinsiTujuan  String?  @map("provinsi_tujuan") @db.VarChar(100)
-  kodePosTujuan   String?  @map("kode_pos_tujuan") @db.VarChar(10)
-
-  alamatAsal      String?  @map("alamat_asal") @db.Text
-  desaAsal        String?  @map("desa_asal") @db.VarChar(100)
-  kecamatanAsal   String?  @map("kecamatan_asal") @db.VarChar(100)
-  kabupatenAsal   String?  @map("kabupaten_asal") @db.VarChar(100)
-  provinsiAsal    String?  @map("provinsi_asal") @db.VarChar(100)
-  kodePosAsal     String?  @map("kode_pos_asal") @db.VarChar(10)
-
-  penduduk        Penduduk @relation(fields: [nik], references: [nik], onDelete: Cascade)
-
-  @@map("mutasi")
-}
-
 // --- MODUL PERSURATAN ---
-model ProfilDesa {
-  id              Int      @id @default(1)
-  namaDesa        String   @map("nama_desa") @db.VarChar(100)
-  kodeDesa        String   @map("kode_desa") @db.VarChar(20)
-  kecamatan       String   @db.VarChar(100)
-  kabupaten       String   @db.VarChar(100)
-  provinsi        String   @db.VarChar(100)
-  alamat          String   @db.Text
-  kodePos         String   @map("kode_pos") @db.VarChar(10)
-  telepon         String?  @db.VarChar(20)
-  email           String?  @db.VarChar(100)
-  website         String?  @db.VarChar(100)
-  namaKepalaDesa  String   @map("nama_kepala_desa") @db.VarChar(150)
-  nipKepalaDesa   String?  @map("nip_kepala_desa") @db.VarChar(30)
-  logoDesa        String?  @map("logo_desa") @db.Text
-  tandaTangan     String?  @map("tanda_tangan") @db.Text // Path ke image TTD
-  
-  // Field tambahan untuk profil lengkap
-  sejarah         String?  @db.LongText
-  visi            String?  @db.Text
-  misi            String?  @db.LongText // Simpan sebagai JSON string
-  instagram       String?  @db.VarChar(100)
-  facebook        String?  @db.VarChar(100)
-  
-  // Landing Page Settings
-  heroTitle       String?  @map("hero_title") @db.VarChar(200)
-  heroSubtitle    String?  @map("hero_subtitle") @db.VarChar(200)
-  welcomeTitle    String?  @map("welcome_title") @db.VarChar(200)
-  welcomeMessage  String?  @map("welcome_message") @db.Text
-
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  @@map("profil_desa")
-}
-
 model KlasifikasiSurat {
-  id              Int      @id @default(autoincrement())
-  kode            String   @unique @db.VarChar(20)
-  nama            String   @db.VarChar(200)
-  deskripsi       String?  @db.Text
-
-  masterSurat     MasterSurat[]
+  id          Int           @id @default(autoincrement())
+  kode        String        @unique @db.VarChar(20)
+  nama        String        @db.VarChar(200)
+  masterSurat MasterSurat[]
 
   @@map("klasifikasi_surat")
 }
 
 model MasterSurat {
-  id              Int      @id @default(autoincrement())
-  klasifikasiId   Int?     @map("klasifikasi_id")
-  kodeSurat       String   @unique @map("kode_surat") @db.VarChar(20)
-  namaSurat       String   @map("nama_surat") @db.VarChar(100)
-  formatNomor     String   @map("format_nomor") @db.VarChar(100)
-  templatePath    String?  @map("template_path") @db.Text
-  templateContent String?  @map("template_content") @db.LongText // JSON/Markdown template
-  formSchema      String?  @map("form_schema") @db.LongText // JSON schema for dynamic fields
-  isActive        Boolean  @default(true) @map("is_active")
+  id              Int              @id @default(autoincrement())
+  kodeSurat       String           @unique @map("kode_surat") @db.VarChar(20)
+  namaSurat       String           @map("nama_surat") @db.VarChar(200)
+  klasifikasiId   Int              @map("klasifikasi_id")
+  formatNomor     String           @map("format_nomor") @db.VarChar(200)
+  formSchema      String           @map("form_schema") @db.LongText
+  templateContent String?          @map("template_content") @db.LongText
+  isActive        Boolean          @default(true) @map("is_active")
+  createdAt       DateTime         @default(now()) @map("created_at")
 
-  klasifikasi     KlasifikasiSurat? @relation(fields: [klasifikasiId], references: [id])
+  klasifikasi     KlasifikasiSurat @relation(fields: [klasifikasiId], references: [id])
   riwayatSurat    RiwayatSurat[]
 
   @@map("master_surat")
 }
 
 model RiwayatSurat {
-  id              String   @id @default(uuid())
-  nikPemohon      String   @map("nik_pemohon") @db.VarChar(16)
-  masterSuratId   Int      @map("master_surat_id")
-  nomorSurat      String   @map("nomor_surat") @db.VarChar(100)
-  tanggalPengajuan DateTime @default(now()) @map("tanggal_pengajuan")
-  keterangan      String?  @map("keterangan_keperluan") @db.Text
-  metaData        String?  @map("meta_data") @db.LongText // Simpan variabel dinamis surat (JSON)
-  statusSurat     String   @default("Selesai") @map("status_surat") @db.VarChar(20)
-  qrCodeData      String?  @map("qr_code_data") @db.Text
-  dicetakOleh     String?  @map("dicetak_oleh") @db.VarChar(100)
-  createdAt       DateTime @default(now()) @map("created_at")
+  id            String      @id @default(cuid())
+  nikPemohon    String      @map("nik_pemohon") @db.VarChar(16)
+  masterSuratId Int         @map("master_surat_id")
+  nomorSurat    String      @map("nomor_surat") @db.VarChar(200)
+  tanggalSurat  DateTime    @default(now()) @map("tanggal_surat")
+  statusSurat   String      @default("Pending") @map("status_surat") @db.VarChar(30)
+  keterangan    String?     @db.Text
+  metaData      String      @map("meta_data") @db.LongText
+  qrCodeData    String?     @map("qr_code_data") @db.Text
+  createdAt     DateTime    @default(now()) @map("created_at")
 
-  penduduk        Penduduk    @relation(fields: [nikPemohon], references: [nik])
-  masterSurat     MasterSurat @relation(fields: [masterSuratId], references: [id])
+  penduduk      Penduduk    @relation(fields: [nikPemohon], references: [nik])
+  masterSurat   MasterSurat @relation(fields: [masterSuratId], references: [id])
 
   @@map("riwayat_surat")
 }
 
-// --- MODUL TRANSPARANSI APBDES ---
+// --- MODUL PROFIL & PENGATURAN ---
+model ProfilDesa {
+  id             Int     @id @default(1)
+  namaDesa       String  @map("nama_desa") @db.VarChar(100)
+  kodeDesa       String? @map("kode_desa") @db.VarChar(50)
+  kecamatan      String? @db.VarChar(100)
+  kabupaten      String? @db.VarChar(100)
+  provinsi       String? @db.VarChar(100)
+  alamat         String? @db.Text
+  kodePos        String? @map("kode_pos") @db.VarChar(10)
+  telepon        String? @db.VarChar(20)
+  email          String? @db.VarChar(100)
+  website        String? @db.VarChar(100)
+  sejarah        String? @db.LongText
+  visi           String? @db.Text
+  misi           String? @db.Text
+  instagram      String? @db.VarChar(100)
+  facebook       String? @db.VarChar(100)
+  namaKepalaDesa String? @map("nama_kepala_desa") @db.VarChar(150)
+  nipKepalaDesa  String? @map("nip_kepala_desa") @db.VarChar(30)
+  logoDesa       String? @map("logo_desa") @db.Text
+  
+  // New Layout Settings
+  heroTitle      String? @map("hero_title") @db.VarChar(200)
+  heroSubtitle   String? @map("hero_subtitle") @db.Text
+  welcomeTitle   String? @map("welcome_title") @db.VarChar(200)
+  welcomeMessage String? @map("welcome_message") @db.LongText
+  heroImage      String? @map("hero_image") @db.Text
+  welcomeImage   String? @map("welcome_image") @db.Text
+
+  // User Requested Features
+  runningText    String? @map("running_text") @db.Text
+  sliderImages   String? @map("slider_images") @db.LongText
+
+  @@map("profil_desa")
+}
+
+// --- MODUL ORGANISASI ---
+model Jabatan {
+  id            Int             @id @default(autoincrement())
+  namaJabatan   String          @map("nama_jabatan") @db.VarChar(100)
+  kategori      String          @db.VarChar(50) // PEMERINTAH, BPD, LSM, PKK
+  level         Int             @default(1)
+  urutan        Int             @default(1)
+  parentId      Int?            @map("parent_id")
+  
+  perangkatDesa PerangkatDesa[]
+
+  @@map("jabatan")
+}
+
+model PerangkatDesa {
+  id                Int      @id @default(autoincrement())
+  jabatanId         Int      @map("jabatan_id")
+  nik               String   @db.VarChar(16)
+  nama              String?  @db.VarChar(150)
+  fotoProfil        String?  @map("foto_profil") @db.Text
+  tandaTanganDigital String? @map("tanda_tangan_digital") @db.Text
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  jabatan           Jabatan  @relation(fields: [jabatanId], references: [id])
+
+  @@map("perangkat_desa")
+}
+
+// --- MODUL TRANSPARANSI & APBDES ---
 enum ApbdesJenis {
   PENDAPATAN
   BELANJA
@@ -201,167 +190,78 @@ enum ApbdesJenis {
 
 model ApbdesKategori {
   id           Int           @id @default(autoincrement())
-  namaKategori String        @map("nama_kategori") @db.VarChar(200)
-  jenis        ApbdesJenis   @default(BELANJA)
+  namaKategori String        @map("nama_kategori") @db.VarChar(150)
+  jenis        ApbdesJenis
   items        ApbdesItem[]
 
   @@map("apbdes_kategori")
 }
 
 model ApbdesItem {
-  id           Int      @id @default(autoincrement())
+  id           Int            @id @default(autoincrement())
   tahun        Int
-  status       String   @default("MURNI") @db.VarChar(20) // MURNI, PERUBAHAN
-  kategoriId   Int      @map("kategori_id")
-  kodeRekening String?  @map("kode_rekening") @db.VarChar(20)
-  namaItem     String   @map("nama_item") @db.VarChar(200)
-  anggaran     Decimal  @default(0) @db.Decimal(15, 2)
-  realisasi    Decimal  @default(0) @db.Decimal(15, 2)
-  sumberDana   String?  @map("sumber_dana") @db.VarChar(50)
-  keterangan   String?  @db.Text
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
+  status       String         @default("MURNI") @db.VarChar(50)
+  kategoriId   Int            @map("kategori_id")
+  namaItem     String         @map("nama_item") @db.VarChar(200)
+  anggaran     Decimal        @db.Decimal(15, 2)
+  realisasi    Decimal        @default(0) @db.Decimal(15, 2)
+  sumberDana   String?        @map("sumber_dana") @db.VarChar(50)
+  kodeRekening String?        @map("kode_rekening") @db.VarChar(50)
+  keterangan   String?        @db.Text
+  
   kategori     ApbdesKategori @relation(fields: [kategoriId], references: [id])
 
   @@map("apbdes_item")
 }
 
-// --- MODUL PROGRAM KERJA ---
 model ProgramKerja {
-  id           Int      @id @default(autoincrement())
-  tahun        Int
-  namaProgram  String   @map("nama_program") @db.VarChar(200)
-  deskripsi    String?  @db.Text
-  lokasi       String?  @db.VarChar(200)
-  anggaran     Decimal? @db.Decimal(15, 2)
-  sumberDana   String?  @map("sumber_dana") @db.VarChar(100)
-  status       String   @db.VarChar(50) // Rencana, Berjalan, Selesai, Tertunda
-  fotoProgres  String?  @map("foto_progres") @db.LongText
-  latitude     Decimal? @db.Decimal(10, 8)
-  longitude    Decimal? @db.Decimal(11, 8)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  
+  id          Int      @id @default(autoincrement())
+  tahun       Int
+  namaProgram String   @map("nama_program") @db.VarChar(200)
+  deskripsi   String?  @db.Text
+  lokasi      String?  @db.VarChar(200)
+  anggaran    Decimal  @db.Decimal(15, 2)
+  sumberDana  String?  @map("sumber_dana") @db.VarChar(100)
+  status      String   @default("Rencana") @db.VarChar(50) // Rencana, Berjalan, Selesai
+  fotoProgres String?  @map("foto_progres") @db.Text
+  latitude    Float?   @db.Double
+  longitude   Float?   @db.Double
+  gambar      String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
   @@map("program_kerja")
 }
 
-// --- MODUL POTENSI DESA (UMKM & WISATA) ---
-model Umkm {
-  id             Int      @id @default(autoincrement())
-  ownerNik       String   @map("owner_nik") @db.VarChar(16)
-  namaUsaha      String   @map("nama_usaha") @db.VarChar(150)
-  kategoriUsaha  String?  @map("kategori_usaha") @db.VarChar(100)
-  alamatUsaha    String?  @map("alamat_usaha") @db.Text
-  deskripsiProduk String? @map("deskripsi_produk") @db.Text
-  kontakWa       String?  @map("kontak_wa") @db.VarChar(15)
-  fotoUsaha      String?  @map("foto_usaha") @db.Text
-  isVerified     Boolean  @default(false) @map("is_verified")
-  createdAt      DateTime @default(now()) @map("created_at")
+// --- MODUL BERITA ---
+model Berita {
+  id          Int      @id @default(autoincrement())
+  judul       String   @db.VarChar(200)
+  slug        String   @unique @db.VarChar(191)
+  ringkasan   String?  @db.Text
+  konten      String   @db.LongText
+  gambar      String?  @db.Text
+  penulis     String?  @db.VarChar(100)
+  tanggal     DateTime @default(now())
+  isPublished Boolean  @default(false)
+  kategori    String?  @db.VarChar(50)
 
-  owner          Penduduk @relation(fields: [ownerNik], references: [nik])
-
-  @@map("umkm")
+  @@map("berita")
 }
 
-model WisataDesa {
-  id             Int      @id @default(autoincrement())
-  namaWisata     String   @map("nama_wisata") @db.VarChar(150)
-  deskripsi      String?  @db.Text
-  fasilitas      String?  @db.Text
-  hargaTiket     Decimal  @default(0) @map("harga_tiket") @db.Decimal(10, 2)
-  fotoUtama      String?  @map("foto_utama") @db.Text
-  kontakPengelola String? @map("kontak_pengelola") @db.VarChar(15)
-  createdAt      DateTime @default(now()) @map("created_at")
+// --- MODUL POTENSI & WISATA ---
+model Potensi {
+  id          Int      @id @default(autoincrement())
+  kategori    String   // WISATA, UMKM
+  judul       String   @db.VarChar(200)
+  deskripsi   String?  @db.Text
+  gambar      String?  @db.Text
+  lokasi      String?  @db.VarChar(200) // Untuk Wisata (misal Dusun Barat)
+  harga       String?  @db.VarChar(100) // Untuk UMKM (misal Rp 25.000)
+  isBestSeller Boolean @default(false) @map("is_best_seller")
+  mapsUrl     String?  @map("maps_url") @db.Text // Link Google Maps untuk Wisata
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  @@map("wisata_desa")
-}
-
-// --- MODUL POSYANDU ---
-model Posyandu {
-  id           Int      @id @default(autoincrement())
-  namaPosyandu String   @map("nama_posyandu") @db.VarChar(100)
-  lokasi       String?  @db.VarChar(100)
-  kaderUtama   String?  @map("kader_utama") @db.VarChar(150)
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  jadwal       PosyanduJadwal[]
-  pemeriksaan  PosyanduPemeriksaan[]
-
-  @@map("posyandu")
-}
-
-model PosyanduJadwal {
-  id           Int      @id @default(autoincrement())
-  posyanduId   Int      @map("posyandu_id")
-  tanggal      DateTime @db.Date
-  keterangan   String?  @db.Text
-  
-  posyandu     Posyandu @relation(fields: [posyanduId], references: [id])
-
-  @@map("posyandu_jadwal")
-}
-
-model PosyanduPemeriksaan {
-  id           String   @id @default(uuid())
-  posyanduId   Int      @map("posyandu_id")
-  nikAnak      String   @map("nik_anak") @db.VarChar(16)
-  tanggal      DateTime @default(now()) @map("tanggal_pemeriksaan")
-  beratBadan   Float    @map("berat_badan") // KG
-  tinggiBadan  Float    @map("tinggi_badan") // CM
-  lingkarKepala Float?  @map("lingkar_kepala")
-  imunisasi    String?  @db.VarChar(100)
-  catatan      String?  @db.Text
-  petugas      String?  @db.VarChar(100)
-
-  posyandu     Posyandu @relation(fields: [posyanduId], references: [id])
-
-  @@map("posyandu_pemeriksaan")
-}
-
-// --- MODUL PKK ---
-model PkkKegiatan {
-  id           Int      @id @default(autoincrement())
-  namaKegiatan String   @map("nama_kegiatan") @db.VarChar(200)
-  tanggal      DateTime @db.Date
-  lokasi       String?  @db.VarChar(100)
-  deskripsi    String?  @db.Text
-  pokja        String?  @db.VarChar(10) // Pokja 1, 2, 3, 4
-  fotoKegiatan String?  @map("foto_kegiatan") @db.Text
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@map("pkk_kegiatan")
-}
-
-// --- MODUL STRUKTUR ORGANISASI ---
-model Jabatan {
-  id            Int      @id @default(autoincrement())
-  namaJabatan   String   @map("nama_jabatan") @db.VarChar(100)
-  kategori      String   @default("PEMERINTAH") @db.VarChar(50) // PEMERINTAH, BPD, LSM
-  level         Int      @default(1) // 1: Kades, 2: Sekdes/BPD, 3: Kaur/Kasi
-  urutan        Int      @default(1)
-  parentId      Int?     @map("parent_id")
-  
-  parent        Jabatan?  @relation("HierarkiJabatan", fields: [parentId], references: [id])
-  children      Jabatan[] @relation("HierarkiJabatan")
-  perangkat     PerangkatDesa[]
-
-  @@map("jabatan")
-}
-
-model PerangkatDesa {
-  id                Int      @id @default(autoincrement())
-  jabatanId         Int      @map("jabatan_id")
-  nik               String   @db.VarChar(16) // Hilangkan @unique agar bisa fleksibel jika satu orang pindah jabatan
-  nama              String?  @db.VarChar(150) // Input manual Nama
-  fotoProfil        String?  @map("foto_profil") @db.Text
-  tandaTanganDigital String? @map("tanda_tangan_digital") @db.Text
-  status            String   @default("AKTIF") @db.VarChar(20)
-  periodeMulai      DateTime? @map("periode_mulai") @db.Date
-  periodeSelesai    DateTime? @map("periode_selesai") @db.Date
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  jabatan           Jabatan  @relation(fields: [jabatanId], references: [id])
-
-  @@map("perangkat_desa")
+  @@map("potensi_wisata")
 }

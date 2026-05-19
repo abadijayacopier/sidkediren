@@ -3,11 +3,29 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
+import { syncDatabaseStructure } from './system';
+
 export async function getApbdesSummary(tahun: number, status: string = 'MURNI') {
-  const items = await prisma.apbdesItem.findMany({
-    where: { tahun, status } as any,
-    include: { kategori: true }
-  });
+  let items: any[] = [];
+  try {
+    items = await prisma.apbdesItem.findMany({
+      where: { tahun, status } as any,
+      include: { kategori: true }
+    });
+  } catch (error: any) {
+    const isDrift = error.message?.includes('does not exist') || 
+                    error.message?.includes('Unknown column') || 
+                    error.message?.includes('status');
+    if (isDrift) {
+      await syncDatabaseStructure();
+      items = await prisma.apbdesItem.findMany({
+        where: { tahun, status } as any,
+        include: { kategori: true }
+      }) as any;
+    } else {
+      throw error;
+    }
+  }
 
   // Kalkulasi Pendapatan, Belanja, Pembiayaan
   // Note: Usually categories are grouped by specific names or IDs
@@ -24,14 +42,34 @@ export async function getApbdesSummary(tahun: number, status: string = 'MURNI') 
 }
 
 export async function getApbdesItems(tahun: number, status: string = 'MURNI') {
-  const items = await prisma.apbdesItem.findMany({
-    where: { tahun, status } as any,
-    include: { kategori: true },
-    orderBy: [
-      { kategoriId: 'asc' },
-      { kodeRekening: 'asc' }
-    ]
-  });
+  let items: any[] = [];
+  try {
+    items = await prisma.apbdesItem.findMany({
+      where: { tahun, status } as any,
+      include: { kategori: true },
+      orderBy: [
+        { kategoriId: 'asc' },
+        { kodeRekening: 'asc' }
+      ] as any
+    }) as any;
+  } catch (error: any) {
+    const isDrift = error.message?.includes('does not exist') || 
+                    error.message?.includes('Unknown column') || 
+                    error.message?.includes('status');
+    if (isDrift) {
+      await syncDatabaseStructure();
+      items = await prisma.apbdesItem.findMany({
+        where: { tahun, status } as any,
+        include: { kategori: true },
+        orderBy: [
+          { kategoriId: 'asc' },
+          { kodeRekening: 'asc' }
+        ] as any
+      }) as any;
+    } else {
+      throw error;
+    }
+  }
 
   return JSON.parse(JSON.stringify(items));
 }
@@ -44,10 +82,27 @@ export async function getApbdesKategori() {
 }
 
 export async function getProgramKerja(tahun: number) {
-  const programs = await prisma.programKerja.findMany({
-    where: { tahun },
-    orderBy: { updatedAt: 'desc' }
-  });
+  let programs: any[] = [];
+  try {
+    programs = await prisma.programKerja.findMany({
+      where: { tahun },
+      orderBy: { updatedAt: 'desc' } as any
+    }) as any;
+  } catch (error: any) {
+    const isDrift = error.message?.includes('does not exist') || 
+                    error.message?.includes('Unknown column') || 
+                    error.message?.includes('updated_at') || 
+                    error.message?.includes('updatedAt');
+    if (isDrift) {
+      await syncDatabaseStructure();
+      programs = await prisma.programKerja.findMany({
+        where: { tahun },
+        orderBy: { updatedAt: 'desc' } as any
+      }) as any;
+    } else {
+      throw error;
+    }
+  }
 
   return JSON.parse(JSON.stringify(programs));
 }

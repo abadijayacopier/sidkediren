@@ -14,6 +14,8 @@ import {
 import Link from 'next/link';
 import { getProfilDesa } from '@/app/actions/surat';
 import { getStrukturOrganisasi } from '@/app/actions/struktur';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 export default async function ProfilPage() {
   const profil = await getProfilDesa();
@@ -35,38 +37,7 @@ export default async function ProfilPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] font-arial selection:bg-[#154212] selection:text-white overflow-x-hidden text-[#0b1c30]">
-      {/* TopNavBar - Reused from Home */}
-      <header className="fixed top-0 w-full z-[100] bg-white border-b border-emerald-900/10 shadow-sm">
-        <div className="max-w-[1280px] mx-auto px-6 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#154212] flex items-center justify-center rounded-lg shadow-lg shadow-emerald-900/10">
-              <Globe className="text-white w-6 h-6" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <h1 className="font-bold text-[#154212] text-xl tracking-tight uppercase">DESA<span className="font-black text-[#154212]">{profil?.namaDesa || 'KEDIREN'}</span></h1>
-              <span className="text-[10px] font-medium tracking-[0.2em] text-[#42493e] uppercase">Portal Desa Digital</span>
-            </div>
-          </div>
-          
-          <nav className="hidden md:flex items-center gap-10 text-sm font-semibold">
-            <Link href="/" className="text-[#42493e] hover:text-[#154212] transition-all">Beranda</Link>
-            <Link href="/profil" className="text-[#154212] relative py-1">
-              Profil Desa
-              <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-[#154212]" />
-            </Link>
-            <Link href="/layanan" className="text-[#42493e] hover:text-[#154212] transition-all">Layanan Publik</Link>
-            <Link href="/potensi" className="text-[#42493e] hover:text-[#154212] transition-all">Potensi & Wisata</Link>
-            <Link href="/transparansi" className="text-[#42493e] hover:text-[#154212] transition-all">Transparansi</Link>
-          </nav>
-
-          <Link 
-            href="/login" 
-            className="flex items-center gap-2 px-8 py-2.5 bg-[#154212] text-white rounded-full text-sm font-semibold hover:bg-[#2d5a27] transition-all active:scale-95"
-          >
-            Login Warga
-          </Link>
-        </div>
-      </header>
+      <Navbar profil={profil} />
 
       <main className="pt-20">
         {/* Header Profil */}
@@ -161,7 +132,7 @@ export default async function ProfilPage() {
               {/* Level 1: Kepala Desa */}
               <div className="flex justify-center">
                 {struktur.filter(j => j.level === 1).map(j => (
-                  <OrgMember key={j.id} jabatan={j.namaJabatan} nama={j.perangkat?.[0]?.nama || undefined} foto={j.perangkat?.[0]?.fotoProfil || undefined} />
+                  <OrgMember key={j.id} jabatan={j.namaJabatan} nama={(j as any).perangkatDesa?.[0]?.nama || undefined} foto={(j as any).perangkatDesa?.[0]?.fotoProfil || undefined} />
                 ))}
               </div>
 
@@ -169,14 +140,14 @@ export default async function ProfilPage() {
               <div className="flex flex-wrap justify-center gap-12 md:gap-24 relative">
                 <div className="absolute top-[-40px] left-1/2 -translate-x-1/2 w-[2px] h-10 bg-[#d3e4fe] hidden md:block"></div>
                 {struktur.filter(j => j.level === 2).map(j => (
-                  <OrgMember key={j.id} jabatan={j.namaJabatan} nama={j.perangkat?.[0]?.nama || undefined} foto={j.perangkat?.[0]?.fotoProfil || undefined} />
+                  <OrgMember key={j.id} jabatan={j.namaJabatan} nama={(j as any).perangkatDesa?.[0]?.nama || undefined} foto={(j as any).perangkatDesa?.[0]?.fotoProfil || undefined} />
                 ))}
               </div>
 
               {/* Level 3: Kaur / Kasi */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
                 {struktur.filter(j => j.level === 3).map(j => (
-                  <OrgMember key={j.id} jabatan={j.namaJabatan} nama={j.perangkat?.[0]?.nama || undefined} foto={j.perangkat?.[0]?.fotoProfil || undefined} small />
+                  <OrgMember key={j.id} jabatan={j.namaJabatan} nama={(j as any).perangkatDesa?.[0]?.nama || undefined} foto={(j as any).perangkatDesa?.[0]?.fotoProfil || undefined} small />
                 ))}
               </div>
             </div>
@@ -207,18 +178,7 @@ export default async function ProfilPage() {
         </section>
       </main>
 
-      {/* Footer - Reused from Home */}
-      <footer className="bg-[#eff4ff] pt-[80px] pb-12 border-t border-[#d3e4fe]">
-        <div className="max-w-[1280px] mx-auto px-6 text-center text-sm text-[#42493e]">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-8 h-8 bg-[#154212] rounded flex items-center justify-center">
-              <Globe className="text-white w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-bold text-[#154212] tracking-tight uppercase">PEMERINTAH DESA DIGITAL</h2>
-          </div>
-          <p>© {new Date().getFullYear()} Pemerintah Desa {profil?.namaDesa || 'Kediren'}. Seluruh Hak Cipta Dilindungi.</p>
-        </div>
-      </footer>
+      <Footer profil={profil} />
     </div>
   );
 }

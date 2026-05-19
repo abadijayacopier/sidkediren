@@ -15,28 +15,107 @@ import {
   Save, 
   ArrowLeft,
   Camera,
-  Plus
+  Plus,
+  Trash2,
+  Zap,
+  Layout
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Swal from 'sweetalert2';
 
 import { getStrukturOrganisasi } from '@/app/actions/struktur';
 import { getProfilDesa, updateProfilDesa } from '@/app/actions/surat';
 
 export default function ProfilDesaSettings() {
   const [activeTab, setActiveTab] = useState('identitas');
+  const [saving, setSaving] = useState(false);
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    Swal.fire({
+      title: 'Menyimpan Perubahan...',
+      text: 'Sedang menyinkronkan data dengan database.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    const formData = new FormData(e.currentTarget);
+    try {
+      const res = await updateProfilDesa(formData);
+      if (res?.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil Disimpan!',
+          text: 'Data profil desa telah diperbarui.',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal Menyimpan',
+          text: 'Terjadi kesalahan sistem.'
+        });
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Menyimpan',
+        text: err.message || 'Terjadi kesalahan koneksi database.'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
   const [struktur, setStruktur] = useState<any[]>([]);
   const [loadingStruktur, setLoadingStruktur] = useState(false);
   const [profil, setProfil] = useState<any>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [heroPreview, setHeroPreview] = useState<string | null>(null);
+  const [welcomePreview, setWelcomePreview] = useState<string | null>(null);
+  const [runningText, setRunningText] = useState('');
+  const [sliderImages, setSliderImages] = useState<string[]>([]);
 
-  // Fetch initial profile data
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setter(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Fetch initial profile and structure data together
   React.useEffect(() => {
-    getProfilDesa().then(res => {
-      setProfil(res);
+    setLoadingStruktur(true);
+    Promise.all([getProfilDesa(), getStrukturOrganisasi()]).then(([resProfil, resStruktur]) => {
+      const p = resProfil as any;
+      setProfil(p);
+      setStruktur(resStruktur);
+      setLoadingStruktur(false);
+      
+      if (p?.logoDesa) setLogoPreview(p.logoDesa);
+      if (p?.heroImage) setHeroPreview(p.heroImage);
+      if (p?.welcomeImage) setWelcomePreview(p.welcomeImage);
+      if (p?.runningText) setRunningText(p.runningText);
+      if (p?.sliderImages) {
+        try {
+          setSliderImages(JSON.parse(p.sliderImages));
+        } catch (e) {
+          setSliderImages([]);
+        }
+      }
     });
   }, []);
 
-  // Fetch struktur data when tab is active
+  // Sync / refresh structure when tab is switched
   React.useEffect(() => {
     if (activeTab === 'struktur') {
       setLoadingStruktur(true);
@@ -51,17 +130,12 @@ export default function ProfilDesaSettings() {
     { id: 'identitas', label: 'Identitas Desa', icon: <Building size={16} /> },
     { id: 'visi-misi', label: 'Visi & Misi', icon: <Target size={16} /> },
     { id: 'struktur', label: 'Struktur Organisasi', icon: <Users size={16} /> },
+    { id: 'landing-page', label: 'Landing Page', icon: <Globe size={16} /> },
     { id: 'kontak', label: 'Kontak & Sosmed', icon: <Phone size={16} /> }
   ];
 
-  const categories = [
-    { label: 'Pemerintah Desa', key: 'PEMERINTAH', color: 'bg-emerald-500' },
-    { id: 'bpd', label: 'BPD', key: 'BPD', color: 'bg-blue-500' },
-    { id: 'lsm', label: 'LSM', key: 'LSM', color: 'bg-amber-500' },
-  ];
-
   return (
-    <form action={updateProfilDesa} className="max-w-5xl mx-auto space-y-8 pb-20">
+    <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -73,8 +147,12 @@ export default function ProfilDesaSettings() {
             <p className="text-slate-500 text-sm font-medium">Informasi publik yang dipublikasikan secara resmi.</p>
           </div>
         </div>
-        <button type="submit" className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
-          <Save size={18} /> Simpan Perubahan
+        <button 
+          type="submit" 
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-200"
+        >
+          <Save size={18} /> {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
         </button>
       </div>
 
@@ -109,13 +187,21 @@ export default function ProfilDesaSettings() {
                <div className="md:col-span-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Logo Pemerintah Desa</p>
                   <div className="relative group w-48 h-48 mx-auto">
-                     <div className="w-full h-full bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 text-center group-hover:border-emerald-400 transition-all">
-                        <img src="/logo-magetan.png" alt="Logo" className="w-24 h-auto opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                        <p className="text-[9px] text-slate-400 font-bold mt-4 uppercase">Klik untuk Ganti</p>
+                     <div className="w-full h-full bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 text-center group-hover:border-emerald-400 transition-all overflow-hidden">
+                        {logoPreview ? (
+                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" />
+                        ) : (
+                          <>
+                            <img src="/logo-magetan.png" alt="Logo" className="w-24 h-auto opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                            <p className="text-[9px] text-slate-400 font-bold mt-4 uppercase">Klik untuk Ganti</p>
+                          </>
+                        )}
                      </div>
                      <button type="button" className="absolute -bottom-2 -right-2 p-3 bg-emerald-600 text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
                         <Camera size={18} />
                      </button>
+                     <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setLogoPreview)} className="absolute inset-0 opacity-0 cursor-pointer" title="Ganti Logo" />
+                     <input type="hidden" name="logoDesa" value={logoPreview || ''} />
                   </div>
                </div>
 
@@ -170,9 +256,6 @@ export default function ProfilDesaSettings() {
             <div>
                <div className="flex items-center justify-between mb-4">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Misi Desa</label>
-                  <button type="button" className="p-2 bg-emerald-600 text-white rounded-lg hover:scale-110 transition-transform">
-                     <Plus size={16} />
-                  </button>
                </div>
                <div className="space-y-3">
                   <input type="hidden" name="misi" value={profil?.misi || "[]"} />
@@ -198,12 +281,6 @@ export default function ProfilDesaSettings() {
             className="p-10 space-y-8"
           >
              <div className="flex items-center justify-between">
-                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 no-print">
-                   <Link href="/admin/settings/struktur/bagan" className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg text-xs font-black shadow-sm border border-slate-200 hover:bg-slate-50 transition-all">
-                      <Plus size={14} className="text-emerald-600" />
-                      LIHAT BAGAN VISUAL
-                   </Link>
-                </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Total {struktur.length} Jabatan Terdefinisi</p>
              </div>
 
@@ -221,18 +298,18 @@ export default function ProfilDesaSettings() {
                          </div>
                          <h4 className="text-sm font-black text-slate-800 leading-tight mb-4">{j.namaJabatan}</h4>
                          
-                         {j.perangkat && j.perangkat.length > 0 ? (
+                         {(j as any).perangkatDesa && (j as any).perangkatDesa.length > 0 ? (
                             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shrink-0 shadow-inner overflow-hidden">
-                                  {j.perangkat[0].fotoProfil ? (
-                                     <img src={j.perangkat[0].fotoProfil} alt="Profile" className="w-full h-full object-cover" />
+                                  {(j as any).perangkatDesa[0].fotoProfil ? (
+                                     <img src={(j as any).perangkatDesa[0].fotoProfil} alt="Profile" className="w-full h-full object-cover" />
                                   ) : (
                                      <Users size={18} />
                                   )}
                                </div>
                                <div className="overflow-hidden">
-                                  <p className="text-[11px] font-black text-slate-700 truncate">{j.perangkat[0].nama}</p>
-                                  <p className="text-[9px] text-slate-400 font-mono tracking-tighter">{j.perangkat[0].nik}</p>
+                                  <p className="text-[11px] font-black text-slate-700 truncate">{(j as any).perangkatDesa[0].nama}</p>
+                                  <p className="text-[9px] text-slate-400 font-mono tracking-tighter">{(j as any).perangkatDesa[0].nik}</p>
                                </div>
                             </div>
                          ) : (
@@ -244,6 +321,169 @@ export default function ProfilDesaSettings() {
                    ))}
                 </div>
              )}
+          </motion.div>
+        )}
+        
+        {activeTab === 'landing-page' && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            className="p-10 space-y-12"
+          >
+             {/* Running Text Settings */}
+             <div className="bg-slate-900 p-8 rounded-[2rem] border border-slate-800 text-white space-y-6">
+                <div className="flex items-center gap-3">
+                   <Zap className="text-amber-400" size={20} />
+                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Pengaturan Running Text (Ticker)</h3>
+                </div>
+                <div>
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Pesan Berjalan di Halaman Utama</label>
+                   <input 
+                     name="runningText" 
+                     type="text" 
+                     value={runningText}
+                     onChange={(e) => setRunningText(e.target.value)}
+                     placeholder="Contoh: Selamat Datang di Portal Resmi Desa Kediren - Informasi Transparan, Warga Sejahtera." 
+                     className="w-full px-5 py-4 bg-slate-800 border border-slate-700 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-white shadow-inner" 
+                   />
+                </div>
+             </div>
+
+             {/* Slider Images Gallery */}
+             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-8">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <Layout className="text-emerald-600" size={20} />
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Hero Slider Gallery</h3>
+                   </div>
+                   <div className="relative">
+                      <button type="button" className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all">
+                         <Plus size={14} /> TAMBAH FOTO SLIDER
+                      </button>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          files.forEach(file => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setSliderImages(prev => [...prev, reader.result as string]);
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                        }} 
+                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                      />
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                   <input type="hidden" name="sliderImages" value={JSON.stringify(sliderImages)} />
+                   {sliderImages.map((img, i) => (
+                      <div key={i} className="group relative aspect-square rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm">
+                         <img src={img} alt={`Slider ${i}`} className="w-full h-full object-cover" />
+                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button 
+                               type="button" 
+                               onClick={() => setSliderImages(prev => prev.filter((_, idx) => idx !== i))}
+                               className="p-2 bg-red-600 text-white rounded-xl hover:scale-110 transition-transform"
+                            >
+                               <Trash2 size={16} />
+                            </button>
+                         </div>
+                      </div>
+                   ))}
+                   {sliderImages.length === 0 && (
+                      <div className="col-span-full py-10 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Belum Ada Foto Slider. Banner Utama Akan Menggunakan Foto Default.</p>
+                      </div>
+                   )}
+                </div>
+             </div>
+
+             <div className="bg-emerald-50 p-8 rounded-[2rem] border border-emerald-100 space-y-8">
+                <div className="flex items-center gap-3 mb-2">
+                   <Globe className="text-emerald-600" size={20} />
+                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Hero Banner (Fallback)</h3>
+                </div>
+                
+                <div className="grid lg:grid-cols-3 gap-10">
+                   <div className="lg:col-span-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4 text-center">Foto Background Utama</label>
+                      <div className="relative group aspect-[4/5] w-full max-w-[200px] mx-auto">
+                         <div className="w-full h-full bg-white rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden group-hover:border-emerald-400 transition-all shadow-inner">
+                            {heroPreview ? (
+                               <img src={heroPreview} alt="Hero" className="w-full h-full object-cover" />
+                            ) : (
+                               <div className="text-center p-4">
+                                 <Plus size={32} className="text-slate-300 mx-auto mb-2" />
+                                 <p className="text-[8px] text-slate-400 font-bold uppercase">Upload Foto Desa</p>
+                               </div>
+                            )}
+                         </div>
+                         <button type="button" className="absolute -bottom-2 -right-2 p-3 bg-emerald-600 text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+                            <Camera size={18} />
+                         </button>
+                         <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setHeroPreview)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                         <input type="hidden" name="heroImage" value={heroPreview || ''} />
+                      </div>
+                   </div>
+
+                   <div className="lg:col-span-2 space-y-6">
+                      <div>
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Judul Utama (Hero Title)</label>
+                         <input name="heroTitle" type="text" defaultValue={profil?.heroTitle || "Sistem Informasi Desa Kediren"} placeholder="Contoh: Selamat Datang di Desa Kediren" className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700" />
+                      </div>
+                      <div>
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Sub-Judul (Hero Subtitle)</label>
+                         <input name="heroSubtitle" type="text" defaultValue={profil?.heroSubtitle || "Mewujudkan tata kelola desa yang transparan dan digital."} placeholder="Tuliskan slogan singkat..." className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700" />
+                      </div>
+                   </div>
+                </div>
+             </div>
+
+             <div className="space-y-8">
+                <div className="flex items-center gap-3 mb-2">
+                   <Target className="text-emerald-600" size={20} />
+                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Welcome Section (Sambutan)</h3>
+                </div>
+                
+                <div className="grid lg:grid-cols-3 gap-10">
+                   <div className="lg:col-span-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4 text-center">Foto Kepala Desa</label>
+                      <div className="relative group aspect-[3/4] w-full max-w-[180px] mx-auto">
+                         <div className="w-full h-full bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden group-hover:border-emerald-400 transition-all shadow-inner">
+                            {welcomePreview ? (
+                               <img src={welcomePreview} alt="Welcome" className="w-full h-full object-cover" />
+                            ) : (
+                               <div className="text-center p-4">
+                                 <Users size={32} className="text-slate-300 mx-auto mb-2" />
+                                 <p className="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em]">Upload Foto</p>
+                               </div>
+                            )}
+                         </div>
+                         <button type="button" className="absolute -bottom-2 -right-2 p-3 bg-emerald-600 text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+                            <Camera size={18} />
+                         </button>
+                         <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setWelcomePreview)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                         <input type="hidden" name="welcomeImage" value={welcomePreview || ''} />
+                      </div>
+                   </div>
+
+                   <div className="lg:col-span-2 space-y-6">
+                      <div>
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Judul Sambutan</label>
+                         <input name="welcomeTitle" type="text" defaultValue={profil?.welcomeTitle || "Sambutan Kepala Desa Kediren"} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700" />
+                      </div>
+                      <div>
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Isi Sambutan / Pesan Singkat</label>
+                         <textarea name="welcomeMessage" defaultValue={profil?.welcomeMessage} placeholder="Tuliskan pesan pembuka untuk warga di sini..." className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-600 h-40 resize-none leading-relaxed" />
+                      </div>
+                   </div>
+                </div>
+             </div>
           </motion.div>
         )}
 

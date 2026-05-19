@@ -17,7 +17,9 @@ import {
   Cloud,
   QrCode,
   Fingerprint,
-  Zap
+  Zap,
+  Newspaper,
+  Palmtree
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -32,10 +34,26 @@ const settingMenus = [
     color: 'bg-emerald-50'
   },
   {
+    title: 'Berita Desa',
+    description: 'Kelola artikel berita, pengumuman, dan kegiatan terbaru untuk warga.',
+    icon: <Newspaper className="text-emerald-600" />,
+    href: '/admin/berita',
+    status: 'Aktif',
+    color: 'bg-emerald-50'
+  },
+  {
     title: 'Transparansi & APBDes',
     description: 'Manajemen data anggaran desa, realisasi belanja, dan monitoring program kerja.',
     icon: <TrendingUp className="text-emerald-600" />,
     href: '/admin/settings/transparansi',
+    status: 'Aktif',
+    color: 'bg-emerald-50'
+  },
+  {
+    title: 'Potensi & Wisata',
+    description: 'Manajemen destinasi wisata desa, galeri foto pesona alam, dan produk unggulan UMKM.',
+    icon: <Palmtree className="text-emerald-600" />,
+    href: '/admin/settings/potensi',
     status: 'Aktif',
     color: 'bg-emerald-50'
   },

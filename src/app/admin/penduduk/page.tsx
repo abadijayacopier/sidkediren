@@ -8,6 +8,7 @@ import ExportButton from '@/components/ExportButton';
 import MutasiButton from '@/components/MutasiButton';
 import PrintBiodata from '@/components/PrintBiodata';
 import FilterPenduduk from '@/components/FilterPenduduk';
+import { syncDatabaseStructure } from '@/app/actions/system';
 
 export default async function DataPendudukPage({
   searchParams,
@@ -35,32 +36,68 @@ export default async function DataPendudukPage({
       rtFilter ? { keluarga: { rt: rtFilter } } : {},
       rwFilter ? { keluarga: { rw: rwFilter } } : {},
       statusFilter ? { statusRekam: statusFilter } : {},
-      onlyKK ? { kepalaDariKeluarga: { isNot: null } } : {},
+      onlyKK ? { statusDalamKeluarga: 'KEPALA KELUARGA' } : {},
       // Secara default hanya tampilkan yang HIDUP
-      !showAll ? { statusDasar: 'Hidup' } : {},
+      !showAll ? { isHidup: true } : {},
     ]
   };
 
   // Hitung total data & Ambil Data
-  const [penduduk, totalItems] = await Promise.all([
-    prisma.penduduk.findMany({
-      where: whereFilter,
-      include: {
-        keluarga: {
-          include: {
-            kepalaKeluarga: {
-              select: { namaLengkap: true, nik: true }
+  let penduduk: any[] = [];
+  let totalItems = 0;
+
+  try {
+    const [pData, tData] = await Promise.all([
+      prisma.penduduk.findMany({
+        where: whereFilter,
+        include: {
+          keluarga: {
+            include: {
+              penduduk: {
+                where: { statusDalamKeluarga: 'KEPALA KELUARGA' },
+                select: { namaLengkap: true, nik: true }
+              }
             }
           }
         },
-        kepalaDariKeluarga: true,
-      },
-      orderBy: { namaLengkap: 'asc' },
-      skip: (currentPage - 1) * pageSize,
-      take: pageSize
-    }),
-    prisma.penduduk.count({ where: whereFilter }),
-  ]);
+        orderBy: { namaLengkap: 'asc' },
+        skip: (currentPage - 1) * pageSize,
+        take: pageSize
+      }),
+      prisma.penduduk.count({ where: whereFilter }),
+    ]);
+    penduduk = pData;
+    totalItems = tData;
+  } catch (error: any) {
+    if (error.message?.includes('is_hidup')) {
+      console.log('Missing is_hidup column. Running sync...');
+      await syncDatabaseStructure();
+      // Retry once
+      const [pData, tData] = await Promise.all([
+        prisma.penduduk.findMany({
+          where: whereFilter,
+          include: {
+            keluarga: {
+              include: {
+                penduduk: {
+                  where: { statusDalamKeluarga: 'KEPALA KELUARGA' },
+                  select: { namaLengkap: true, nik: true }
+                }
+              }
+            }
+          },
+          orderBy: { namaLengkap: 'asc' },
+          skip: (currentPage - 1) * pageSize,
+          take: pageSize
+        }) as any,
+        prisma.penduduk.count({ where: whereFilter }),
+      ]);
+      penduduk = pData;
+      totalItems = tData;
+    } else {
+      throw error;
+    }
+  }
 
   const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -145,7 +182,7 @@ export default async function DataPendudukPage({
                 <td className="px-6 py-4">
                    <div className="flex items-center gap-2">
                         <Home size={14} className="text-slate-300" />
-                        <span className="text-xs font-medium text-slate-600">{warga.keluarga?.kepalaKeluarga?.namaLengkap || '-'}</span>
+                        <span className="text-xs font-medium text-slate-600">{warga.keluarga?.penduduk?.[0]?.namaLengkap || '-'}</span>
                    </div>
                 </td>
                 <td className="px-6 py-4 text-center">

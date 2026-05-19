@@ -14,14 +14,40 @@ import {
 import Link from 'next/link';
 import DeleteRiwayatSurat from '@/components/surat/DeleteRiwayatSurat';
 
+import { syncDatabaseStructure } from '@/app/actions/system';
+
 export default async function RiwayatSuratPage() {
-  const riwayat = await prisma.riwayatSurat.findMany({
-    include: {
-      penduduk: true,
-      masterSurat: true
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  let riwayat: any[] = [];
+  try {
+    riwayat = await prisma.riwayatSurat.findMany({
+      include: {
+        penduduk: true,
+        masterSurat: true
+      },
+      orderBy: { tanggalSurat: 'desc' }
+    });
+  } catch (error: any) {
+    const isDrift = error.message?.includes('does not exist') || 
+                    error.message?.includes('Unknown column') || 
+                    error.message?.includes('tanggal_surat') || 
+                    error.message?.includes('tanggalSurat') || 
+                    error.message?.includes('status_surat') || 
+                    error.message?.includes('qr_code_data') || 
+                    error.message?.includes('meta_data') || 
+                    error.message?.includes('keterangan');
+    if (isDrift) {
+      await syncDatabaseStructure();
+      riwayat = await prisma.riwayatSurat.findMany({
+        include: {
+          penduduk: true,
+          masterSurat: true
+        },
+        orderBy: { tanggalSurat: 'desc' }
+      });
+    } else {
+      throw error;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -83,7 +109,7 @@ export default async function RiwayatSuratPage() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-800 leading-tight">
-                          {new Date(s.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
+                          {new Date(s.tanggalSurat || s.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </p>
                         <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Tanggal Terbit</p>
                       </div>

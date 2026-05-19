@@ -37,6 +37,8 @@ import {
   CartesianGrid,
   Legend 
 } from 'recharts';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 interface TransparansiClientProps {
   profil: any;
@@ -105,8 +107,6 @@ export default function TransparansiClient({
   }, [items, categories]);
 
   const totalPengeluaranPembiayaan = useMemo(() => {
-    // Biasanya pengeluaran pembiayaan diinput sebagai nilai positif di anggaran tapi sifatnya mengurangi kas
-    // Kita filter berdasarkan kategori spesifik jika ada
     return items
       .filter(item => categories.find(c => c.id === item.kategoriId)?.namaKategori.toLowerCase().includes('pengeluaran pembiayaan'))
       .reduce((acc, curr) => acc + Number(curr.anggaran), 0);
@@ -119,40 +119,22 @@ export default function TransparansiClient({
     return items.filter(i => i.kategoriId === selectedKategori);
   }, [items, selectedKategori]);
 
+  const SummaryCard = ({ title, value, icon: Icon, desc, color, bgColor, isDark = false }: any) => (
+    <div className={`p-8 rounded-[32px] ${bgColor} border ${isDark ? 'border-transparent' : 'border-slate-100'} shadow-sm`}>
+      <div className="flex justify-between items-start mb-6">
+        <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/10' : 'bg-white'}`}>
+          <Icon className={color} size={24} />
+        </div>
+      </div>
+      <h4 className={`text-sm font-bold ${isDark ? 'text-emerald-200' : 'text-slate-500'} mb-2`}>{title}</h4>
+      <p className={`text-3xl font-black ${isDark ? 'text-white' : 'text-[#0b1c30]'} mb-1`}>{formatIDR(value)}</p>
+      <p className={`text-xs ${isDark ? 'text-emerald-100/60' : 'text-slate-400'}`}>{desc}</p>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#f8f9ff] font-arial selection:bg-[#154212] selection:text-white overflow-x-hidden text-[#0b1c30]">
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-emerald-900/10 shadow-sm">
-        <div className="max-w-[1280px] mx-auto px-6 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#154212] flex items-center justify-center rounded-lg shadow-lg shadow-emerald-900/10">
-              <Globe className="text-white w-6 h-6" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <h1 className="font-bold text-[#154212] text-xl tracking-tight uppercase">DESA<span className="font-black text-[#154212]">{profil?.namaDesa || 'KEDIREN'}</span></h1>
-              <span className="text-[10px] font-medium tracking-[0.2em] text-[#42493e] uppercase">Portal Desa Digital</span>
-            </div>
-          </div>
-          
-          <nav className="hidden md:flex items-center gap-10 text-sm font-semibold">
-            <Link href="/" className="text-[#42493e] hover:text-[#154212] transition-all">Beranda</Link>
-            <Link href="/profil" className="text-[#42493e] hover:text-[#154212] transition-all">Profil Desa</Link>
-            <Link href="/layanan" className="text-[#42493e] hover:text-[#154212] transition-all">Layanan Publik</Link>
-            <Link href="/potensi" className="text-[#42493e] hover:text-[#154212] transition-all">Potensi & Wisata</Link>
-            <Link href="/transparansi" className="text-[#154212] relative py-1">
-              Transparansi
-              <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-[#154212]" />
-            </Link>
-          </nav>
-
-          <Link 
-            href="/login" 
-            className="flex items-center gap-2 px-8 py-2.5 bg-[#154212] text-white rounded-full text-sm font-semibold hover:bg-[#2d5a27] transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
-          >
-            Login Warga
-          </Link>
-        </div>
-      </header>
+      <Navbar profil={profil} />
 
       <main className="pt-20">
         {/* Hero Section */}
@@ -220,7 +202,7 @@ export default function TransparansiClient({
 
         {activeTab === 'apbdes' ? (
           <>
-            {/* Section 1: Pendapatan (NEW) */}
+            {/* Section 1: Pendapatan */}
             <section className="py-20 bg-white">
               <div className="max-w-[1280px] mx-auto px-6">
                 <div className="flex flex-col items-center text-center mb-16">
@@ -268,7 +250,7 @@ export default function TransparansiClient({
               </div>
             </section>
 
-            {/* Section 2: Belanja (Existing but adjusted) */}
+            {/* Section 2: Belanja */}
             <section className="py-20 bg-[#f8f9ff]">
               <div className="max-w-[1280px] mx-auto px-6">
                 <div className="flex flex-col items-center text-center mb-16">
@@ -318,7 +300,7 @@ export default function TransparansiClient({
               </div>
             </section>
 
-            {/* Section 3: Pembiayaan Summary (NEW) */}
+            {/* Section 3: Pembiayaan Summary */}
             <section className="py-20 bg-white border-y border-slate-100">
                <div className="max-w-[1280px] mx-auto px-6">
                  <div className="bg-[#0b1c30] rounded-[40px] p-12 text-white relative overflow-hidden">
@@ -453,7 +435,7 @@ export default function TransparansiClient({
           </section>
         )}
 
-        {/* Download Center Section (New) */}
+        {/* Download Center Section */}
         <section className="py-20 bg-white border-t border-slate-100">
           <div className="max-w-[1280px] mx-auto px-6">
             <div className="bg-[#154212] rounded-[40px] p-12 relative overflow-hidden text-white">
@@ -474,7 +456,7 @@ export default function TransparansiClient({
           </div>
         </section>
 
-        {/* GIS Mapping CTA (Placeholder for next step) */}
+        {/* GIS Mapping CTA */}
         <section className="py-20 bg-[#f8f9ff]">
           <div className="max-w-[1280px] mx-auto px-6 text-center">
             <div className="inline-flex items-center gap-3 px-6 py-2 bg-white rounded-full border border-slate-100 shadow-sm mb-8">
@@ -487,54 +469,16 @@ export default function TransparansiClient({
             </p>
             <div className="relative max-w-4xl mx-auto h-[400px] bg-slate-200 rounded-[40px] overflow-hidden border-8 border-white shadow-2xl flex items-center justify-center group">
               <div className="absolute inset-0 bg-emerald-900/40 backdrop-blur-sm flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all cursor-not-allowed">
-                <Clock size={64} className="mb-4 animate-spin-slow" />
+                <Clock size={64} className="mb-4" />
                 <span className="text-xl font-black uppercase tracking-widest">Sedang Dalam Pengembangan</span>
               </div>
               <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover grayscale opacity-50" />
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className="bg-white pt-20 pb-12 border-t border-slate-50">
-          <div className="max-w-[1280px] mx-auto px-6">
-            <div className="flex flex-col items-center text-center gap-6">
-              <div className="w-12 h-12 bg-[#154212] rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-900/20">
-                <Globe className="text-white w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-[#154212] tracking-tight uppercase">Portal Desa Digital Kediren</h2>
-                <p className="text-slate-400 text-sm max-w-md">Keterbukaan adalah pondasi utama pembangunan desa yang mandiri dan berintegritas.</p>
-              </div>
-              <div className="pt-8 border-t border-slate-50 w-full flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-bold text-slate-300">
-                <span>© {new Date().getFullYear()} PEMERINTAH DESA KEDIREN</span>
-                <div className="flex gap-8">
-                  <a href="#" className="hover:text-[#154212]">KEBIJAKAN PRIVASI</a>
-                  <a href="#" className="hover:text-[#154212]">KONTAK KAMI</a>
-                  <a href="#" className="hover:text-[#154212]">ADMIN LOGIN</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
       </main>
-    </div>
-  );
-}
 
-function SummaryCard({ title, value, icon: Icon, desc, color, bgColor, isDark }: any) {
-  return (
-    <div className={`${isDark ? 'bg-[#154212] text-white shadow-emerald-900/20' : 'bg-white border border-slate-100 shadow-emerald-900/5'} p-8 rounded-[40px] shadow-2xl relative overflow-hidden group hover:scale-[1.02] transition-all`}>
-      <div className={`w-14 h-14 ${isDark ? 'bg-white/10' : bgColor} ${isDark ? 'text-white' : color} rounded-2xl flex items-center justify-center mb-6`}>
-        <Icon size={28} />
-      </div>
-      <h3 className={`text-xs font-black uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{title}</h3>
-      <div className="text-3xl font-black mb-4">
-        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value || 0)}
-      </div>
-      <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider ${isDark ? 'text-white/60' : color}`}>
-        <BadgeCheck size={14} /> {desc}
-      </div>
+      <Footer profil={profil} />
     </div>
   );
 }

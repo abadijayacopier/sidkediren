@@ -1,12 +1,7 @@
 import React from 'react';
 import { 
   ArrowRight, 
-  Globe,
-  ChevronDown,
-  Sparkles,
   BadgeCheck,
-  Search,
-  MapPin,
   TrendingUp,
   Award,
   ArrowUpRight,
@@ -15,126 +10,97 @@ import {
   Facebook,
   FileText,
   Users,
-  CreditCard
+  CreditCard,
+  Calendar,
+  Newspaper,
+  MapPin,
+  ChevronDown,
+  Globe
 } from 'lucide-react';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import Link from 'next/link';
 import { getProfilDesa, getMasterSurat } from '@/app/actions/surat';
+import { getBerita } from '@/app/actions/berita';
+import Marquee from '@/components/layout/Marquee';
+import HeroSlider from '@/components/features/HeroSlider';
 
 export default async function HomePage() {
-  const profil = await getProfilDesa();
+  const profilData = await getProfilDesa();
   const masterSurat = await getMasterSurat();
+  const berita = await getBerita(3); // Ambil 3 berita terbaru
+  
+  // Cast to any to handle dynamic fields from database
+  const profil = profilData as any;
   
   const batikPattern = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l15 30-15 30L15 30z' fill='%23154212' fill-opacity='0.05'/%3E%3C/svg%3E")`;
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] font-arial selection:bg-[#154212] selection:text-white overflow-x-hidden text-[#0b1c30]">
       {/* TopNavBar - Professional & Official */}
-      <header className="fixed top-0 w-full z-[100] bg-white border-b border-emerald-900/10 shadow-sm">
-        <div className="max-w-[1280px] mx-auto px-6 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#154212] flex items-center justify-center rounded-lg shadow-lg shadow-emerald-900/10">
-              <Globe className="text-white w-6 h-6" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <h1 className="font-bold text-[#154212] text-xl tracking-tight uppercase">DESA<span className="font-black text-[#154212]">{profil?.namaDesa || 'KEDIREN'}</span></h1>
-              <span className="text-[10px] font-medium tracking-[0.2em] text-[#42493e] uppercase">Portal Desa Digital</span>
-            </div>
-          </div>
-          
-          <nav className="hidden md:flex items-center gap-10 text-sm font-semibold">
-            <Link href="/" className="text-[#154212] relative py-1">
-              Beranda
-              <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-[#154212]" />
-            </Link>
-            <Link href="/profil" className="text-[#42493e] hover:text-[#154212] transition-all">Profil Desa</Link>
-            <Link href="/layanan" className="text-[#42493e] hover:text-[#154212] transition-all">Layanan Publik</Link>
-            <Link href="/potensi" className="text-[#42493e] hover:text-[#154212] transition-all">Potensi & Wisata</Link>
-            <Link href="/transparansi" className="text-[#42493e] hover:text-[#154212] transition-all">Transparansi</Link>
-          </nav>
+      <Navbar profil={profil} />
+      
+      {/* Running Text / Marquee */}
+      <div className="mt-20">
+        <Marquee text={profil?.runningText || "Selamat Datang di Portal Resmi Desa Kediren - Informasi Transparan, Warga Sejahtera."} />
+      </div>
 
-          <Link 
-            href="/login" 
-            className="flex items-center gap-2 px-8 py-2.5 bg-[#154212] text-white rounded-full text-sm font-semibold hover:bg-[#2d5a27] transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
-          >
-            Login Warga
-          </Link>
-        </div>
-      </header>
+      <main>
+        {/* Hero Section - Official & Modern Slider */}
+        <section className="max-w-[1280px] mx-auto px-6 pt-6 pb-2 bg-transparent">
+          <HeroSlider 
+            images={(() => {
+              try {
+                const imgs = profil?.sliderImages ? JSON.parse(profil.sliderImages) : [];
+                return imgs.length > 0 ? imgs : [profil?.heroImage || "https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?q=80&w=1500&auto=format&fit=crop"];
+              } catch (e) {
+                return [profil?.heroImage || "https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?q=80&w=1500&auto=format&fit=crop"];
+              }
+            })()}
+            title={profil?.heroTitle || "Sistem Informasi Desa Kediren"}
+            subtitle={profil?.heroSubtitle || "Portal pelayanan publik yang cepat, transparan, dan akuntabel berbasis teknologi informasi."}
+          />
+        </section>
 
-      <main className="pt-20">
-        {/* Hero Section - Official & Modern */}
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-white">
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#eff4ff] via-white to-white"></div>
-            <div className="absolute top-[-10%] right-[-5%] w-[60%] h-[120%] batik-pattern opacity-[0.03] rotate-12" style={{ backgroundImage: batikPattern }}></div>
-            <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[100%] bg-[#a1d494]/10 blur-[120px] rounded-full"></div>
-          </div>
-          
-          <div className="max-w-[1280px] mx-auto px-6 relative z-10 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#bcf0ae]/30 text-[#154212] rounded-full text-[10px] font-bold tracking-widest uppercase mb-8 border border-[#154212]/10">
-                  <BadgeCheck size={14} /> Desa Digital Terverifikasi
-                </div>
-                <h2 className="text-5xl md:text-[72px] font-black text-[#0b1c30] leading-[1.05] mb-8 tracking-tighter">
-                  Membangun <br />
-                  <span className="text-[#154212]">Masa Depan</span> <br />
-                  Dari Desa.
-                </h2>
-                <p className="text-lg md:text-xl text-[#42493e] mb-12 leading-relaxed font-light max-w-lg">
-                  Portal resmi Desa {profil?.namaDesa || 'Kediren'} untuk pelayanan publik yang cepat, transparan, dan akuntabel berbasis teknologi informasi.
-                </p>
-                
-                <div className="flex flex-wrap gap-6">
-                  <Link href="/layanan" className="px-10 py-4 bg-[#154212] text-white rounded-2xl font-bold flex items-center gap-3 hover:bg-[#2d5a27] transition-all shadow-xl shadow-emerald-900/20 active:scale-95">
-                    Layanan Mandiri <ArrowRight size={20} />
-                  </Link>
-                  <Link href="/profil" className="px-10 py-4 border-2 border-[#154212] text-[#154212] rounded-2xl font-bold hover:bg-[#154212]/5 transition-all active:scale-95">
-                    Jelajahi Profil
-                  </Link>
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="relative z-10 rounded-[48px] overflow-hidden shadow-2xl border-8 border-white">
-                  <img 
-                    src="https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?q=80&w=1500&auto=format&fit=crop" 
-                    alt="Desa Kediren" 
-                    className="w-full aspect-[4/5] object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0b1c30]/60 to-transparent"></div>
-                  <div className="absolute bottom-10 left-10 right-10 text-white">
-                    <div className="text-sm font-bold uppercase tracking-widest opacity-60 mb-2">Desa {profil?.namaDesa || 'Kediren'}</div>
-                    <div className="text-2xl font-bold italic leading-relaxed">"Mandiri, Religius, dan Berbudaya."</div>
+        {/* Welcome Section - Dynamic */}
+        {profil?.welcomeMessage && (
+          <section className="py-24 bg-white relative overflow-hidden border-b border-slate-50">
+            <div className="max-w-[1280px] mx-auto px-6">
+              <div className="flex flex-col md:flex-row items-center gap-16">
+                <div className="w-full md:w-1/3">
+                  <div className="relative">
+                    <div className="aspect-[3/4] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white rotate-[-2deg]">
+                      <img 
+                        src={profil?.welcomeImage || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1500&auto=format&fit=crop"} 
+                        alt="Kepala Desa" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="absolute -bottom-6 -right-6 bg-[#154212] text-white p-6 rounded-3xl shadow-xl rotate-[3deg]">
+                      <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Kepala Desa</p>
+                      <p className="font-black text-lg">{profil?.namaKepalaDesa}</p>
+                    </div>
                   </div>
                 </div>
-                {/* Float Cards */}
-                <div className="absolute -left-12 top-1/4 bg-white p-6 rounded-3xl shadow-2xl border border-[#eff4ff] z-20 hidden xl:block animate-bounce-slow">
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-[#a1d494] rounded-2xl flex items-center justify-center text-[#154212]">
-                         <TrendingUp size={24} />
-                      </div>
-                      <div>
-                         <div className="text-xl font-black text-[#0b1c30]">98%</div>
-                         <div className="text-[10px] font-bold text-[#42493e] uppercase">Kepuasan Warga</div>
-                      </div>
-                   </div>
-                </div>
-                <div className="absolute -right-8 bottom-1/4 bg-white p-6 rounded-3xl shadow-2xl border border-[#eff4ff] z-20 hidden xl:block animate-bounce-slow" style={{ animationDelay: '1s' }}>
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-[#465f88] rounded-2xl flex items-center justify-center text-white">
-                         <Award size={24} />
-                      </div>
-                      <div>
-                         <div className="text-[10px] font-bold text-[#42493e] uppercase">Status Desa</div>
-                         <div className="text-xl font-black text-[#0b1c30]">Mandiri</div>
-                      </div>
-                   </div>
+                <div className="w-full md:w-2/3 space-y-8">
+                  <div className="space-y-4">
+                    <span className="text-[#154212] font-bold tracking-[0.2em] text-xs uppercase block">Pesan Utama</span>
+                    <h3 className="text-4xl font-bold text-[#0b1c30] tracking-tight">
+                      {profil?.welcomeTitle || `Sambutan Kepala Desa ${profil?.namaDesa}`}
+                    </h3>
+                  </div>
+                  <div className="text-xl text-[#42493e] leading-relaxed font-light italic border-l-4 border-[#154212] pl-8 py-2">
+                    "{profil.welcomeMessage}"
+                  </div>
+                  <div className="flex items-center gap-4 pt-4">
+                    <div className="w-12 h-[2px] bg-[#154212]/20"></div>
+                    <p className="text-sm font-bold text-[#154212] uppercase tracking-[0.3em]">Salam Sejahtera</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Layanan Publik Grid - Quick Access */}
         <section className="py-[100px] bg-[#f8f9ff]">
@@ -170,6 +136,74 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* Berita Terkini */}
+        <section className="py-[100px] bg-white">
+          <div className="max-w-[1280px] mx-auto px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+              <div className="space-y-4">
+                <span className="text-[#154212] font-bold tracking-[0.2em] text-xs uppercase block">Informasi Terbaru</span>
+                <h3 className="text-4xl font-bold text-[#0b1c30] tracking-tight">Kabar Desa Kediren</h3>
+              </div>
+              <Link href="/berita" className="flex items-center gap-2 text-[#154212] font-bold hover:gap-4 transition-all">
+                Lihat Semua Berita <ArrowRight size={20} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {berita.map((item: any) => (
+                <Link 
+                  key={item.id}
+                  href={`/berita/${item.slug}`} 
+                  className="group block bg-white rounded-[40px] overflow-hidden border border-[#eff4ff] hover:shadow-2xl hover:shadow-emerald-900/10 transition-all hover:-translate-y-2"
+                >
+                  <div className="aspect-[16/10] overflow-hidden relative">
+                    {item.gambar ? (
+                      <img 
+                        src={item.gambar} 
+                        alt={item.judul} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#f8f9ff] flex items-center justify-center text-[#154212]/20">
+                        <Newspaper size={64} />
+                      </div>
+                    )}
+                    <div className="absolute top-6 left-6">
+                      <span className="px-4 py-2 bg-white/90 backdrop-blur-md text-[#154212] text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm border border-white/50">
+                        {item.kategori || 'Berita'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-[#42493e]/60 uppercase tracking-widest">
+                       <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#154212]" /> {new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                    <h4 className="text-xl font-bold text-[#0b1c30] group-hover:text-[#154212] transition-colors leading-snug">
+                      {item.judul}
+                    </h4>
+                    <p className="text-sm text-[#42493e] leading-relaxed line-clamp-2 opacity-60">
+                      {item.ringkasan || item.konten.substring(0, 100) + '...'}
+                    </p>
+                    <div className="pt-4 flex items-center gap-2 text-[#154212] font-black text-[10px] uppercase tracking-widest">
+                       Baca Selengkapnya <ArrowUpRight size={16} />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+              
+              {berita.length === 0 && (
+                <div className="col-span-full py-20 bg-[#f8f9ff] rounded-[40px] border-2 border-dashed border-[#eff4ff] flex flex-col items-center text-center">
+                   <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-[#154212]/10 mb-6 shadow-sm">
+                      <Newspaper size={40} />
+                   </div>
+                   <p className="text-[#0b1c30] font-bold text-lg">Belum Ada Berita Terbaru</p>
+                   <p className="text-[#42493e]/60 text-sm mt-2">Nantikan informasi menarik seputar Desa Kediren di sini.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Statistik & Transparansi */}
         <section className="py-[120px] bg-white relative overflow-hidden">
           <div className="absolute inset-0 batik-pattern opacity-[0.02] pointer-events-none" style={{ backgroundImage: batikPattern }}></div>
@@ -191,7 +225,6 @@ export default async function HomePage() {
                     </div>
                     <ArrowUpRight className="ml-auto text-[#154212]/20 group-hover:text-[#154212] transition-all" size={24} />
                   </div>
-                  {/* More stats if needed */}
                 </div>
               </div>
               <div className="lg:col-span-7">
@@ -244,60 +277,7 @@ export default async function HomePage() {
         </section>
       </main>
 
-      {/* Footer - Professional & Clean */}
-      <footer className="bg-[#eff4ff] pt-[100px] pb-12 border-t border-[#d3e4fe]">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-16 mb-20 text-sm">
-            <div className="md:col-span-5">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-[#154212] rounded flex items-center justify-center">
-                  <Globe className="text-white w-6 h-6" />
-                </div>
-                <h2 className="text-2xl font-bold text-[#154212] tracking-tight uppercase">DESA<span className="font-black text-[#154212]">{profil?.namaDesa || 'KEDIREN'}</span></h2>
-              </div>
-              <p className="text-[#42493e] leading-relaxed mb-10 text-lg font-light">
-                Mewujudkan tata kelola desa yang mandiri, transparan, and berbasis teknologi untuk kesejahteraan seluruh warga.
-              </p>
-              <div className="flex gap-6">
-                <a href="#" className="text-[#154212] hover:scale-110 transition-all"><Instagram size={24} /></a>
-                <a href="#" className="text-[#154212] hover:scale-110 transition-all"><Facebook size={24} /></a>
-              </div>
-            </div>
-            
-            <div className="md:col-span-2">
-              <h4 className="font-bold text-[#0b1c30] mb-6 text-sm">Menu</h4>
-              <ul className="space-y-4 text-sm text-[#42493e]">
-                <li><Link href="/" className="hover:text-[#154212] transition-colors">Beranda</Link></li>
-                <li><Link href="/profil" className="hover:text-[#154212] transition-colors">Profil Desa</Link></li>
-                <li><Link href="/layanan" className="hover:text-[#154212] transition-colors">Layanan Publik</Link></li>
-                <li><Link href="/potensi" className="hover:text-[#154212] transition-colors">Potensi & Wisata</Link></li>
-              </ul>
-            </div>
-
-            <div className="md:col-span-5">
-              <h4 className="font-bold text-[#0b1c30] mb-6 text-sm">Lokasi & Kontak</h4>
-              <div className="space-y-4 text-sm text-[#42493e] leading-loose">
-                <div className="flex gap-4">
-                  <MapPin className="text-[#154212] shrink-0" size={20} />
-                  <p>{profil?.alamat || 'Jl. Raya Kediren No. 01, Kediren, Lembeyan, Magetan, Jawa Timur'}</p>
-                </div>
-                <div className="flex gap-4">
-                  <Phone className="text-[#154212] shrink-0" size={20} />
-                  <p>{profil?.telepon || '0351-XXXXXX'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="pt-10 border-t border-[#d3e4fe] flex flex-col md:flex-row justify-between items-center gap-6 text-[#42493e]/60 font-medium">
-            <p>© {new Date().getFullYear()} Pemerintah Desa {profil?.namaDesa || 'Kediren'}. Seluruh Hak Cipta Dilindungi.</p>
-            <div className="flex gap-10">
-              <a href="#" className="hover:text-[#154212] transition-colors">Kebijakan Privasi</a>
-              <a href="#" className="hover:text-[#154212] transition-colors">Syarat & Ketentuan</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer profil={profil} />
     </div>
   );
 }
@@ -316,4 +296,3 @@ function ServiceCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
     </div>
   );
 }
-

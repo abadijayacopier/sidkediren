@@ -25,9 +25,11 @@ import {
   Layers,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { 
   getApbdesItems, 
   getApbdesKategori, 
@@ -910,28 +912,50 @@ export default function AdminTransparansiPage() {
         </div>
       )}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-              <div>
-                <h3 className="text-2xl font-bold text-slate-800">{editingItem ? 'Edit' : 'Tambah'} {modalType === 'apbdes' ? 'Anggaran' : 'Program'}</h3>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Lengkapi data di bawah ini</p>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" 
+            onClick={() => setIsModalOpen(false)}
+          ></motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col my-auto"
+          >
+            {/* Modal Header - Agent Style */}
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-amber-500"></div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">
+                  {editingItem ? 'Perbarui' : 'Entri'} {modalType === 'apbdes' ? 'Anggaran' : 'Program Kerja'}
+                </h3>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                  Konfigurasi Infrastruktur Digital Kediren
+                </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all">
-                <X size={24} />
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-100 group"
+              >
+                <X size={24} className="group-hover:rotate-90 transition-transform" />
               </button>
             </div>
 
-            <form onSubmit={modalType === 'apbdes' ? handleSaveApbdes : handleSaveProgram} className="p-8 space-y-6">
+            <form onSubmit={modalType === 'apbdes' ? handleSaveApbdes : handleSaveProgram} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               {editingItem && <input type="hidden" name="id" value={editingItem.id} />}
               <input type="hidden" name="tahun" value={tahun} />
               <input type="hidden" name="status" value={status} />
 
               {modalType === 'apbdes' ? (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gunakan Template Standar</label>
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Zap size={14} className="text-emerald-500" /> Gunakan Template Siskeudes
+                    </label>
                     <select 
                       onChange={(e) => {
                         const template = APBDES_TEMPLATES.find(t => t.id === e.target.value);
@@ -944,46 +968,51 @@ export default function AdminTransparansiPage() {
                           }
                         }
                       }}
-                      className="w-full px-4 py-3 bg-emerald-50 text-emerald-700 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-5 py-4 bg-emerald-50/50 text-emerald-800 border border-emerald-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
                     >
-                      <option value="">-- Pilih Template Siskeudes --</option>
+                      <option value="">-- Pilih Template Standar --</option>
                       {APBDES_TEMPLATES.map(t => (
                         <option key={t.id} value={t.id}>[{t.code}] {t.name}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bidang / Kategori</label>
-                      <select name="kategoriId" defaultValue={editingItem?.kategoriId} className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bidang / Kategori</label>
+                      <select name="kategoriId" defaultValue={editingItem?.kategoriId} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
                         {categories.map(c => <option key={c.id} value={c.id}>{c.namaKategori}</option>)}
                       </select>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kode Rekening</label>
-                      <input name="kodeRekening" defaultValue={editingItem?.kodeRekening} placeholder="Contoh: 2.1.01" className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" />
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kode Rekening</label>
+                      <input name="kodeRekening" defaultValue={editingItem?.kodeRekening} placeholder="Contoh: 2.1.01" className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none" />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Uraian Kegiatan</label>
-                    <input name="namaItem" defaultValue={editingItem?.namaItem} required placeholder="Masukkan nama kegiatan anggaran" className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" />
+                  
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Uraian Kegiatan / Anggaran</label>
+                    <input name="namaItem" defaultValue={editingItem?.namaItem} required placeholder="Masukkan nama kegiatan anggaran..." className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none" />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Anggaran (Rp)</label>
-                      <input 
-                        name="anggaran" 
-                        value={formattedAnggaran || ''}
-                        onChange={(e) => handlePriceInput(e, setFormattedAnggaran)}
-                        required 
-                        placeholder="Contoh: 1.000.000"
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" 
-                      />
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Anggaran (Rp)</label>
+                      <div className="relative">
+                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                        <input 
+                          name="anggaran" 
+                          value={formattedAnggaran || ''}
+                          onChange={(e) => handlePriceInput(e, setFormattedAnggaran)}
+                          required 
+                          placeholder="0"
+                          className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-black text-emerald-600 focus:ring-2 focus:ring-emerald-500 outline-none" 
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sumber Dana</label>
-                      <select name="sumberDana" defaultValue={editingItem?.sumberDana || 'DD'} className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sumber Dana</label>
+                      <select name="sumberDana" defaultValue={editingItem?.sumberDana || 'DD'} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
                         <option value="DD">DANA DESA (DD)</option>
                         <option value="ADD">ALOKASI DANA DESA (ADD)</option>
                         <option value="PAD">PENDAPATAN ASLI DESA (PAD)</option>
@@ -992,77 +1021,89 @@ export default function AdminTransparansiPage() {
                       </select>
                     </div>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Program Kerja</label>
-                    <input name="namaProgram" defaultValue={editingItem?.namaProgram} required placeholder="Contoh: Pembangunan Jalan Lingkungan" className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" />
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Program Kerja</label>
+                    <input name="namaProgram" defaultValue={editingItem?.namaProgram} required placeholder="Contoh: Pembangunan Jalan Lingkungan" className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none" />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lokasi</label>
-                      <input name="lokasi" defaultValue={editingItem?.lokasi} placeholder="Contoh: Dusun Kediren RT 06" className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" />
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lokasi</label>
+                      <input name="lokasi" defaultValue={editingItem?.lokasi} placeholder="Contoh: Dusun Kediren RT 06" className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none" />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Anggaran (Rp)</label>
-                      <input 
-                        name="anggaran" 
-                        value={formattedAnggaran || ''}
-                        onChange={(e) => handlePriceInput(e, setFormattedAnggaran)}
-                        required 
-                        placeholder="Contoh: 50.000.000"
-                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" 
-                      />
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Anggaran (Rp)</label>
+                      <div className="relative">
+                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                        <input 
+                          name="anggaran" 
+                          value={formattedAnggaran || ''}
+                          onChange={(e) => handlePriceInput(e, setFormattedAnggaran)}
+                          required 
+                          placeholder="0"
+                          className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-black text-emerald-600 focus:ring-2 focus:ring-emerald-500 outline-none" 
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status Proyek</label>
-                      <select name="status" defaultValue={editingItem?.status || 'Rencana'} className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500">
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Proyek</label>
+                      <select name="status" defaultValue={editingItem?.status || 'Rencana'} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
                         <option value="Rencana">RENCANA</option>
                         <option value="Berjalan">SEDANG BERJALAN</option>
                         <option value="Selesai">SELESAI</option>
                         <option value="Tertunda">TERTUNDA</option>
                       </select>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sumber Dana</label>
-                      <input name="sumberDana" defaultValue={editingItem?.sumberDana || 'DANA DESA (DD)'} placeholder="Contoh: DD 2024" className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500" />
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sumber Dana</label>
+                      <input name="sumberDana" defaultValue={editingItem?.sumberDana || 'DANA DESA (DD)'} placeholder="Contoh: DD 2024" className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none" />
                     </div>
                   </div>
+
                   <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Foto Progres & Lokasi GPS</label>
-                      <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Camera size={14} className="text-emerald-500" /> Foto Progres & Lokasi GPS
+                      </label>
+                      <div className="grid grid-cols-3 gap-6">
                         {[
                           { label: 'Awal (0%)', icon: Activity },
                           { label: 'Progres (50%)', icon: Layers },
                           { label: 'Selesai (100%)', icon: CheckCircle2 }
                         ].map((stage, idx) => (
-                          <div key={idx} className="space-y-2">
-                            <span className="text-[7px] font-black text-slate-400 uppercase text-center block">{stage.label}</span>
-                            <div className="relative group aspect-square rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden hover:border-emerald-500 transition-all bg-slate-50">
+                          <div key={idx} className="space-y-3">
+                            <span className="text-[8px] font-black text-slate-400 uppercase text-center block tracking-widest">{stage.label}</span>
+                            <div className="relative group aspect-square rounded-[1.5rem] border-2 border-dashed border-slate-200 overflow-hidden hover:border-emerald-500 hover:bg-emerald-50/30 transition-all bg-slate-50 shadow-inner">
                               {previewImages[idx] ? (
                                 <>
                                   <img src={previewImages[idx] as string} className="w-full h-full object-cover" />
-                                  <button 
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      const newImgs = [...previewImages];
-                                      newImgs[idx] = null;
-                                      setPreviewImages(newImgs);
-                                    }}
-                                    className="absolute top-1 right-1 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                                  >
-                                    <X size={10} />
-                                  </button>
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        const newImgs = [...previewImages];
+                                        newImgs[idx] = null;
+                                        setPreviewImages(newImgs);
+                                      }}
+                                      className="w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                    >
+                                      <X size={18} />
+                                    </button>
+                                  </div>
                                 </>
                               ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-                                  <Camera size={20} className="text-slate-300 group-hover:text-emerald-500" />
-                                  <span className="text-[6px] font-bold text-slate-300 uppercase">Upload</span>
+                                <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                  <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-emerald-500 transition-colors">
+                                    <Camera size={20} />
+                                  </div>
+                                  <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Pilih Foto</span>
                                 </div>
                               )}
                               <input type="file" accept="image/*" onChange={(e) => handleCapture(e, idx)} className="absolute inset-0 opacity-0 cursor-pointer" />
@@ -1072,9 +1113,12 @@ export default function AdminTransparansiPage() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-6 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
+                        <Navigation size={120} />
+                      </div>
+                      <div className="flex items-center justify-between relative z-10">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                           <Navigation size={14} className="text-emerald-500" /> Koordinat Geospasial (GIS)
                         </label>
                         <button 
@@ -1083,39 +1127,49 @@ export default function AdminTransparansiPage() {
                             if (navigator.geolocation) {
                               navigator.geolocation.getCurrentPosition((pos) => {
                                 setCoords({lat: pos.coords.latitude, lng: pos.coords.longitude});
-                                Swal.fire({ icon: 'success', title: 'GPS Terkunci', toast: true, position: 'top-end', timer: 1500 });
+                                Swal.fire({ icon: 'success', title: 'GPS Terkunci', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
                               });
                             }
                           }}
-                          className="text-[9px] font-black text-emerald-600 hover:underline uppercase tracking-widest"
+                          className="px-4 py-2 bg-white text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm border border-emerald-100 hover:bg-emerald-50 transition-all flex items-center gap-2"
                         >
-                          Kunci Lokasi (GPS)
+                          <MapPin size={12} /> Kunci Lokasi (GPS)
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <span className="text-[8px] font-bold text-slate-400 uppercase">Latitude</span>
-                          <input type="text" name="latitude" value={coords?.lat || ''} readOnly className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-[10px] font-mono font-bold" placeholder="Otomatis..." />
+                      <div className="grid grid-cols-2 gap-6 relative z-10">
+                        <div className="space-y-1.5">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Latitude</span>
+                          <input type="text" name="latitude" value={coords?.lat || ''} readOnly className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl text-xs font-mono font-bold text-slate-800 shadow-inner" placeholder="Otomatis..." />
                         </div>
-                        <div className="space-y-1">
-                          <span className="text-[8px] font-bold text-slate-400 uppercase">Longitude</span>
-                          <input type="text" name="longitude" value={coords?.lng || ''} readOnly className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-[10px] font-mono font-bold" placeholder="Otomatis..." />
+                        <div className="space-y-1.5">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Longitude</span>
+                          <input type="text" name="longitude" value={coords?.lng || ''} readOnly className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl text-xs font-mono font-bold text-slate-800 shadow-inner" placeholder="Otomatis..." />
                         </div>
                       </div>
                       <input type="hidden" name="fotoProgres" value={JSON.stringify(previewImages)} />
                     </div>
                   </div>
-                </>
+                </div>
               )}
 
-              <div className="pt-6 flex gap-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-slate-200 transition-all">Batal</button>
-                <button type="submit" className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
-                  <Save size={20} /> Simpan Data
+              {/* Form Footer */}
+              <div className="pt-8 flex gap-4 border-t border-slate-50">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="flex-1 py-4.5 bg-slate-100 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                >
+                  Batalkan
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 py-4.5 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/20 flex items-center justify-center gap-3 active:scale-[0.98]"
+                >
+                  <Save size={20} /> Simpan Data Resmi
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
