@@ -363,14 +363,33 @@ model BalitaKms {
   posyanduId  Int      @map("posyandu_id")
   nama        String   @db.VarChar(150)
   namaIbu     String   @map("nama_ibu") @db.VarChar(150)
+  jenisKelamin String   @default("L") @map("jenis_kelamin") @db.VarChar(1) // "L" atau "P"
   usiaBulan   Int      @map("usia_bulan")
   beratBadan  Float    @map("berat_badan")
   tinggiBadan Float    @map("tinggi_badan")
-  statusGizi  String   @map("status_gizi") @db.VarChar(50)
+  statusGizi  String   @map("status_gizi") @db.VarChar(150)
 
   posyandu    Posyandu @relation(fields: [posyanduId], references: [id])
+  pengukuran  KmsPengukuran[]
 
   @@map("balita_kms")
+}
+
+model KmsPengukuran {
+  id          Int      @id @default(autoincrement())
+  balitaId    Int      @map("balita_id")
+  tanggalUkur DateTime @map("tanggal_ukur")
+  usiaBulan   Int      @map("usia_bulan")
+  beratBadan  Float    @map("berat_badan")
+  tinggiBadan Float    @map("tinggi_badan")
+  statusGizi  String   @map("status_gizi") @db.VarChar(150)
+  keterangan  String?  @db.Text
+  petugas     String?  @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  balita      BalitaKms @relation(fields: [balitaId], references: [id], onDelete: Cascade)
+
+  @@map("kms_pengukuran")
 }
 
 model KegiatanPkk {

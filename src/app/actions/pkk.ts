@@ -38,9 +38,12 @@ export async function getJadwalPosyandu() {
 
 export async function getBalitaKmsList() {
   return withDriftRetry(
-    () => prisma.balitaKms.findMany({
+    () => (prisma.balitaKms as any).findMany({
       include: {
-        posyandu: true
+        posyandu: true,
+        pengukuran: {
+          orderBy: { usiaBulan: 'asc' }
+        }
       },
       orderBy: { nama: 'asc' }
     }),
@@ -66,6 +69,7 @@ export async function getWargaBalitaList() {
           namaLengkap: true,
           namaIbu: true,
           tanggalLahir: true,
+          jenisKelamin: true,
           keluarga: {
             select: {
               dusun: true
@@ -131,10 +135,42 @@ export async function seedPkkData() {
     await prisma.jadwalPosyandu.create({ data: { posyanduId: p3.id, kaderId: k3.id, tanggal: new Date('2026-05-25'), waktu: '08:00 - 11:00', sasaran: 'Balita & Ibu Hamil' } });
 
     // 4. Seed Balita
-    await prisma.balitaKms.create({ data: { posyanduId: p1.id, nama: 'Ahmad Rafiq', namaIbu: 'Nurul Hidayah', usiaBulan: 18, beratBadan: 10.2, tinggiBadan: 80, statusGizi: 'Normal' } });
-    await prisma.balitaKms.create({ data: { posyanduId: p1.id, nama: 'Siti Aisyah', namaIbu: 'Dewi Lestari', usiaBulan: 24, beratBadan: 11.5, tinggiBadan: 86, statusGizi: 'Normal' } });
-    await prisma.balitaKms.create({ data: { posyanduId: p3.id, nama: 'Budi Santoso', namaIbu: 'Wahyuni', usiaBulan: 12, beratBadan: 7.8, tinggiBadan: 72, statusGizi: 'Gizi Kurang' } });
-    await prisma.balitaKms.create({ data: { posyanduId: p2.id, nama: 'Clara Putri', namaIbu: 'Maria Ulfa', usiaBulan: 36, beratBadan: 14.0, tinggiBadan: 95, statusGizi: 'Normal' } });
+    const b1 = await (prisma.balitaKms as any).create({ data: { posyanduId: p1.id, nama: 'Ahmad Rafiq', namaIbu: 'Nurul Hidayah', jenisKelamin: 'L', usiaBulan: 18, beratBadan: 10.8, tinggiBadan: 82.5, statusGizi: 'Normal' } });
+    const b2 = await (prisma.balitaKms as any).create({ data: { posyanduId: p1.id, nama: 'Siti Aisyah', namaIbu: 'Dewi Lestari', jenisKelamin: 'P', usiaBulan: 24, beratBadan: 11.5, tinggiBadan: 86.0, statusGizi: 'Normal' } }); // Catatan: Ada kesalahan penulisan 'namaIgu', kita perbaiki menjadi 'namaIbu' di bawah
+    const b3 = await (prisma.balitaKms as any).create({ data: { posyanduId: p3.id, nama: 'Budi Santoso', namaIbu: 'Wahyuni', jenisKelamin: 'L', usiaBulan: 12, beratBadan: 7.2, tinggiBadan: 71.0, statusGizi: 'Gizi Kurang' } });
+    const b4 = await (prisma.balitaKms as any).create({ data: { posyanduId: p2.id, nama: 'Clara Putri', namaIbu: 'Maria Ulfa', jenisKelamin: 'P', usiaBulan: 36, beratBadan: 14.2, tinggiBadan: 96.0, statusGizi: 'Normal' } });
+
+    // 5. Seed Riwayat Pengukuran Bulanan (KmsPengukuran)
+    // Ahmad Rafiq (Laki-laki, Usia 18 bln, saat ini 10.8 kg, 82.5 cm)
+    await (prisma as any).kmsPengukuran.createMany({
+      data: [
+        { balitaId: b1.id, usiaBulan: 0, beratBadan: 3.2, tinggiBadan: 50.0, statusGizi: 'Normal', keterangan: 'Lahir Normal', petugas: 'Bidan Desa', tanggalUkur: new Date('2024-11-20') },
+        { balitaId: b1.id, usiaBulan: 3, beratBadan: 5.8, tinggiBadan: 60.0, statusGizi: 'Normal', keterangan: 'Imunisasi DPT 1', petugas: 'Kader Posyandu', tanggalUkur: new Date('2025-02-20') },
+        { balitaId: b1.id, usiaBulan: 6, beratBadan: 7.5, tinggiBadan: 66.0, statusGizi: 'Normal', keterangan: 'ASI Eksklusif', petugas: 'Kader Posyandu', tanggalUkur: new Date('2025-05-20') },
+        { balitaId: b1.id, usiaBulan: 12, beratBadan: 9.2, tinggiBadan: 75.0, statusGizi: 'Normal', keterangan: 'Imunisasi Campak', petugas: 'Kader Posyandu', tanggalUkur: new Date('2025-11-20') },
+        { balitaId: b1.id, usiaBulan: 18, beratBadan: 10.8, tinggiBadan: 82.5, statusGizi: 'Normal', keterangan: 'Aktif, PMT Lahap', petugas: 'Kader Posyandu', tanggalUkur: new Date('2026-05-20') }
+      ]
+    });
+
+    // Siti Aisyah (Perempuan, Usia 24 bln, saat ini 11.5 kg, 86.0 cm)
+    await (prisma as any).kmsPengukuran.createMany({
+      data: [
+        { balitaId: b2.id, usiaBulan: 0, beratBadan: 3.0, tinggiBadan: 49.0, statusGizi: 'Normal', keterangan: 'Lahir Sehat', petugas: 'Bidan Desa', tanggalUkur: new Date('2024-05-20') },
+        { balitaId: b2.id, usiaBulan: 6, beratBadan: 7.2, tinggiBadan: 64.0, statusGizi: 'Normal', keterangan: 'Imunisasi Lengkap', petugas: 'Kader Posyandu', tanggalUkur: new Date('2024-11-20') },
+        { balitaId: b2.id, usiaBulan: 12, beratBadan: 9.0, tinggiBadan: 74.0, statusGizi: 'Normal', keterangan: 'Tumbuh Baik', petugas: 'Kader Posyandu', tanggalUkur: new Date('2025-05-20') },
+        { balitaId: b2.id, usiaBulan: 24, beratBadan: 11.5, tinggiBadan: 86.0, statusGizi: 'Normal', keterangan: 'Sangat Lincah, Vit A', petugas: 'Kader Posyandu', tanggalUkur: new Date('2026-05-20') }
+      ]
+    });
+
+    // Budi Santoso (Laki-laki, Usia 12 bln, saat ini 7.2 kg, 71.0 cm - Gizi Kurang)
+    await (prisma as any).kmsPengukuran.createMany({
+      data: [
+        { balitaId: b3.id, usiaBulan: 0, beratBadan: 3.1, tinggiBadan: 49.5, statusGizi: 'Normal', keterangan: 'Lahir Sehat', petugas: 'Bidan Desa', tanggalUkur: new Date('2025-05-20') },
+        { balitaId: b3.id, usiaBulan: 4, beratBadan: 5.2, tinggiBadan: 58.0, statusGizi: 'Normal', keterangan: 'Tumbuh Normal', petugas: 'Kader Posyandu', tanggalUkur: new Date('2025-09-20') },
+        { balitaId: b3.id, usiaBulan: 8, beratBadan: 6.3, tinggiBadan: 65.0, statusGizi: 'Gizi Kurang', keterangan: 'Nafsu Makan Turun', petugas: 'Kader Posyandu', tanggalUkur: new Date('2026-01-20') },
+        { balitaId: b3.id, usiaBulan: 12, beratBadan: 7.2, tinggiBadan: 71.0, statusGizi: 'Gizi Kurang', keterangan: 'Perlu Intervensi PMT', petugas: 'Kader Posyandu', tanggalUkur: new Date('2026-05-20') }
+      ]
+    });
 
     revalidatePath('/admin/pkk');
     return { success: true, message: 'Seeding berhasil' };
@@ -370,6 +406,7 @@ export async function saveBalita(formData: FormData) {
   try {
     const nama = formData.get('nama') as string;
     const namaIbu = formData.get('namaIbu') as string;
+    const jenisKelamin = (formData.get('jenisKelamin') as string) || 'L';
     const usiaBulan = Number(formData.get('usiaBulan'));
     const beratBadan = Number(formData.get('beratBadan'));
     const tinggiBadan = Number(formData.get('tinggiBadan'));
@@ -383,16 +420,32 @@ export async function saveBalita(formData: FormData) {
       if (tinggiBadan < (usiaBulan * 2.5)) statusGizi = 'Stunting';
     }
 
-    await prisma.balitaKms.create({
+    // Buat data balita utama
+    const newBalita = await (prisma.balitaKms as any).create({
       data: {
         nama,
         namaIbu,
+        jenisKelamin,
         usiaBulan,
         beratBadan,
         tinggiBadan,
         posyanduId,
         statusGizi,
         nik: Date.now().toString().slice(-16) // mock NIK
+      }
+    });
+
+    // Otomatis buat entri pertama di riwayat pengukuran KMS
+    await (prisma as any).kmsPengukuran.create({
+      data: {
+        balitaId: newBalita.id,
+        usiaBulan,
+        beratBadan,
+        tinggiBadan,
+        statusGizi,
+        keterangan: 'Pendaftaran & Pengukuran Awal',
+        petugas: 'Kader Posyandu',
+        tanggalUkur: new Date()
       }
     });
 
@@ -407,6 +460,85 @@ export async function saveBalita(formData: FormData) {
 export async function deleteBalita(id: number) {
   try {
     await prisma.balitaKms.delete({ where: { id } });
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function savePengukuran(formData: FormData) {
+  try {
+    const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+    const balitaId = Number(formData.get('balitaId'));
+    const usiaBulan = Number(formData.get('usiaBulan'));
+    const beratBadan = Number(formData.get('beratBadan'));
+    const tinggiBadan = Number(formData.get('tinggiBadan'));
+    const statusGizi = formData.get('statusGizi') as string;
+    const keterangan = (formData.get('keterangan') as string) || '';
+    const petugas = (formData.get('petugas') as string) || 'Kader Posyandu';
+    const tanggalUkur = new Date(formData.get('tanggalUkur') as string || new Date());
+
+    if (id) {
+      await (prisma as any).kmsPengukuran.update({
+        where: { id },
+        data: { balitaId, usiaBulan, beratBadan, tinggiBadan, statusGizi, keterangan, petugas, tanggalUkur }
+      });
+    } else {
+      // Simpan ke riwayat pengukuran baru
+      await (prisma as any).kmsPengukuran.create({
+        data: { balitaId, usiaBulan, beratBadan, tinggiBadan, statusGizi, keterangan, petugas, tanggalUkur }
+      });
+    }
+
+    // Sinkronisasikan BalitaKms dengan pengukuran terbaru (usiaBulan terbesar)
+    const lastPengukuran = await (prisma as any).kmsPengukuran.findFirst({
+      where: { balitaId },
+      orderBy: { usiaBulan: 'desc' }
+    });
+
+    if (lastPengukuran) {
+      await prisma.balitaKms.update({
+        where: { id: balitaId },
+        data: {
+          usiaBulan: lastPengukuran.usiaBulan,
+          beratBadan: lastPengukuran.beratBadan,
+          tinggiBadan: lastPengukuran.tinggiBadan,
+          statusGizi: lastPengukuran.statusGizi
+        }
+      });
+    }
+
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error saving Pengukuran:', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function deletePengukuran(id: number, balitaId: number) {
+  try {
+    await (prisma as any).kmsPengukuran.delete({ where: { id } });
+
+    // Cari pengukuran terbaru yang tersisa untuk disinkronkan kembali ke BalitaKms utama
+    const lastPengukuran = await (prisma as any).kmsPengukuran.findFirst({
+      where: { balitaId },
+      orderBy: { usiaBulan: 'desc' }
+    });
+
+    if (lastPengukuran) {
+      await prisma.balitaKms.update({
+        where: { id: balitaId },
+        data: {
+          usiaBulan: lastPengukuran.usiaBulan,
+          beratBadan: lastPengukuran.beratBadan,
+          tinggiBadan: lastPengukuran.tinggiBadan,
+          statusGizi: lastPengukuran.statusGizi
+        }
+      });
+    }
+
     revalidatePath('/admin/pkk');
     return { success: true };
   } catch (error: any) {

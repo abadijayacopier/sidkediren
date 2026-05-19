@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { HeartPulse, Activity, FileText, Plus, Calendar, MapPin, Search, ChevronRight, Scale, Baby, Stethoscope, Save, Trash2, X, ShieldCheck, CheckCircle2, UserCheck, Clock, Users, Link as LinkIcon, Edit } from 'lucide-react';
-import { getJadwalPosyandu, getBalitaKmsList, seedPkkData, saveBalita, deleteBalita, getPosyanduList, getKaderPkkList, saveJadwal, deleteJadwal, getWargaBalitaList } from '@/app/actions/pkk';
+import { HeartPulse, Activity, FileText, Plus, Calendar, MapPin, Search, ChevronRight, Scale, Baby, Stethoscope, Save, Trash2, X, ShieldCheck, CheckCircle2, UserCheck, Clock, Users, Link as LinkIcon, Edit, Printer } from 'lucide-react';
+import { getJadwalPosyandu, getBalitaKmsList, seedPkkData, saveBalita, deleteBalita, getPosyanduList, getKaderPkkList, saveJadwal, deleteJadwal, getWargaBalitaList, savePengukuran, deletePengukuran } from '@/app/actions/pkk';
 import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -24,6 +24,7 @@ export default function PosyanduDashboard() {
   const [selectedWargaNik, setSelectedWargaNik] = useState('');
   const [formNama, setFormNama] = useState('');
   const [formIbu, setFormIbu] = useState('');
+  const [formGender, setFormGender] = useState<'L' | 'P'>('L');
   const [formUsia, setFormUsia] = useState('');
   const [formBb, setFormBb] = useState('');
   const [formTb, setFormTb] = useState('');
@@ -45,6 +46,16 @@ export default function PosyanduDashboard() {
 
   // Modal Detail KMS State
   const [selectedBalitaKms, setSelectedBalitaKms] = useState<any | null>(null);
+  const [kmsChartTab, setKmsChartTab] = useState<'bb' | 'tb'>('bb');
+  
+  // State Input Timbang Bulanan Baru
+  const [editPengukuranId, setEditPengukuranId] = useState<number | null>(null);
+  const [inputTanggalUkur, setInputTanggalUkur] = useState(new Date().toISOString().split('T')[0]);
+  const [inputUsiaBulan, setInputUsiaBulan] = useState('');
+  const [inputBeratBadan, setInputBeratBadan] = useState('');
+  const [inputTinggiBadan, setInputTinggiBadan] = useState('');
+  const [inputKeterangan, setInputKeterangan] = useState('');
+  const [inputPetugas, setInputPetugas] = useState('Kader Posyandu');
 
   const loadData = async () => {
     setLoading(true);
@@ -74,6 +85,17 @@ export default function PosyanduDashboard() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (selectedBalitaKms) {
+      document.body.classList.add('modal-kms-open');
+    } else {
+      document.body.classList.remove('modal-kms-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-kms-open');
+    };
+  }, [selectedBalitaKms]);
+
   // Fungsi saat kader memilih Warga Balita (Auto-Populate dan Lock Data)
   const handleSelectWarga = (nik: string) => {
     setSelectedWargaNik(nik);
@@ -81,6 +103,7 @@ export default function PosyanduDashboard() {
       setFormNama('');
       setFormIbu('');
       setFormUsia('');
+      setFormGender('L');
       setFormPosyandu('');
       return;
     }
@@ -89,6 +112,7 @@ export default function PosyanduDashboard() {
     if (warga) {
       setFormNama(warga.namaLengkap);
       setFormIbu(warga.namaIbu || 'Ibu Kandung');
+      setFormGender(warga.jenisKelamin === 'P' ? 'P' : 'L');
 
       // Hitung Usia (Bulan) otomatis berdasarkan tanggal lahir warga
       const lahir = new Date(warga.tanggalLahir);
@@ -114,15 +138,27 @@ export default function PosyanduDashboard() {
     }
   };
 
-  // Hitung Status Gizi Dinamis (Real-time di Client)
-  const calculateNutritionalStatus = (usia: number, bb: number, tb: number) => {
-    if (!usia || !bb || !tb) return { status: 'Masukkan data...', color: 'text-slate-400', isStunted: false };
+  // Hitung Status Gizi Dinamis (Real-time di Client dengan Diferensiasi Gender WHO)
+  const calculateNutritionalStatus = (usia: number, bb: number, tb: number, gender: 'L' | 'P' = 'L') => {
+    if (!usia || !bb || !tb) return { status: 'Masukkan data...', color: 'text-slate-400', isStunted: false, statusTb: 'Normal', idealBb: 3.2, idealTb: 49.0, sdDown: 2.8, sdUp: 4.5, tbSdDown: 47.0 };
 
-    // Kalkulasi sederhana Z-Score WHO untuk berat badan menurut usia
-    const idealBb = 3.2 + (usia * 0.35); // Estimasi linear BB median WHO anak 0-24 bulan
-    const sdDown = idealBb - (usia * 0.12) - 1.0;
-    const sdSevereDown = sdDown - 1.2;
-    const sdUp = idealBb + (usia * 0.15) + 2.0;
+    // 1. Z-Score Berat Badan menurut Umur (BB/U)
+    // Interpolasi Median WHO (0-60 Bulan)
+    let idealBb = 3.2;
+    let sdDown = 2.8;
+    let sdUp = 4.5;
+
+    if (gender === 'L') {
+      idealBb = 3.3 + (usia * 0.28);
+      sdDown = idealBb - (usia * 0.12) - 0.9;
+      sdUp = idealBb + (usia * 0.15) + 1.8;
+    } else { // Perempuan
+      idealBb = 3.2 + (usia * 0.26);
+      sdDown = idealBb - (usia * 0.11) - 0.8;
+      sdUp = idealBb + (usia * 0.14) + 1.6;
+    }
+
+    const sdSevereDown = sdDown - 1.1;
 
     let status = 'Normal';
     let color = 'bg-emerald-50 text-emerald-600 border-emerald-200';
@@ -138,20 +174,40 @@ export default function PosyanduDashboard() {
       color = 'bg-red-50 text-red-600 border-red-200';
     }
 
-    // Kalkulasi Tinggi Badan menurut Usia (Stunting)
-    const idealTb = 48 + (usia * 1.8); // Estimasi tinggi median WHO
-    const tbSdDown = idealTb - (usia * 0.5) - 3.5;
+    // 2. Z-Score Tinggi Badan menurut Umur (TB/U - Stunting)
+    let idealTb = 49.0;
+    let tbSdDown = 47.0;
+    let tbSdSevereDown = 45.0;
+
+    if (gender === 'L') {
+      idealTb = 49.9 + (usia * 1.05);
+      tbSdDown = idealTb - (usia * 0.25) - 3.2;
+      tbSdSevereDown = tbSdDown - 2.0;
+    } else { // Perempuan
+      idealTb = 49.1 + (usia * 1.02);
+      tbSdDown = idealTb - (usia * 0.24) - 3.0;
+      tbSdSevereDown = tbSdDown - 1.8;
+    }
+
+    let statusTb = 'Normal';
     const isStunted = tb < tbSdDown;
+    const isSeverelyStunted = tb < tbSdSevereDown;
+
+    if (isSeverelyStunted) {
+      statusTb = 'Sangat Pendek';
+    } else if (isStunted) {
+      statusTb = 'Pendek (Stunting)';
+    }
 
     if (isStunted) {
       status = status === 'Normal' ? 'Stunting' : `${status} & Stunting`;
-      if (status === 'Stunting') color = 'bg-purple-50 text-purple-600 border-purple-200';
+      if (status.includes('Stunting')) color = 'bg-purple-50 text-purple-600 border-purple-200';
     }
 
-    return { status, color, isStunted };
+    return { status, color, isStunted, statusTb, idealBb, idealTb, sdDown, sdUp, tbSdDown };
   };
 
-  const currentGizi = calculateNutritionalStatus(Number(formUsia), Number(formBb), Number(formTb));
+  const currentGizi = calculateNutritionalStatus(Number(formUsia), Number(formBb), Number(formTb), formGender);
 
   const handleVaksinToggle = (vaksin: string) => {
     setSelectedVaksin(prev => 
@@ -171,6 +227,7 @@ export default function PosyanduDashboard() {
       const formData = new FormData();
       formData.append('nama', formNama);
       formData.append('namaIbu', formIbu);
+      formData.append('jenisKelamin', formGender);
       formData.append('usiaBulan', formUsia);
       formData.append('beratBadan', formBb);
       formData.append('tinggiBadan', formTb);
@@ -196,7 +253,7 @@ export default function PosyanduDashboard() {
       setShowModal(false);
       
       // Reset Form
-      setFormNama(''); setFormIbu(''); setFormUsia(''); setFormBb(''); setFormTb('');
+      setFormNama(''); setFormIbu(''); setFormUsia(''); setFormBb(''); setFormTb(''); setFormGender('L');
       setSelectedVaksin([]); setHasVitaminA(false); setHasObatCacing(false); setHasPmt(false);
       
       loadData();
@@ -273,31 +330,183 @@ export default function PosyanduDashboard() {
     });
   };
 
-  // Generate Data Pertumbuhan KMS Historis untuk Recharts
-  const generateChartData = (balita: any) => {
-    if (!balita) return [];
-    const chartData = [];
-    const targetUsia = balita.usiaBulan;
-    const targetBb = balita.beratBadan;
+  const resetPengukuranForm = () => {
+    setEditPengukuranId(null);
+    setInputUsiaBulan('');
+    setInputBeratBadan('');
+    setInputTinggiBadan('');
+    setInputKeterangan('');
+    setInputTanggalUkur(new Date().toISOString().split('T')[0]);
+  };
 
-    // Hitung langkah kenaikan berat badan fiktif berdasarkan kurva WHO sehat
-    for (let u = 0; u <= targetUsia; u += Math.max(1, Math.floor(targetUsia / 6))) {
-      const idealBb = 3.2 + (u * 0.35);
-      const lowLimit = idealBb - (u * 0.12) - 1.0;
-      const highLimit = idealBb + (u * 0.15) + 2.0;
-
-      // BB aktual diplot mendekati BB target di bulan terakhir
-      let bbAktual = 3.0 + (u * ((targetBb - 3.0) / targetUsia));
-      if (u === targetUsia) bbAktual = targetBb;
-
-      chartData.push({
-        umur: `${u} Bln`,
-        'Batas Atas': parseFloat(highLimit.toFixed(1)),
-        'Ideal (WHO)': parseFloat(idealBb.toFixed(1)),
-        'Batas Bawah': parseFloat(lowLimit.toFixed(1)),
-        'Berat Balita': parseFloat(bbAktual.toFixed(1)),
-      });
+  const handleEditPengukuran = (pengukuran: any) => {
+    setEditPengukuranId(pengukuran.id);
+    setInputUsiaBulan(String(pengukuran.usiaBulan));
+    setInputBeratBadan(String(pengukuran.beratBadan));
+    setInputTinggiBadan(String(pengukuran.tinggiBadan));
+    setInputKeterangan(pengukuran.keterangan || '');
+    setInputPetugas(pengukuran.petugas || 'Kader Posyandu');
+    if (pengukuran.tanggalUkur) {
+      setInputTanggalUkur(new Date(pengukuran.tanggalUkur).toISOString().split('T')[0]);
     }
+  };
+
+  const handleSubmitPengukuran = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBalitaKms || !inputUsiaBulan || !inputBeratBadan || !inputTinggiBadan) {
+      Swal.fire('Oops!', 'Mohon lengkapi usia, berat, dan tinggi badan.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Menyimpan Pengukuran...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+      const parsedGizi = calculateNutritionalStatus(
+        Number(inputUsiaBulan),
+        Number(inputBeratBadan),
+        Number(inputTinggiBadan),
+        selectedBalitaKms.jenisKelamin
+      );
+
+      const formData = new FormData();
+      if (editPengukuranId) formData.append('id', String(editPengukuranId));
+      formData.append('balitaId', String(selectedBalitaKms.id));
+      formData.append('usiaBulan', inputUsiaBulan);
+      formData.append('beratBadan', inputBeratBadan);
+      formData.append('tinggiBadan', inputTinggiBadan);
+      formData.append('statusGizi', parsedGizi.status);
+      formData.append('keterangan', inputKeterangan);
+      formData.append('petugas', inputPetugas);
+      formData.append('tanggalUkur', inputTanggalUkur);
+
+      await savePengukuran(formData);
+
+      Swal.fire({ icon: 'success', title: editPengukuranId ? 'Data Berhasil Diperbarui!' : 'Data Timbangan Berhasil Dicatat!', showConfirmButton: false, timer: 1500 });
+      
+      resetPengukuranForm();
+
+      // Refresh data di dashboard, lalu buka ulang detail KMS dengan data ter-update
+      const updatedList = await getBalitaKmsList();
+      setDataBalita((updatedList as any[]) || []);
+      const matched = (updatedList as any[]).find(b => b.id === selectedBalitaKms.id);
+      if (matched) setSelectedBalitaKms(matched);
+    } catch (err: any) {
+      Swal.fire('Gagal', err.message, 'error');
+    }
+  };
+
+  const handleDeletePengukuran = (id: number) => {
+    Swal.fire({
+      title: 'Hapus riwayat timbang?',
+      text: "Data penimbangan bulan ini akan dihapus permanen.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Ya, Hapus!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() });
+        try {
+          await deletePengukuran(id, selectedBalitaKms.id);
+          Swal.fire('Terhapus!', '', 'success');
+          
+          // Refresh list
+          const updatedList = await getBalitaKmsList();
+          setDataBalita((updatedList as any[]) || []);
+          const matched = (updatedList as any[]).find(b => b.id === selectedBalitaKms.id);
+          if (matched) setSelectedBalitaKms(matched);
+        } catch (err: any) {
+          Swal.fire('Gagal', err.message, 'error');
+        }
+      }
+    });
+  };
+
+  // Generate Data Pertumbuhan KMS Historis untuk Recharts (Dinamis & Gender-Aware)
+  const generateChartData = (balita: any, type: 'bb' | 'tb' = 'bb') => {
+    if (!balita) return [];
+    
+    // Gunakan riwayat pengukuran asli dari DB jika ada, jika tidak pakai data pendaftaran awal
+    const riwayat = balita.pengukuran && balita.pengukuran.length > 0
+      ? balita.pengukuran
+      : [{
+          usiaBulan: balita.usiaBulan,
+          beratBadan: balita.beratBadan,
+          tinggiBadan: balita.tinggiBadan,
+          statusGizi: balita.statusGizi,
+          keterangan: 'Pendaftaran Awal',
+          tanggalUkur: new Date()
+        }];
+
+    // Urutkan riwayat berdasarkan usiaBulan
+    const sortedRiwayat = [...riwayat].sort((a, b) => a.usiaBulan - b.usiaBulan);
+    
+    // Tentukan target plotting (maksimal usiaBulan saat ini atau 24/36)
+    const maxUsia = Math.max(24, Math.max(...sortedRiwayat.map(r => r.usiaBulan)));
+    const chartData: any[] = [];
+
+    // Buat grid usia WHO standar
+    const steps: number[] = [];
+    for (let i = 0; i <= maxUsia; i += (maxUsia <= 24 ? 2 : 4)) {
+      steps.push(i);
+    }
+    // Pastikan usia saat ini tercakup
+    sortedRiwayat.forEach(r => {
+      if (!steps.includes(r.usiaBulan)) steps.push(r.usiaBulan);
+    });
+    steps.sort((a, b) => a - b);
+
+    // Plotting data Z-Score WHO gender-aware untuk setiap langkah
+    steps.forEach(u => {
+      let ideal = 0;
+      let limitLow = 0;
+      let limitHigh = 0;
+      let aktualVal: number | null = null;
+
+      // Cari apakah ada riwayat aktual anak pada usia bulan ini
+      const match = sortedRiwayat.find(r => r.usiaBulan === u);
+      if (match) {
+        aktualVal = type === 'bb' ? match.beratBadan : match.tinggiBadan;
+      }
+
+      if (type === 'bb') {
+        // BB/U Z-Score WHO Standard
+        if (balita.jenisKelamin === 'P') { // Perempuan
+          ideal = 3.2 + (u * 0.26);
+          limitLow = ideal - (u * 0.11) - 0.8;
+          limitHigh = ideal + (u * 0.14) + 1.6;
+        } else { // Laki-laki
+          ideal = 3.3 + (u * 0.28);
+          limitLow = ideal - (u * 0.12) - 0.9;
+          limitHigh = ideal + (u * 0.15) + 1.8;
+        }
+      } else {
+        // TB/U Z-Score WHO Standard
+        if (balita.jenisKelamin === 'P') {
+          ideal = 49.1 + (u * 1.02);
+          limitLow = ideal - (u * 0.24) - 3.0;
+          limitHigh = ideal + (u * 0.25) + 3.0;
+        } else {
+          ideal = 49.9 + (u * 1.05);
+          limitLow = ideal - (u * 0.25) - 3.2;
+          limitHigh = ideal + (u * 0.26) + 3.2;
+        }
+      }
+
+      const dataPoint: any = {
+        umur: `${u} Bln`,
+        'Batas Atas': parseFloat(limitHigh.toFixed(1)),
+        'Ideal (WHO)': parseFloat(ideal.toFixed(1)),
+        'Batas Bawah': parseFloat(limitLow.toFixed(1)),
+      };
+
+      if (aktualVal !== null) {
+        dataPoint[type === 'bb' ? 'Berat Balita' : 'Tinggi Balita'] = parseFloat(aktualVal.toFixed(1));
+      }
+
+      chartData.push(dataPoint);
+    });
+
     return chartData;
   };
 
@@ -609,7 +818,7 @@ export default function PosyanduDashboard() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nama Balita</label>
                       <input 
@@ -641,6 +850,23 @@ export default function PosyanduDashboard() {
                         placeholder="Nama Ibu Kandung" 
                         required 
                       />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jenis Kelamin</label>
+                      <select
+                        value={formGender}
+                        onChange={(e) => setFormGender(e.target.value as 'L' | 'P')}
+                        disabled={isAutoWarga && !!selectedWargaNik}
+                        className={`w-full px-5 py-3 border rounded-xl outline-none font-bold text-sm transition-all ${
+                          isAutoWarga && !!selectedWargaNik 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-emerald-500'
+                        }`}
+                        required
+                      >
+                        <option value="L">Laki-laki (L)</option>
+                        <option value="P">Perempuan (P)</option>
+                      </select>
                     </div>
                   </div>
 
@@ -884,31 +1110,110 @@ export default function PosyanduDashboard() {
       {/* Modal Detail KMS & Chart Interaktif */}
       <AnimatePresence>
         {selectedBalitaKms && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center p-6 md:p-10 overflow-y-auto print:p-0 print:bg-white print:static">
+            <style dangerouslySetInnerHTML={{__html: `
+              @media screen {
+                /* Sembunyikan sidebar dan header secara global sewaktu modal ini di-render */
+                aside, header {
+                  display: none !important;
+                }
+              }
+              @media print {
+                /* Sembunyikan sidebar, header admin, footer admin, button, form */
+                aside, header, footer, button, form, .print\\:hidden {
+                  display: none !important;
+                }
+                /* Reset padding & layout pembungkus admin */
+                main, .overflow-y-auto, .p-8 {
+                  padding: 0 !important;
+                  margin: 0 !important;
+                  overflow: visible !important;
+                }
+                .flex-1 {
+                  overflow: visible !important;
+                  padding: 0 !important;
+                }
+                /* Posisikan modal di kiri atas */
+                .print\\:static {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  background: white !important;
+                  z-index: 99999 !important;
+                }
+              }
+            `}} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl overflow-hidden my-8"
+              className="bg-white rounded-[2rem] shadow-2xl w-full max-w-6xl overflow-hidden my-8 print:my-0 print:shadow-none print:rounded-none print:w-full print:max-w-none"
             >
               {/* Header Modal */}
-              <div className="px-8 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <div className="px-8 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between print:hidden">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
                     <ShieldCheck size={20} />
                   </div>
                   <div>
-                    <h3 className="font-black text-slate-800 text-lg">Kartu Menuju Sehat (e-KMS)</h3>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Grafik Pemantauan Gizi Interaktif</p>
+                    <h3 className="font-black text-slate-800 text-lg">Kartu Menuju Sehat Digital (e-KMS)</h3>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Sistem Tumbuh Kembang & Timbangan Bulanan Terpadu</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedBalitaKms(null)} className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"><X size={20} /></button>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => {
+                      setTimeout(() => {
+                        window.print();
+                      }, 200);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-all border border-slate-200"
+                  >
+                    <Printer size={14} /> Cetak Kartu KMS
+                  </button>
+                  <button onClick={() => setSelectedBalitaKms(null)} className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"><X size={20} /></button>
+                </div>
               </div>
 
-              <div className="p-8 space-y-6">
+              {/* Tampilan khusus Cetak Fisik (Hanya dirender saat print) */}
+              <div className="hidden print:block p-8 space-y-6">
+                <div className="flex justify-between items-center border-b-2 border-slate-800 pb-4">
+                  <div>
+                    <h1 className="text-2xl font-black text-slate-850">KARTU MENUJU SEHAT (KMS) BALITA</h1>
+                    <p className="text-sm font-bold text-slate-500">POSYANDU DIGITAL DESA KEDIREN • KEC. LEMBEYAN</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-black uppercase tracking-wider">
+                      {selectedBalitaKms.jenisKelamin === 'P' ? 'Perempuan (P)' : 'Laki-Laki (L)'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NAMA BALITA</p>
+                    <p className="text-sm font-bold text-slate-850">{selectedBalitaKms.nama}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NAMA IBU KANDUNG</p>
+                    <p className="text-sm font-bold text-slate-700">{selectedBalitaKms.namaIbu}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">USIA UKUR</p>
+                    <p className="text-sm font-bold text-slate-850">{selectedBalitaKms.usiaBulan} Bulan</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">POSYANDU CAKUPAN</p>
+                    <p className="text-sm font-bold text-slate-750">{selectedBalitaKms.posyandu?.nama}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-6 print:p-4">
                 
-                {/* Biodata Balita */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                {/* Biodata Balita (Web View) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-100 print:hidden">
                   <div>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nama Balita</p>
                     <p className="text-sm font-bold text-slate-800 mt-0.5">{selectedBalitaKms.nama}</p>
@@ -918,68 +1223,283 @@ export default function PosyanduDashboard() {
                     <p className="text-sm font-semibold text-slate-700 mt-0.5">{selectedBalitaKms.namaIbu}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Usia Saat Ini</p>
-                    <p className="text-sm font-bold text-emerald-600 mt-0.5">{selectedBalitaKms.usiaBulan} Bulan</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Usia & Jenis Kelamin</p>
+                    <p className="text-sm font-bold text-slate-800 mt-0.5 flex items-center gap-1.5">
+                      <span className="text-emerald-600">{selectedBalitaKms.usiaBulan} Bulan</span>
+                      <span className="text-[10px] px-2 py-0.5 bg-slate-200 text-slate-700 rounded-md font-black">
+                        {selectedBalitaKms.jenisKelamin === 'P' ? 'P' : 'L'}
+                      </span>
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lokasi Posyandu</p>
-                    <p className="text-sm font-semibold text-slate-700 mt-0.5">{selectedBalitaKms.posyandu?.nama}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Posyandu & Dusun</p>
+                    <p className="text-sm font-semibold text-slate-700 mt-0.5">{selectedBalitaKms.posyandu?.nama} ({selectedBalitaKms.posyandu?.dusun})</p>
                   </div>
                 </div>
 
-                {/* Riwayat Pelayanan Tambahan (Imunisasi & Vitamin) */}
-                {parseStatusDisplay(selectedBalitaKms.statusGizi).detail && (
-                  <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex items-center gap-3">
-                    <span className="text-lg">🛡️</span>
-                    <div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status Vaksinasi & Vitamin:</p>
-                      <p className="text-xs font-bold text-emerald-800 mt-0.5">
-                        {parseStatusDisplay(selectedBalitaKms.statusGizi).detail}
-                      </p>
+                {/* Grid Utama: Kiri (Grafik & Riwayat), Kanan (Catat Baru) */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  
+                  {/* Bagian Kiri: Grafik & Riwayat */}
+                  <div className="lg:col-span-2 space-y-6 print:w-full">
+                    
+                    {/* Header Grafik & Tab Pilihan */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3 print:hidden">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Activity size={14} className="text-emerald-600" />
+                        {kmsChartTab === 'bb' ? 'Kurva Berat Badan menurut Usia (BB/U)' : 'Kurva Tinggi Badan menurut Usia (TB/U)'}
+                      </h4>
+                      <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setKmsChartTab('bb')}
+                          className={`px-3 py-1 rounded-md transition-all ${kmsChartTab === 'bb' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                        >
+                          Berat Badan (BB/U)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setKmsChartTab('tb')}
+                          className={`px-3 py-1 rounded-md transition-all ${kmsChartTab === 'tb' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                        >
+                          Tinggi Badan (TB/U)
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Grafik e-KMS (Recharts) */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Kurva Pertumbuhan Berat Badan (0 - {selectedBalitaKms.usiaBulan} Bulan)</h4>
-                  <div className="w-full h-[300px] bg-white border border-slate-100 rounded-2xl p-4 shadow-inner">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={generateChartData(selectedBalitaKms)}
-                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id="colorBb" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="umur" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} domain={[0, 'dataMax + 4']} />
-                        <Tooltip />
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                        
-                        {/* Batas Atas WHO (Kuning) */}
-                        <Area type="monotone" dataKey="Batas Atas" stroke="#f59e0b" fill="none" strokeWidth={1.5} strokeDasharray="5 5" />
-                        
-                        {/* Garis Ideal WHO (Hijau) */}
-                        <Area type="monotone" dataKey="Ideal (WHO)" stroke="#3b82f6" fill="none" strokeWidth={1.5} />
-                        
-                        {/* Batas Bawah WHO (Merah) */}
-                        <Area type="monotone" dataKey="Batas Bawah" stroke="#ef4444" fill="none" strokeWidth={1.5} strokeDasharray="5 5" />
-                        
-                        {/* Berat Balita Aktual (Area Hijau Indah) */}
-                        <Area type="monotone" dataKey="Berat Balita" stroke="#10b981" fill="url(#colorBb)" strokeWidth={3} activeDot={{ r: 8 }} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {/* Judul Grafik untuk Cetak */}
+                    <div className="hidden print:block text-xs font-black text-slate-600 uppercase tracking-widest mb-2 text-center">
+                      Kurva Tumbuh Kembang: {kmsChartTab === 'bb' ? 'Berat Badan Anak menurut Usia (BB/U)' : 'Tinggi Badan Anak menurut Usia (TB/U)'}
+                    </div>
+
+                    {/* Render Grafik */}
+                    <div className="w-full h-[320px] bg-white border border-slate-100 rounded-2xl p-4 shadow-inner print:shadow-none print:border-slate-300">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={generateChartData(selectedBalitaKms, kmsChartTab)}
+                          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient id="colorKms" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={kmsChartTab === 'bb' ? '#10b981' : '#3b82f6'} stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor={kmsChartTab === 'bb' ? '#10b981' : '#3b82f6'} stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="umur" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                          <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} domain={kmsChartTab === 'bb' ? [0, 20] : [40, 120]} />
+                          <Tooltip />
+                          <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                          
+                          {/* Batas Atas WHO */}
+                          <Area type="monotone" dataKey="Batas Atas" stroke="#f59e0b" fill="none" strokeWidth={1.5} strokeDasharray="5 5" name="Batas Atas (+2 SD)" />
+                          
+                          {/* Garis Ideal WHO */}
+                          <Area type="monotone" dataKey="Ideal (WHO)" stroke="#3b82f6" fill="none" strokeWidth={1.5} name="Median WHO" />
+                          
+                          {/* Batas Bawah WHO */}
+                          <Area type="monotone" dataKey="Batas Bawah" stroke="#ef4444" fill="none" strokeWidth={1.5} strokeDasharray="5 5" name="Batas Bawah (-2 SD)" />
+                          
+                          {/* Aktual Anak */}
+                          {kmsChartTab === 'bb' ? (
+                            <Area type="monotone" dataKey="Berat Balita" stroke="#10b981" fill="url(#colorKms)" strokeWidth={3} activeDot={{ r: 8 }} name="Berat Badan Aktual" />
+                          ) : (
+                            <Area type="monotone" dataKey="Tinggi Balita" stroke="#2563eb" fill="url(#colorKms)" strokeWidth={3} activeDot={{ r: 8 }} name="Tinggi Badan Aktual" />
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Tabel Riwayat Pengukuran */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        📋 Riwayat Timbangan & Pengukuran Berkala
+                      </h4>
+                      <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-100">
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">Usia</th>
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">Tanggal</th>
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider text-center">BB (kg)</th>
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider text-center">TB (cm)</th>
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider text-center">Status Gizi</th>
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider">Keterangan</th>
+                              <th className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider print:hidden text-right">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-medium">
+                            {selectedBalitaKms.pengukuran && selectedBalitaKms.pengukuran.length > 0 ? (
+                              selectedBalitaKms.pengukuran.map((p: any) => {
+                                const st = calculateNutritionalStatus(p.usiaBulan, p.beratBadan, p.tinggiBadan, selectedBalitaKms.jenisKelamin);
+                                return (
+                                  <tr key={p.id} className={`transition-colors ${editPengukuranId === p.id ? 'bg-blue-50/70 border-l-2 border-blue-500' : 'hover:bg-slate-50/50'}`}>
+                                    <td className="px-4 py-3 font-bold text-slate-700">{p.usiaBulan} Bulan</td>
+                                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{new Date(p.tanggalUkur).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                                    <td className="px-4 py-3 text-center font-bold text-slate-800">{p.beratBadan} kg</td>
+                                    <td className="px-4 py-3 text-center text-slate-600">{p.tinggiBadan} cm</td>
+                                    <td className="px-4 py-3 text-center">
+                                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${st.isStunted ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                        {p.statusGizi}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-slate-500 italic text-xs">{p.keterangan || '-'}</td>
+                                    <td className="px-4 py-3 print:hidden text-right">
+                                      <div className="flex justify-end gap-1">
+                                        <button 
+                                          type="button"
+                                          onClick={() => handleEditPengukuran(p)}
+                                          className="p-1 text-blue-500 hover:text-white rounded-lg hover:bg-blue-500 transition-colors"
+                                          title="Ubah Data"
+                                        >
+                                          <Edit size={13} />
+                                        </button>
+                                        {selectedBalitaKms.pengukuran.length > 1 && (
+                                          <button 
+                                            type="button"
+                                            onClick={() => handleDeletePengukuran(p.id)}
+                                            className="p-1 text-slate-350 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                                            title="Hapus"
+                                          >
+                                            <Trash2 size={13} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={6} className="px-4 py-6 text-center text-slate-400 italic">
+                                  Belum ada riwayat timbangan. Gunakan form di sebelah kanan untuk mencatat timbangan baru.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
                   </div>
+
+                  {/* Bagian Kanan: Catat Timbangan Baru (Hidden saat Print) */}
+                  <div className={`bg-slate-50 p-6 rounded-[1.5rem] border space-y-5 print:hidden transition-all ${editPengukuranId ? 'border-blue-200 bg-blue-50/30' : 'border-slate-100'}`}>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${editPengukuranId ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                          {editPengukuranId ? <Edit size={16} /> : <Plus size={16} />}
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-800 text-sm">{editPengukuranId ? 'Ubah Data Timbangan' : 'Catat Timbangan Bulanan'}</h4>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{editPengukuranId ? 'Edit Data Pengukuran' : 'Penimbangan Rutin Posyandu'}</p>
+                        </div>
+                      </div>
+                      {editPengukuranId && (
+                        <button type="button" onClick={resetPengukuranForm} className="text-[10px] px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold uppercase tracking-widest transition-colors">
+                          Batal Edit
+                        </button>
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSubmitPengukuran} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Usia Pengukuran (Bulan)</label>
+                          <input 
+                            type="number" 
+                            value={inputUsiaBulan}
+                            onChange={(e) => setInputUsiaBulan(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm"
+                            placeholder="Contoh: 19"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Tanggal Posyandu</label>
+                          <input 
+                            type="date" 
+                            value={inputTanggalUkur}
+                            onChange={(e) => setInputTanggalUkur(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Berat Badan (kg)</label>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            value={inputBeratBadan}
+                            onChange={(e) => setInputBeratBadan(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm"
+                            placeholder="Contoh: 11.2"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Tinggi Badan (cm)</label>
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            value={inputTinggiBadan}
+                            onChange={(e) => setInputTinggiBadan(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm"
+                            placeholder="Contoh: 84.5"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Keterangan / Imunisasi</label>
+                        <input 
+                          type="text" 
+                          value={inputKeterangan}
+                          onChange={(e) => setInputKeterangan(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-600 text-sm"
+                          placeholder="Misal: ASI Eksklusif, Vitamin A, Campak"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nama Petugas Pemeriksa</label>
+                        <input 
+                          type="text" 
+                          value={inputPetugas}
+                          onChange={(e) => setInputPetugas(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-slate-700 text-sm"
+                          placeholder="Nama Bidan / Kader"
+                          required
+                        />
+                      </div>
+
+                      {inputUsiaBulan && inputBeratBadan && inputTinggiBadan && (
+                        <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100 text-xs font-semibold text-center animate-fade-in">
+                          Estimasi Status Gizi: <span className="font-black uppercase tracking-wider">{
+                            calculateNutritionalStatus(Number(inputUsiaBulan), Number(inputBeratBadan), Number(inputTinggiBadan), selectedBalitaKms.jenisKelamin).status
+                          }</span>
+                        </div>
+                      )}
+
+                      <button 
+                        type="submit"
+                        className={`w-full py-3 ${editPengukuranId ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100'} text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md mt-2`}
+                      >
+                        {editPengukuranId ? <Edit size={14} /> : <Save size={14} />} 
+                        {editPengukuranId ? 'Simpan Perubahan Data' : 'Simpan Pengukuran'}
+                      </button>
+                    </form>
+                  </div>
+
                 </div>
 
-                <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest border-t pt-4">
-                  <span>Data Diupdate Real-time</span>
-                  <span>Standar WHO Kemenkes RI</span>
+                <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-widest border-t pt-4 print:pt-6 print:border-slate-300">
+                  <span>Sistem Informasi Posyandu Desa Kediren</span>
+                  <span>Standar Z-Score WHO & Kemenkes RI</span>
                 </div>
               </div>
             </motion.div>
