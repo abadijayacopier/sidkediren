@@ -100,8 +100,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: 
 
         <SidebarLink href="/admin/settings/transparansi" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/settings/transparansi')} isCollapsed={isCollapsed} />
         
-        {/* FIX BUG-11: Add visually disabled links for missing features */}
-        <SidebarLink href="#" icon={<Map size={20} />} label="Pemetaan GIS" isCollapsed={isCollapsed} disabled />
+        {/* FIX BUG-11: Activated missing features */}
+        <SidebarLink href="/admin/gis" icon={<Map size={20} />} label="Pemetaan GIS" active={pathname.startsWith('/admin/gis')} isCollapsed={isCollapsed} />
 
         {!isCollapsed ? (
           <div className="pt-6 mb-1">
@@ -111,7 +111,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: 
           <div className="h-px bg-slate-100 my-4 mx-2" />
         )}
         <SidebarLink href="/admin/settings/potensi" icon={<Store size={20} />} label="UMKM & Wisata" active={pathname.startsWith('/admin/settings/potensi')} isCollapsed={isCollapsed} />
-        <SidebarLink href="#" icon={<HeartPulse size={20} />} label="PKK & Posyandu" isCollapsed={isCollapsed} disabled />
+        <SidebarLink href="/admin/pkk" icon={<HeartPulse size={20} />} label="PKK & Posyandu" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} />
       </nav>
 
       <div className="p-4 border-t border-slate-100 space-y-1 bg-white">
