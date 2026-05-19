@@ -45,11 +45,6 @@ export default function PkkDashboard() {
                <FileText size={16} /> Log Kegiatan
              </button>
            </Link>
-           <Link href="/admin/pkk/pokja4">
-             <button className="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-amber-100 transition-all">
-               <BookOpen size={16} /> Buku Baku Pokja IV
-             </button>
-           </Link>
            <Link href="/admin/settings/pkk">
              <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800 shadow-sm transition-all shadow-slate-200">
                <Settings size={16} /> Pengaturan Kader
@@ -95,7 +90,6 @@ export default function PkkDashboard() {
           <p className="text-slate-500 text-xs mt-1 font-semibold">Silakan pilih bidang kegiatan PKK untuk melihat log aktivitas khusus masing-masing bidang.</p>
         </div>
       </div>
-
       {/* Grid Pokja & Dasawisma Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
         
@@ -113,6 +107,7 @@ export default function PkkDashboard() {
           ]}
           actionLink="/admin/pkk/pokja1"
           actionText="Buka Kegiatan Pokja I"
+          themeColor="sky"
         />
 
         {/* POKJA II */}
@@ -129,6 +124,7 @@ export default function PkkDashboard() {
           ]}
           actionLink="/admin/pkk/pokja2"
           actionText="Buka Kegiatan Pokja II"
+          themeColor="emerald"
         />
 
         {/* POKJA III */}
@@ -145,6 +141,7 @@ export default function PkkDashboard() {
           ]}
           actionLink="/admin/pkk/pokja3"
           actionText="Buka Kegiatan Pokja III"
+          themeColor="amber"
         />
 
         {/* POKJA IV */}
@@ -161,7 +158,7 @@ export default function PkkDashboard() {
           ]}
           actionLink="/admin/pkk/pokja4"
           actionText="Kelola Buku Baku Pokja IV"
-          isHighlight={true}
+          themeColor="rose"
         />
 
         {/* DASAWISMA */}
@@ -178,6 +175,7 @@ export default function PkkDashboard() {
           ]}
           actionLink="/admin/pkk/dasawisma"
           actionText="Kelola Kelompok Dasawisma"
+          themeColor="teal"
         />
 
         {/* POSYANDU LINK */}
@@ -194,6 +192,7 @@ export default function PkkDashboard() {
           ]}
           actionLink="/admin/posyandu"
           actionText="Buka Modul e-KMS Posyandu"
+          themeColor="blue"
         />
 
       </div>
@@ -215,7 +214,42 @@ function StatCard({ icon, label, value, suffix, color, textColor }: any) {
   );
 }
 
-function PokjaCard({ colorClass, icon, iconColorClass, title, description, items, actionLink, actionText, isHighlight = false }: any) {
+function PokjaCard({ colorClass, icon, iconColorClass, title, description, items, actionLink, actionText, themeColor = 'rose' }: any) {
+  const themeStyles: Record<string, { titleHover: string, bulletHover: string, button: string }> = {
+    sky: {
+      titleHover: 'group-hover:text-sky-600',
+      bulletHover: 'group-hover:bg-sky-500',
+      button: 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-600 hover:text-white hover:border-sky-600 shadow-sky-50/50'
+    },
+    emerald: {
+      titleHover: 'group-hover:text-emerald-600',
+      bulletHover: 'group-hover:bg-emerald-500',
+      button: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 shadow-emerald-50/50'
+    },
+    amber: {
+      titleHover: 'group-hover:text-amber-700',
+      bulletHover: 'group-hover:bg-amber-500',
+      button: 'bg-amber-50 text-amber-750 border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600 shadow-amber-50/50'
+    },
+    rose: {
+      titleHover: 'group-hover:text-rose-600',
+      bulletHover: 'group-hover:bg-rose-500',
+      button: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 shadow-rose-50/50'
+    },
+    teal: {
+      titleHover: 'group-hover:text-teal-600',
+      bulletHover: 'group-hover:bg-teal-500',
+      button: 'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-600 hover:text-white hover:border-teal-600 shadow-teal-50/50'
+    },
+    blue: {
+      titleHover: 'group-hover:text-blue-600',
+      bulletHover: 'group-hover:bg-blue-500',
+      button: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-blue-50/50'
+    }
+  };
+
+  const style = themeStyles[themeColor] || themeStyles.rose;
+
   return (
     <div className={`bg-white border rounded-[2.5rem] p-7 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group hover:-translate-y-1 transform duration-300 ${colorClass}`}>
       <div className="space-y-4">
@@ -223,9 +257,9 @@ function PokjaCard({ colorClass, icon, iconColorClass, title, description, items
           {icon}
         </div>
         <div>
-          <h3 className="font-bold text-slate-800 text-sm group-hover:text-rose-600 transition-colors flex items-center gap-2">
+          <h3 className={`font-bold text-slate-800 text-sm transition-colors flex items-center gap-2 ${style.titleHover}`}>
             {title}
-            {isHighlight && (
+            {themeColor === 'rose' && (
               <span className="px-2 py-0.5 text-[8px] font-black uppercase bg-rose-100 text-rose-600 rounded-md">Buku Baku</span>
             )}
           </h3>
@@ -237,7 +271,7 @@ function PokjaCard({ colorClass, icon, iconColorClass, title, description, items
         <div className="space-y-2 pt-2 border-t border-slate-50">
           {items.map((item: string, idx: number) => (
             <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-slate-600 leading-normal">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0 group-hover:bg-rose-500 transition-colors" />
+              <span className={`w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0 transition-colors ${style.bulletHover}`} />
               <span>{item}</span>
             </div>
           ))}
@@ -246,11 +280,7 @@ function PokjaCard({ colorClass, icon, iconColorClass, title, description, items
 
       <div className="pt-6">
         <Link href={actionLink} className="block w-full">
-          <button className={`w-full py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 border ${
-            isHighlight 
-              ? 'bg-rose-600 text-white border-rose-600 hover:bg-rose-700 shadow-md shadow-rose-100' 
-              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100'
-          }`}>
+          <button className={`w-full py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 border shadow-sm hover:shadow-md ${style.button}`}>
             {actionText} <ArrowUpRight size={14} />
           </button>
         </Link>

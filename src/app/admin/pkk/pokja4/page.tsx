@@ -1,21 +1,22 @@
 'use client';
-
+ 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   BookOpen, FileText, Calendar, Users, MapPin, Plus, Search, Edit3, Trash2, X, Save, 
-  ArrowLeft, CheckSquare, Printer, ChevronRight, Check, AlertCircle, Info
+  ArrowLeft, CheckSquare, Printer, ChevronRight, Check, AlertCircle, Info, Heart, Shield, Award
 } from 'lucide-react';
 import { 
   getKaderPkkList, seedPkkData,
   getBukuProgramKerjaList, saveBukuProgramKerja, deleteBukuProgramKerja,
   getBukuPelaksanaanList, saveBukuPelaksanaan, deleteBukuPelaksanaan,
   getBukuKegiatanList, saveBukuKegiatan, deleteBukuKegiatan,
-  getBukuNotulenList, saveBukuNotulen, deleteBukuNotulen
+  getBukuNotulenList, saveBukuNotulen, deleteBukuNotulen,
+  getPusWusData
 } from '@/app/actions/pkk';
 import Swal from 'sweetalert2';
 
-type TabType = 'program' | 'pelaksanaan' | 'kegiatan' | 'notulen';
+type TabType = 'program' | 'pelaksanaan' | 'kegiatan' | 'notulen' | 'laporan';
 
 export default function PokjaIVBukuBakuPage() {
   const [activeTab, setActiveTab] = useState<TabType>('program');
@@ -27,12 +28,23 @@ export default function PokjaIVBukuBakuPage() {
   const [pelaksanaanList, setPelaksanaanList] = useState<any[]>([]);
   const [kegiatanList, setKegiatanList] = useState<any[]>([]);
   const [notulenList, setNotulenList] = useState<any[]>([]);
+  
+  // Dynamic report lists
+  const [pusWusData, setPusWusData] = useState<{ wus: any[], pus: any[], balitaStats: any, dusunStats?: any[] }>({ 
+    wus: [], 
+    pus: [], 
+    balitaStats: { total: 0, stunting: 0, giziKurang: 0, giziBuruk: 0, normal: 0 },
+    dusunStats: []
+  });
+  const [activeReportSubTab, setActiveReportSubTab] = useState<'pus' | 'wus' | 'balita' | 'sanitasi'>('pus');
+  const [selectedDusunFilter, setSelectedDusunFilter] = useState<string>('ALL');
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals
   const [showModal, setShowModal] = useState(false);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
 
   // --- FORM STATES ---
@@ -102,6 +114,11 @@ export default function PokjaIVBukuBakuPage() {
 
       const b4 = await getBukuNotulenList() as any[];
       setNotulenList(b4);
+
+      const reportData = await getPusWusData() as any;
+      if (reportData) {
+        setPusWusData(reportData);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -112,6 +129,66 @@ export default function PokjaIVBukuBakuPage() {
   useEffect(() => {
     loadAllData();
   }, []);
+
+  const getUniqueDusuns = () => {
+    const list = new Set<string>();
+    pusWusData.pus.forEach((item: any) => {
+      if (item.dusun) list.add(item.dusun.trim().toUpperCase());
+    });
+    pusWusData.wus.forEach((item: any) => {
+      if (item.dusun) list.add(item.dusun.trim().toUpperCase());
+    });
+    return Array.from(list);
+  };
+
+  const getFilteredPusData = () => {
+    if (selectedDusunFilter === 'ALL') return pusWusData.pus;
+    return pusWusData.pus.filter((item: any) => item.dusun && item.dusun.trim().toUpperCase() === selectedDusunFilter.toUpperCase());
+  };
+
+  const getFilteredWusData = () => {
+    if (selectedDusunFilter === 'ALL') return pusWusData.wus;
+    return pusWusData.wus.filter((item: any) => item.dusun && item.dusun.trim().toUpperCase() === selectedDusunFilter.toUpperCase());
+  };
+
+  const handlePrint = () => {
+    const printContent = document.getElementById('report-print-preview-content');
+    const windowUrl = 'about:blank';
+    const uniqueName = new Date().getTime();
+    const windowName = 'Print' + uniqueName;
+    const printWindow = window.open(windowUrl, windowName, 'left=0,top=0,width=1100,height=800,toolbar=0,scrollbars=0,status=0');
+    
+    if (printWindow && printContent) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>LAPORAN POKJA IV - TP PKK KEDIREN</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @media print {
+                @page { size: portrait; margin: 1.5cm; }
+                body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+              }
+              body { font-family: 'Times New Roman', Times, serif; }
+              table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 11px; }
+              th { background-color: #f8fafc; font-weight: bold; }
+            </style>
+          </head>
+          <body class="bg-white p-6">
+            ${printContent.innerHTML}
+            <script>
+              window.onload = () => {
+                window.print();
+                window.onafterprint = () => window.close();
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   const resetForm = () => {
     setEditId(null);
@@ -404,9 +481,11 @@ export default function PokjaIVBukuBakuPage() {
             <button onClick={() => window.print()} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition text-sm">
               <Printer className="w-4 h-4" /> Cetak Buku
             </button>
-            <button onClick={handleOpenAdd} className="bg-white text-rose-800 hover:bg-rose-50 px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm transition text-sm">
-              <Plus className="w-4 h-4" /> Tambah Data
-            </button>
+            {activeTab !== 'laporan' && (
+              <button onClick={handleOpenAdd} className="bg-white text-rose-800 hover:bg-rose-50 px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm transition text-sm">
+                <Plus className="w-4 h-4" /> Tambah Data
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -428,6 +507,7 @@ export default function PokjaIVBukuBakuPage() {
             { id: 'pelaksanaan', label: 'Buku 2: Pelaksanaan Kerja', desc: 'Realisasi & evaluasi program', icon: CheckSquare },
             { id: 'kegiatan', label: 'Buku 3: Log Kegiatan', desc: 'Buku catatan peristiwa khusus', icon: Calendar },
             { id: 'notulen', label: 'Buku 4: Notulen Rapat', desc: 'Hasil pleno & rapat koordinasi', icon: Users },
+            { id: 'laporan', label: 'e-Laporan & Buku Bantu', desc: 'Laporan PUS/WUS & KMS otomatis', icon: FileText },
           ].map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -452,16 +532,18 @@ export default function PokjaIVBukuBakuPage() {
         </div>
 
         {/* Search */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm mb-6 print:hidden">
-          <Search className="w-5 h-5 text-slate-400 shrink-0" />
-          <input 
-            type="text" 
-            placeholder={`Cari data berdasarkan nama kegiatan, program pokok, pelaksana...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-sm focus:outline-none text-slate-800 placeholder-slate-400"
-          />
-        </div>
+        {activeTab !== 'laporan' && (
+          <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm mb-6 print:hidden">
+            <Search className="w-5 h-5 text-slate-400 shrink-0" />
+            <input 
+              type="text" 
+              placeholder={`Cari data berdasarkan nama kegiatan, program pokok, pelaksana...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-transparent text-sm focus:outline-none text-slate-800 placeholder-slate-400"
+            />
+          </div>
+        )}
 
         {/* Loading State */}
         {loading ? (
@@ -680,6 +762,324 @@ export default function PokjaIVBukuBakuPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            )}            {/* 5. RENDER TAB e-LAPORAN OTOMATIS */}
+            {activeTab === 'laporan' && (
+              <div className="p-6">
+                {/* Print-Only Professional Header */}
+                <div className="hidden print:block text-center border-b-4 double border-slate-900 pb-4 mb-8">
+                  <h2 className="text-xl font-black uppercase text-slate-900 tracking-tight">TIM PENGGERAK PKK DESA KEDIREN</h2>
+                  <h3 className="text-base font-bold uppercase text-slate-700 mt-1">POKJA IV (KESEHATAN, KELESTARIAN LINGKUNGAN, PERENCANAAN SEHAT)</h3>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-1">
+                    {activeReportSubTab === 'pus' && 'LAPORAN REKAPITULASI PASANGAN USIA SUBUR (PUS)'}
+                    {activeReportSubTab === 'wus' && 'LAPORAN REKAPITULASI WANITA USIA SUBUR (WUS)'}
+                    {activeReportSubTab === 'balita' && 'REKAPITULASI POSYANDU & PERKEMBANGAN KMS BALITA'}
+                    {activeReportSubTab === 'sanitasi' && 'REKAPITULASI CAKUPAN RUMAH & SANITASI DASAR SEHAT'}
+                  </h4>
+                  {selectedDusunFilter !== 'ALL' && (
+                    <p className="text-xs font-bold text-slate-700 mt-2 uppercase">WILAYAH DUSUN: {selectedDusunFilter}</p>
+                  )}
+                </div>
+
+                {/* Sub-tab Selection */}
+                <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-4 mb-6 print:hidden">
+                  <button
+                    onClick={() => { setActiveReportSubTab('pus'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'pus'
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Heart size={14} /> Pasangan Usia Subur (PUS)
+                  </button>
+                  <button
+                    onClick={() => { setActiveReportSubTab('wus'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'wus'
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Shield size={14} /> Wanita Usia Subur (WUS)
+                  </button>
+                  <button
+                    onClick={() => { setActiveReportSubTab('balita'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'balita'
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Award size={14} /> e-KMS & Tumbuh Kembang Balita
+                  </button>
+                  <button
+                    onClick={() => { setActiveReportSubTab('sanitasi'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'sanitasi'
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <MapPin size={14} /> Sanitasi & Lingkungan Sehat
+                  </button>
+                </div>
+
+                {/* Print & Filter Toolbar */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 print:hidden">
+                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Filter Wilayah Dusun:</span>
+                    {(activeReportSubTab === 'pus' || activeReportSubTab === 'wus') ? (
+                      <select
+                        value={selectedDusunFilter}
+                        onChange={(e) => setSelectedDusunFilter(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 w-full sm:w-44"
+                      >
+                        <option value="ALL">Semua Dusun (Kediren)</option>
+                        {getUniqueDusuns().map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-400 italic">Filter wilayah tidak berlaku untuk rekap agregat</span>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => setShowPrintPreview(true)}
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center gap-2 w-full sm:w-auto justify-center"
+                  >
+                    <Printer size={14} /> Cetak Laporan Fisik
+                  </button>
+                </div>
+
+                {/* Content based on sub-tab */}
+                {activeReportSubTab === 'pus' && (
+                  <div className="space-y-6">
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+                      <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 p-5 rounded-2xl">
+                        <span className="text-slate-500 font-bold text-xs uppercase block">Total PUS Terdaftar</span>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-3xl font-black text-rose-800">{getFilteredPusData().length}</span>
+                          <span className="text-xs text-rose-600 font-bold">Pasangan</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">Istri berusia 15-49 tahun & berstatus Kawin.</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl md:col-span-2">
+                        <h5 className="font-bold text-slate-800 text-xs uppercase flex items-center gap-1.5"><Info size={14} className="text-rose-500" /> Informasi PUS (Pasangan Usia Subur)</h5>
+                        <p className="text-xs text-slate-600 leading-relaxed mt-2">
+                          Pasangan Usia Subur (PUS) adalah pasangan suami-istri yang istrinya berumur antara 15 sampai dengan 49 tahun. Data ini ditarik secara **otomatis dan real-time** dari database kependudukan berdasarkan Kartu Keluarga (KK). Digunakan sebagai acuan program Keluarga Berencana (KB) sehat.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden print:border-slate-300">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 print:bg-slate-100 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                            <th className="px-4 py-3 border w-12 text-center">No</th>
+                            <th className="px-4 py-3 border">Nama Istri</th>
+                            <th className="px-4 py-3 border text-center w-16">Usia</th>
+                            <th className="px-4 py-3 border">Nama Suami</th>
+                            <th className="px-4 py-3 border">No KK</th>
+                            <th className="px-4 py-3 border">Dusun</th>
+                            <th className="px-4 py-3 border text-center w-20">RT / RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredPusData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Belum ada warga berstatus PUS terdeteksi di database.</td>
+                            </tr>
+                          ) : (
+                            getFilteredPusData().map((item, idx) => (
+                              <tr key={item.wifeNik} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-rose-900 print:text-slate-900">{item.wifeNama}</td>
+                                <td className="px-4 py-3 border text-center font-bold text-slate-700 bg-rose-50/30 print:bg-transparent">{item.wifeUsia} th</td>
+                                <td className="px-4 py-3 border font-bold text-slate-800">{item.husbandNama}</td>
+                                <td className="px-4 py-3 border text-slate-500 font-mono">{item.noKk}</td>
+                                <td className="px-4 py-3 border text-slate-600 font-medium">{item.dusun}</td>
+                                <td className="px-4 py-3 border text-center text-slate-600 font-bold">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {activeReportSubTab === 'wus' && (
+                  <div className="space-y-6">
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+                      <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 p-5 rounded-2xl">
+                        <span className="text-slate-500 font-bold text-xs uppercase block">Total WUS Terdaftar</span>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-3xl font-black text-rose-800">{getFilteredWusData().length}</span>
+                          <span className="text-xs text-rose-600 font-bold">Jiwa</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">Seluruh perempuan berusia 15-49 tahun.</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl md:col-span-2">
+                        <h5 className="font-bold text-slate-800 text-xs uppercase flex items-center gap-1.5"><Info size={14} className="text-rose-500" /> Informasi WUS (Wanita Usia Subur)</h5>
+                        <p className="text-xs text-slate-600 leading-relaxed mt-2">
+                          Wanita Usia Subur (WUS) adalah wanita yang keadaan organ reproduksinya berfungsi dengan baik antara umur 15-49 tahun. Baik yang sudah berstatus menikah, belum menikah, janda cerai maupun janda mati. Berguna untuk pelacakan imunisasi TT (Tetanus Toksoid) WUS dan pencegahan anemia sejak dini.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden print:border-slate-300">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 print:bg-slate-100 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                            <th className="px-4 py-3 border w-12 text-center">No</th>
+                            <th className="px-4 py-3 border">Nama Lengkap</th>
+                            <th className="px-4 py-3 border text-center w-16">Usia</th>
+                            <th className="px-4 py-3 border">Status Perkawinan</th>
+                            <th className="px-4 py-3 border">No KK</th>
+                            <th className="px-4 py-3 border">Dusun</th>
+                            <th className="px-4 py-3 border text-center w-20">RT / RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredWusData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Belum ada warga berstatus WUS terdeteksi di database.</td>
+                            </tr>
+                          ) : (
+                            getFilteredWusData().map((item, idx) => (
+                              <tr key={item.nik} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-rose-900 print:text-slate-900">{item.nama}</td>
+                                <td className="px-4 py-3 border text-center font-bold text-slate-700 bg-rose-50/30 print:bg-transparent">{item.usia} th</td>
+                                <td className="px-4 py-3 border text-slate-650 font-bold">{item.statusPerkawinan}</td>
+                                <td className="px-4 py-3 border text-slate-500 font-mono">{item.noKk}</td>
+                                <td className="px-4 py-3 border text-slate-600 font-medium">{item.dusun}</td>
+                                <td className="px-4 py-3 border text-center text-slate-600 font-bold">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {activeReportSubTab === 'balita' && (
+                  <div className="space-y-6">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center">
+                        <span className="text-slate-400 font-bold text-[10px] uppercase block">Total Balita</span>
+                        <span className="text-2xl font-black text-slate-800 block mt-1">{pusWusData.balitaStats.total}</span>
+                        <span className="text-[10px] text-slate-500 font-medium">Anak Terdaftar</span>
+                      </div>
+                      <div className="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl text-center">
+                        <span className="text-emerald-600 font-bold text-[10px] uppercase block">Gizi Normal</span>
+                        <span className="text-2xl font-black text-emerald-700 block mt-1">{pusWusData.balitaStats.normal}</span>
+                        <span className="text-[10px] text-emerald-600 font-medium">Tumbuh Optimal</span>
+                      </div>
+                      <div className="bg-amber-50/50 border border-amber-100 p-4 rounded-xl text-center">
+                        <span className="text-amber-600 font-bold text-[10px] uppercase block">Gizi Kurang</span>
+                        <span className="text-2xl font-black text-amber-700 block mt-1">{pusWusData.balitaStats.giziKurang}</span>
+                        <span className="text-[10px] text-amber-500 font-medium">Butuh PMT</span>
+                      </div>
+                      <div className="bg-red-50/50 border border-red-100 p-4 rounded-xl text-center">
+                        <span className="text-red-600 font-bold text-[10px] uppercase block">Gizi Buruk</span>
+                        <span className="text-2xl font-black text-red-700 block mt-1">{pusWusData.balitaStats.giziBuruk}</span>
+                        <span className="text-[10px] text-red-500 font-medium">Atensi Khusus</span>
+                      </div>
+                      <div className="bg-rose-50/50 border border-rose-100 p-4 rounded-xl text-center col-span-2 md:col-span-1">
+                        <span className="text-rose-600 font-bold text-[10px] uppercase block">Indikasi Stunting</span>
+                        <span className="text-2xl font-black text-rose-700 block mt-1">{pusWusData.balitaStats.stunting}</span>
+                        <span className="text-[10px] text-rose-500 font-medium">Tinggi Kurang</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl flex items-start gap-3 print:hidden">
+                      <Info className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="font-bold text-slate-800 text-xs uppercase">Integrasi Digital Posyandu e-KMS</h5>
+                        <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                          Statistik tumbuh kembang anak di atas merupakan rekapitulasi dinamis dari modul **e-KMS Posyandu Desa Kediren**. Setiap bulan, ketika kader mengukur tinggi badan, berat badan, dan lingkar kepala balita, data akan langsung diproses oleh sistem untuk menilai status gizi (Normal, Kurang, Buruk, Stunting) secara ilmiah menggunakan standar WHO. Sangat akurat dan tidak memerlukan pembukuan manual yang tebal!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeReportSubTab === 'sanitasi' && (
+                  <div className="space-y-6">
+                    {/* Intro */}
+                    <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 p-5 rounded-2xl flex items-start gap-3.5 print:hidden">
+                      <MapPin size={22} className="text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-rose-600 font-bold text-xs uppercase tracking-wider block">Kelestarian Lingkungan Hidup Pokja IV</span>
+                        <h4 className="text-slate-800 font-black text-base mt-0.5">Rekapitulasi Cakupan Rumah & Sanitasi Sehat</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mt-1.5">
+                          Data di bawah ini menunjukkan tingkat kepemilikan sarana sanitasi dasar sehat (Jamban Sehat, SPAL, dan Air Bersih Layak) di Desa Kediren. Data ini diperbarui secara dinamis mengikuti jumlah Kartu Keluarga (KK) terdaftar di masing-masing dusun untuk memastikan capaian SDGs Desa tercapai optimal.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden print:border-slate-300">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 print:bg-slate-100 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                            <th className="px-4 py-3 border w-12 text-center">No</th>
+                            <th className="px-4 py-3 border">Nama Dusun</th>
+                            <th className="px-4 py-3 border text-center w-24 bg-slate-100/50">Total KK</th>
+                            <th className="px-4 py-3 border text-center w-32 text-emerald-700">Jamban Sehat</th>
+                            <th className="px-4 py-3 border text-center w-32 text-blue-700">Saluran Air (SPAL)</th>
+                            <th className="px-4 py-3 border text-center w-32 text-teal-700">Akses Air Bersih</th>
+                            <th className="px-4 py-3 border text-center w-32 text-amber-700">Keluarga PHBS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pusWusData.dusunStats && pusWusData.dusunStats.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Belum ada data dusun terdeteksi.</td>
+                            </tr>
+                          ) : (
+                            pusWusData.dusunStats?.map((item, idx) => (
+                              <tr key={item.dusun} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-slate-800 uppercase">{item.dusun}</td>
+                                <td className="px-4 py-3 border text-center font-black text-slate-700 bg-slate-100/30">{item.totalKk} KK</td>
+                                <td className="px-4 py-3 border text-center text-emerald-700 font-bold bg-emerald-50/20">{item.jambanSehat} KK ({Math.round((item.jambanSehat / item.totalKk) * 100)}%)</td>
+                                <td className="px-4 py-3 border text-center text-blue-700 font-bold bg-blue-50/20">{item.spal} KK ({Math.round((item.spal / item.totalKk) * 100)}%)</td>
+                                <td className="px-4 py-3 border text-center text-teal-700 font-bold bg-teal-50/20">{item.airBersih} KK ({Math.round((item.airBersih / item.totalKk) * 100)}%)</td>
+                                <td className="px-4 py-3 border text-center text-amber-700 font-bold bg-amber-50/20">{item.phbs} KK ({Math.round((item.phbs / item.totalKk) * 100)}%)</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Print-Only Signature Block */}
+                <div className="hidden print:block mt-12 grid grid-cols-2 text-center text-xs">
+                  <div>
+                    <p>Mengetahui,</p>
+                    <p className="font-bold mt-1">Ketua TP PKK Desa Kediren</p>
+                    <div className="h-20"></div>
+                    <p className="font-bold underline">( ___________________________ )</p>
+                  </div>
+                  <div>
+                    <p>Kediren, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                    <p className="font-bold mt-1">Kader Pokja IV</p>
+                    <div className="h-20"></div>
+                    <p className="font-bold underline">( ___________________________ )</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1203,6 +1603,213 @@ export default function PokjaIVBukuBakuPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- PRINT PREVIEW MODAL --- */}
+      {showPrintPreview && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-100 rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden flex flex-col my-8 max-h-[90vh]">
+            {/* Toolbar Header */}
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
+              <div className="flex items-center gap-2">
+                <Printer size={18} className="text-rose-500 animate-pulse" />
+                <div>
+                  <h3 className="text-sm font-black text-white">Pratinjau Laporan Fisik Pokja IV</h3>
+                  <p className="text-[10px] text-slate-400">Pastikan format cetak sesuai kertas A4 sebelum mencetak</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrint}
+                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md transition flex items-center gap-2"
+                >
+                  <Printer size={14} /> Cetak Sekarang
+                </button>
+                <button 
+                  onClick={() => setShowPrintPreview(false)} 
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-3 py-2 rounded-xl transition"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+
+            {/* A4 Sheet Mockup Container */}
+            <div className="p-8 overflow-y-auto bg-slate-200/40 flex justify-center items-start flex-1">
+              <div 
+                id="report-print-preview-content"
+                className="bg-white p-10 sm:p-14 w-full max-w-[21cm] min-h-[29.7cm] shadow-xl border border-slate-350 rounded-sm text-slate-800 text-xs flex flex-col justify-between"
+                style={{ fontFamily: 'Times New Roman, Times, serif' }}
+              >
+                <div>
+                  {/* Kop Surat Dinas TP PKK */}
+                  <div className="text-center border-b-4 double border-slate-900 pb-3 mb-6">
+                    <h2 className="text-lg font-black uppercase text-slate-900 tracking-tight leading-tight">TIM PENGGERAK PKK DESA KEDIREN</h2>
+                    <h3 className="text-xs font-bold uppercase text-slate-700 mt-1">POKJA IV (KESEHATAN, KELESTARIAN LINGKUNGAN, PERENCANAAN SEHAT)</h3>
+                    <div className="h-0.5 bg-slate-900 my-1"></div>
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800 mt-1 underline">
+                      {activeReportSubTab === 'pus' && 'LAPORAN REKAPITULASI PASANGAN USIA SUBUR (PUS)'}
+                      {activeReportSubTab === 'wus' && 'LAPORAN REKAPITULASI WANITA USIA SUBUR (WUS)'}
+                      {activeReportSubTab === 'balita' && 'REKAPITULASI POSYANDU & PERKEMBANGAN KMS BALITA'}
+                      {activeReportSubTab === 'sanitasi' && 'REKAPITULASI CAKUPAN RUMAH & SANITASI DASAR SEHAT'}
+                    </h4>
+                    {selectedDusunFilter !== 'ALL' && (
+                      <p className="text-[10px] font-black text-slate-700 mt-1 uppercase">WILAYAH DUSUN: {selectedDusunFilter}</p>
+                    )}
+                  </div>
+
+                  {/* Print Content based on active tab */}
+                  {activeReportSubTab === 'pus' && (
+                    <div className="space-y-4">
+                      <table className="w-full border-collapse border border-slate-400 text-[10px]">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold uppercase">
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-8">No</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Nama Istri</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-12">Usia</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Nama Suami</th>
+                            <th className="border border-slate-400 px-2 py-1.5">No KK</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Dusun</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-16">RT/RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredPusData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-6 text-slate-400">Tidak ada data pasangan usia subur.</td>
+                            </tr>
+                          ) : (
+                            getFilteredPusData().map((item, idx) => (
+                              <tr key={item.wifeNik}>
+                                <td className="border border-slate-400 px-2 py-1.5 text-center">{idx + 1}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 font-bold">{item.wifeNama}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 text-center">{item.wifeUsia} th</td>
+                                <td className="border border-slate-400 px-2 py-1.5">{item.husbandNama}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 font-mono">{item.noKk}</td>
+                                <td className="border border-slate-400 px-2 py-1.5">{item.dusun}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 text-center">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {activeReportSubTab === 'wus' && (
+                    <div className="space-y-4">
+                      <table className="w-full border-collapse border border-slate-400 text-[10px]">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold uppercase">
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-8">No</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Nama Lengkap</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-12">Usia</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Status Perkawinan</th>
+                            <th className="border border-slate-400 px-2 py-1.5">No KK</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Dusun</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-16">RT/RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredWusData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-6 text-slate-400">Tidak ada data wanita usia subur.</td>
+                            </tr>
+                          ) : (
+                            getFilteredWusData().map((item, idx) => (
+                              <tr key={item.nik}>
+                                <td className="border border-slate-400 px-2 py-1.5 text-center">{idx + 1}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 font-bold">{item.nama}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 text-center">{item.usia} th</td>
+                                <td className="border border-slate-400 px-2 py-1.5">{item.statusPerkawinan}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 font-mono">{item.noKk}</td>
+                                <td className="border border-slate-400 px-2 py-1.5">{item.dusun}</td>
+                                <td className="border border-slate-400 px-2 py-1.5 text-center">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {activeReportSubTab === 'balita' && (
+                    <div className="space-y-6">
+                      <div className="bg-slate-50 p-4 border border-slate-300 rounded">
+                        <h5 className="font-bold text-center underline uppercase mb-3">RINGKASAN STATUS GIZI BALITA DESA KEDIREN</h5>
+                        <div className="grid grid-cols-2 gap-4 text-center">
+                          <div className="border border-slate-300 p-2">
+                            <span className="font-bold block">Total Balita</span>
+                            <span className="text-lg font-black">{pusWusData.balitaStats.total} Anak</span>
+                          </div>
+                          <div className="border border-slate-300 p-2">
+                            <span className="font-bold text-emerald-800 block">Status Gizi Normal</span>
+                            <span className="text-lg font-black text-emerald-800">{pusWusData.balitaStats.normal} Anak</span>
+                          </div>
+                          <div className="border border-slate-300 p-2">
+                            <span className="font-bold text-amber-800 block">Status Gizi Kurang</span>
+                            <span className="text-lg font-black text-amber-800">{pusWusData.balitaStats.giziKurang} Anak</span>
+                          </div>
+                          <div className="border border-slate-300 p-2">
+                            <span className="font-bold text-rose-800 block">Indikasi Stunting</span>
+                            <span className="text-lg font-black text-rose-800">{pusWusData.balitaStats.stunting} Anak</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeReportSubTab === 'sanitasi' && (
+                    <div className="space-y-4">
+                      <table className="w-full border-collapse border border-slate-400 text-[10px]">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold uppercase">
+                            <th className="border border-slate-400 px-2 py-1.5 text-center w-8">No</th>
+                            <th className="border border-slate-400 px-2 py-1.5">Nama Dusun</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center">Total KK</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center">Jamban Sehat</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center">SPAL Sehat</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center">Air Bersih</th>
+                            <th className="border border-slate-400 px-2 py-1.5 text-center">Keluarga PHBS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pusWusData.dusunStats?.map((item, idx) => (
+                            <tr key={item.dusun}>
+                              <td className="border border-slate-400 px-2 py-1.5 text-center">{idx + 1}</td>
+                              <td className="border border-slate-400 px-2 py-1.5 font-bold uppercase">{item.dusun}</td>
+                              <td className="border border-slate-400 px-2 py-1.5 text-center font-bold">{item.totalKk} KK</td>
+                              <td className="border border-slate-400 px-2 py-1.5 text-center">{item.jambanSehat} KK ({Math.round((item.jambanSehat / item.totalKk) * 100)}%)</td>
+                              <td className="border border-slate-400 px-2 py-1.5 text-center">{item.spal} KK ({Math.round((item.spal / item.totalKk) * 100)}%)</td>
+                              <td className="border border-slate-400 px-2 py-1.5 text-center">{item.airBersih} KK ({Math.round((item.airBersih / item.totalKk) * 100)}%)</td>
+                              <td className="border border-slate-400 px-2 py-1.5 text-center">{item.phbs} KK ({Math.round((item.phbs / item.totalKk) * 100)}%)</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tanda Tangan Basah */}
+                <div className="mt-12 grid grid-cols-2 text-center text-[11px] leading-relaxed">
+                  <div>
+                    <p>Mengetahui,</p>
+                    <p className="font-bold mt-1">Ketua TP PKK Desa Kediren</p>
+                    <div className="h-16"></div>
+                    <p className="font-bold underline">( ___________________________ )</p>
+                  </div>
+                  <div>
+                    <p>Kediren, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                    <p className="font-bold mt-1">Kader Pokja IV</p>
+                    <div className="h-16"></div>
+                    <p className="font-bold underline">( ___________________________ )</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

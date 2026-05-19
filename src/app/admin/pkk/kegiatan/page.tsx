@@ -300,22 +300,28 @@ export default function KegiatanPkkPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end lg:self-start">
-                    <button 
-                      onClick={() => handleOpenEdit(item)}
-                      className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all"
-                      title="Edit Log Kegiatan"
-                    >
-                      <Edit3 size={15} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all"
-                      title="Hapus Log"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                  {!item.isSystemGenerated ? (
+                    <div className="flex items-center gap-2 self-end lg:self-start">
+                      <button 
+                        onClick={() => handleOpenEdit(item)}
+                        className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all"
+                        title="Edit Log Kegiatan"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.dbId || item.id)}
+                        className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all"
+                        title="Hapus Log"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50/70 border border-emerald-100 px-3 py-1.5 rounded-xl self-end lg:self-start flex items-center gap-1.5 shadow-sm">
+                      <CheckCircle size={12} className="text-emerald-500" /> Otomatis Buku Baku
+                    </div>
+                  )}
                 </div>
               );
             })}
