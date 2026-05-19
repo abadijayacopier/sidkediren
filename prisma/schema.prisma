@@ -330,6 +330,7 @@ model KaderPkk {
   isActive  Boolean  @default(true) @map("is_active")
 
   jadwal    JadwalPosyandu[]
+  kegiatan  KegiatanPkk[]
 
   @@map("kader_pkk")
 }
@@ -362,4 +363,24 @@ model BalitaKms {
   posyandu    Posyandu @relation(fields: [posyanduId], references: [id])
 
   @@map("balita_kms")
+}
+
+model KegiatanPkk {
+  id          Int      @id @default(autoincrement())
+  nama        String   @db.VarChar(150)
+  kategori    String   @db.VarChar(50) // "Pokja I", "Pokja II", "Pokja III", "Pokja IV", "Dasawisma"
+  subKategori String   @db.VarChar(100) @map("sub_kategori")
+  tanggal     DateTime
+  lokasi      String   @db.VarChar(150)
+  kaderId     Int?     @map("kader_id")
+  deskripsi   String?  @db.Text
+  dokumentasi String?  @db.Text
+  jumlahHadir Int?     @default(0) @map("jumlah_hadir")
+  sumberDana  String?  @default("Swadaya") @map("sumber_dana") @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  kader       KaderPkk? @relation(fields: [kaderId], references: [id], onDelete: SetNull)
+
+  @@map("kegiatan_pkk")
 }

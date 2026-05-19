@@ -19,7 +19,8 @@ import {
   Fingerprint,
   Zap,
   Newspaper,
-  Palmtree
+  Palmtree,
+  HeartPulse
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -27,11 +28,19 @@ import { motion } from 'framer-motion';
 const settingMenus = [
   {
     title: 'Profil Desa Kediren',
-    description: 'Data wilayah, visi misi, dan struktur organisasi sesuai standar Kemendes.',
+    description: 'Data wilayah, visi misi, and struktur organisasi sesuai standar Kemendes.',
     icon: <Building className="text-emerald-600" />,
     href: '/admin/settings/profil',
     status: 'Lengkap',
     color: 'bg-emerald-50'
+  },
+  {
+    title: 'Manajemen Posyandu',
+    description: 'Kelola nama posyandu, alamat cakupan dusun, and operasional pos pelayanan.',
+    icon: <HeartPulse className="text-rose-600" />,
+    href: '/admin/settings/posyandu',
+    status: 'Aktif',
+    color: 'bg-rose-50'
   },
   {
     title: 'Berita Desa',

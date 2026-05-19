@@ -79,6 +79,37 @@ export async function getWargaBalitaList() {
   );
 }
 
+export async function getWargaList() {
+  return withDriftRetry(
+    () => {
+      const seventeenYearsAgo = new Date();
+      seventeenYearsAgo.setFullYear(seventeenYearsAgo.getFullYear() - 17);
+      
+      return prisma.penduduk.findMany({
+        where: { 
+          isHidup: true,
+          tanggalLahir: {
+            lte: seventeenYearsAgo
+          }
+        },
+        select: {
+          nik: true,
+          namaLengkap: true,
+          keluarga: {
+            select: {
+              dusun: true,
+              rt: true,
+              rw: true
+            }
+          }
+        },
+        orderBy: { namaLengkap: 'asc' }
+      });
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
 export async function seedPkkData() {
   // Hanya melakukan seeding jika tabel kosong
   const posyanduCount = await prisma.posyandu.count();
@@ -107,6 +138,127 @@ export async function seedPkkData() {
 
     revalidatePath('/admin/pkk');
     return { success: true, message: 'Seeding berhasil' };
+  }
+  
+  // Seed berita juara PKK jika belum ada
+  const beritaCount = await prisma.berita.count({
+    where: { slug: 'desa-kediren-sabet-juara-ii-lomba-pkk-kabupaten-magetan' }
+  });
+  if (beritaCount === 0) {
+    await prisma.berita.create({
+      data: {
+        judul: 'Kabar Membanggakan! Tim Penggerak PKK Desa Kediren Sabet Juara II Lomba PKK Tingkat Kabupaten Magetan',
+        slug: 'desa-kediren-sabet-juara-ii-lomba-pkk-kabupaten-magetan',
+        ringkasan: 'Desa Kediren berhasil menorehkan prestasi gemilang dengan meraih Juara II dalam Lomba Pelaksana Terbaik Gotong Royong dan Gerakan PKK Tingkat Kabupaten Magetan tahun 2026. Inovasi e-KMS dan keaktifan Dasawisma menjadi kunci sukses utama.',
+        konten: `### Desa Kediren Raih Prestasi Gemilang di Tingkat Kabupaten Magetan! 🏆✨
+
+Kabar gembira dan penuh kebanggaan menyelimuti seluruh masyarakat **Desa Kediren**. Jajaran Tim Penggerak PKK Desa Kediren berhasil meraih penghargaan sebagai **Juara II Pelaksana Terbaik Gotong Royong dan Gerakan PKK Tingkat Kabupaten Magetan tahun 2026**.
+
+Penghargaan ini diserahkan langsung oleh jajaran Tim Penggerak PKK Kabupaten Magetan kepada Ketua TP PKK Desa Kediren dalam acara puncak evaluasi 10 Program Pokok PKK.
+
+#### Inovasi Utama yang Menjadi Kunci Kemenangan:
+
+1. **🩺 Digitalisasi Layanan KIA dengan Smart e-KMS**:
+   Tim juri kabupaten memberikan apresiasi yang sangat tinggi terhadap terobosan sistem digital **e-KMS Desa Kediren** yang telah **sinkron 100% dengan database kependudukan desa**. Sistem ini memudahkan kader Posyandu melacak tumbuh kembang balita, mengklasifikasi status gizi, dan melakukan intervensi stunting secara real-time.
+
+2. **🏠 Keaktifan Kelompok Dasawisma & Dasawisma Digital**:
+   Soliditas **12 Kelompok Dasawisma** Desa Kediren yang aktif memantau kesehatan lingkungan, pendataan ibu hamil, serta pelestarian tanaman obat keluarga (TOGA) di pekarangan rumah warga menjadi percontohan gotong royong yang luar biasa.
+
+3. **🛍️ Pameran Produk UP2K (Usaha Peningkatan Pendapatan Keluarga)**:
+   Kerajinan tangan kreatif dan kuliner unggulan hasil karya ibu-ibu PKK Kediren terbukti memiliki nilai ekonomi yang tinggi dan siap bersaing di pasar daerah.
+
+#### Sambutan Kepala Desa & TP PKK:
+*"Prestasi ini bukan hanya milik kader PKK, melainkan buah dari gotong royong seluruh warga Desa Kediren. Inovasi digital Posyandu e-KMS akan terus kita kembangkan untuk mewujudkan generasi emas Desa Kediren yang bebas stunting,"* ujar jajaran Pemerintah Desa Kediren dengan penuh syukur.
+
+Selamat kepada seluruh pengurus, kader, dan warga Desa Kediren! Semoga prestasi ini menjadi motivasi untuk terus berinnovasi dan meningkatkan taraf kesejahteraan keluarga serta pelayanan kesehatan masyarakat! 🇮🇩❤️`,
+        gambar: '/juara_pkk_magetan.png',
+        penulis: 'Admin Desa Kediren',
+        isPublished: true,
+        kategori: 'Prestasi'
+      }
+    });
+    revalidatePath('/admin/berita');
+    revalidatePath('/');
+  }
+
+  // Seed kegiatan PKK jika tabel kosong
+  const kegiatanCount = await (prisma as any).kegiatanPkk.count();
+  if (kegiatanCount === 0) {
+    // Cari satu kader posyandu/PKK yang ada untuk dihubungkan
+    const firstKader = await prisma.kaderPkk.findFirst();
+    const kaderId = firstKader ? firstKader.id : null;
+
+    await (prisma as any).kegiatanPkk.create({
+      data: {
+        nama: 'Penyuluhan Pola Asuh Anak & Remaja (PAAR)',
+        kategori: 'Pokja I',
+        subKategori: 'Penghayatan Pancasila',
+        tanggal: new Date('2026-05-10'),
+        lokasi: 'Balai Pertemuan Dusun Selungguh',
+        kaderId,
+        deskripsi: 'Penyuluhan interaktif mengenai pola asuh anak usia dini di era digital untuk mencegah kecanduan gadget dan kekerasan anak.',
+        jumlahHadir: 45,
+        sumberDana: 'Dana Desa (APBDes)'
+      }
+    });
+
+    await (prisma as any).kegiatanPkk.create({
+      data: {
+        nama: 'Pelatihan Usaha UP2K Pembuatan Keripik Tempe Sagu',
+        kategori: 'Pokja II',
+        subKategori: 'Pendidikan & Keterampilan',
+        tanggal: new Date('2026-05-12'),
+        lokasi: 'Rumah Ketua TP PKK Dusun Sekadalan',
+        kaderId,
+        deskripsi: 'Pelatihan produksi kuliner inovatif keripik tempe sagu untuk meningkatkan pendapatan ekonomi mandiri ibu-ibu rumah tangga.',
+        jumlahHadir: 30,
+        sumberDana: 'UP2K Mandiri'
+      }
+    });
+
+    await (prisma as any).kegiatanPkk.create({
+      data: {
+        nama: 'Lomba Pekarangan Hijau Sehat Hatinya PKK',
+        kategori: 'Pokja III',
+        subKategori: 'Sandang, Pangan & Perumahan',
+        tanggal: new Date('2026-05-14'),
+        lokasi: 'RT 002 / RW 001 Dusun Ledok',
+        kaderId,
+        deskripsi: 'Evaluasi pemanfaatan pekarangan rumah dengan kebun sayur mandiri, kolam ikan mini, dan tanaman obat keluarga (TOGA).',
+        jumlahHadir: 60,
+        sumberDana: 'Swadaya Masyarakat'
+      }
+    });
+
+    await (prisma as any).kegiatanPkk.create({
+      data: {
+        nama: 'Sosialisasi PHBS dan Pembagian Paket Nutrisi PMT Stunting',
+        kategori: 'Pokja IV',
+        subKategori: 'Kesehatan & Lingkungan',
+        tanggal: new Date('2026-05-16'),
+        lokasi: 'Posyandu Mawar 1 Dusun Sekadalan',
+        kaderId,
+        deskripsi: 'Sosialisasi Perilaku Hidup Bersih & Sehat (PHBS) serta penyaluran telur, susu, dan biskuit PMT untuk 25 balita indikasi stunting.',
+        jumlahHadir: 55,
+        sumberDana: 'Dana CSR Puskesmas'
+      }
+    });
+
+    await (prisma as any).kegiatanPkk.create({
+      data: {
+        nama: 'Kerja Bakti Kebun Gizi Mandiri Dasawisma Mawar',
+        kategori: 'Dasawisma',
+        subKategori: 'Dasawisma Gotong Royong',
+        tanggal: new Date('2026-05-18'),
+        lokasi: 'RT 003 / RW 001 Dusun Selungguh',
+        kaderId,
+        deskripsi: 'Gotong royong ibu-ibu anggota Dasawisma Mawar melakukan penyiangan, pemupukan organik, dan pemanenan sayur sawi di kebun gizi.',
+        jumlahHadir: 20,
+        sumberDana: 'Kas Dasawisma'
+      }
+    });
+    
+    revalidatePath('/admin/pkk');
   }
   
   return { success: true, message: 'Data sudah ada' };
@@ -196,4 +348,142 @@ export async function deleteJadwal(id: number) {
   } catch (error: any) {
     throw new Error(error.message);
   }
+}
+
+export async function savePosyandu(formData: FormData) {
+  try {
+    const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+    const nama = formData.get('nama') as string;
+    const dusun = formData.get('dusun') as string;
+
+    if (id) {
+      await prisma.posyandu.update({
+        where: { id },
+        data: { nama, dusun }
+      });
+    } else {
+      await prisma.posyandu.create({
+        data: { nama, dusun }
+      });
+    }
+
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error saving Posyandu:', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function deletePosyandu(id: number) {
+  try {
+    // Pastikan tidak ada jadwal atau balita terikat sebelum dihapus, atau hapus cascading safely
+    await prisma.jadwalPosyandu.deleteMany({ where: { posyanduId: id } });
+    await prisma.balitaKms.deleteMany({ where: { posyanduId: id } });
+    await prisma.posyandu.delete({ where: { id } });
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function saveKader(formData: FormData) {
+  try {
+    const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+    const nik = formData.get('nik') as string;
+    const nama = formData.get('nama') as string;
+    const jabatan = formData.get('jabatan') as string;
+    const areaTugas = formData.get('areaTugas') as string;
+    const kontak = formData.get('kontak') as string;
+
+    if (id) {
+      await prisma.kaderPkk.update({
+        where: { id },
+        data: { nik, nama, jabatan, areaTugas, kontak }
+      });
+    } else {
+      await prisma.kaderPkk.create({
+        data: { nik, nama, jabatan, areaTugas, kontak, isActive: true }
+      });
+    }
+
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error saving Kader:', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteKader(id: number) {
+  try {
+    await prisma.jadwalPosyandu.deleteMany({ where: { kaderId: id } });
+    await prisma.kaderPkk.delete({ where: { id } });
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function getKegiatanList() {
+  return withDriftRetry(
+    () => (prisma as any).kegiatanPkk.findMany({
+      include: {
+        kader: {
+          select: {
+            nama: true,
+            jabatan: true
+          }
+        }
+      },
+      orderBy: { tanggal: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveKegiatan(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const nama = formData.get('nama') as string;
+      const kategori = formData.get('kategori') as string;
+      const subKategori = formData.get('subKategori') as string;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const lokasi = formData.get('lokasi') as string;
+      const kaderId = formData.get('kaderId') ? Number(formData.get('kaderId')) : null;
+      const deskripsi = formData.get('deskripsi') as string || '';
+      const dokumentasi = formData.get('dokumentasi') as string || '';
+      const jumlahHadir = formData.get('jumlahHadir') ? Number(formData.get('jumlahHadir')) : 0;
+      const sumberDana = formData.get('sumberDana') as string || 'Swadaya';
+
+      if (id) {
+        await (prisma as any).kegiatanPkk.update({
+          where: { id },
+          data: { nama, kategori, subKategori, tanggal, lokasi, kaderId, deskripsi, dokumentasi, jumlahHadir, sumberDana }
+        });
+      } else {
+        await (prisma as any).kegiatanPkk.create({
+          data: { nama, kategori, subKategori, tanggal, lokasi, kaderId, deskripsi, dokumentasi, jumlahHadir, sumberDana }
+        });
+      }
+
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteKegiatan(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).kegiatanPkk.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
 }
