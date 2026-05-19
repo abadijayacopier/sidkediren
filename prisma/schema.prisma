@@ -307,3 +307,59 @@ model Potensi {
 
   @@map("potensi_wisata")
 }
+
+// --- MODUL PKK & POSYANDU ---
+model Posyandu {
+  id        Int      @id @default(autoincrement())
+  nama      String   @db.VarChar(100)
+  dusun     String   @db.VarChar(50)
+  
+  jadwal    JadwalPosyandu[]
+  balita    BalitaKms[]
+
+  @@map("posyandu")
+}
+
+model KaderPkk {
+  id        Int      @id @default(autoincrement())
+  nik       String   @unique @db.VarChar(16)
+  nama      String   @db.VarChar(150)
+  jabatan   String   @db.VarChar(100)
+  areaTugas String   @map("area_tugas") @db.VarChar(100)
+  kontak    String?  @db.VarChar(20)
+  isActive  Boolean  @default(true) @map("is_active")
+
+  jadwal    JadwalPosyandu[]
+
+  @@map("kader_pkk")
+}
+
+model JadwalPosyandu {
+  id          Int      @id @default(autoincrement())
+  posyanduId  Int      @map("posyandu_id")
+  kaderId     Int      @map("kader_id")
+  tanggal     DateTime
+  waktu       String   @db.VarChar(50)
+  sasaran     String   @db.VarChar(100)
+
+  posyandu    Posyandu @relation(fields: [posyanduId], references: [id])
+  kader       KaderPkk @relation(fields: [kaderId], references: [id])
+
+  @@map("jadwal_posyandu")
+}
+
+model BalitaKms {
+  id          Int      @id @default(autoincrement())
+  nik         String?  @unique @db.VarChar(16)
+  posyanduId  Int      @map("posyandu_id")
+  nama        String   @db.VarChar(150)
+  namaIbu     String   @map("nama_ibu") @db.VarChar(150)
+  usiaBulan   Int      @map("usia_bulan")
+  beratBadan  Float    @map("berat_badan")
+  tinggiBadan Float    @map("tinggi_badan")
+  statusGizi  String   @map("status_gizi") @db.VarChar(50)
+
+  posyandu    Posyandu @relation(fields: [posyanduId], references: [id])
+
+  @@map("balita_kms")
+}
