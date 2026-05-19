@@ -43,6 +43,14 @@ const settingMenus = [
     color: 'bg-rose-50'
   },
   {
+    title: 'Manajemen Kader PKK',
+    description: 'Kelola daftar pengurus TP PKK, jabatan, wilayah tugas dusun, dan kontak aktif.',
+    icon: <Users className="text-rose-600" />,
+    href: '/admin/settings/pkk',
+    status: 'Aktif',
+    color: 'bg-rose-50'
+  },
+  {
     title: 'Berita Desa',
     description: 'Kelola artikel berita, pengumuman, dan kegiatan terbaru untuk warga.',
     icon: <Newspaper className="text-emerald-600" />,

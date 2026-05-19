@@ -331,6 +331,8 @@ model KaderPkk {
 
   jadwal    JadwalPosyandu[]
   kegiatan  KegiatanPkk[]
+  notulenPimpinan  BukuNotulenPokjaIV[] @relation("pimpinan_rapat")
+  notulenPembuat   BukuNotulenPokjaIV[] @relation("pembuat_notulen")
 
   @@map("kader_pkk")
 }
@@ -383,4 +385,79 @@ model KegiatanPkk {
   kader       KaderPkk? @relation(fields: [kaderId], references: [id], onDelete: SetNull)
 
   @@map("kegiatan_pkk")
+}
+
+model BukuProgramKerjaPokjaIV {
+  id                  Int      @id @default(autoincrement())
+  programPokok        String   @map("program_pokok") @db.VarChar(100)
+  programPokja4       String   @map("program_pokja_4") @db.VarChar(100)
+  kegiatan            String   @db.VarChar(200)
+  sasaran             String   @db.VarChar(150)
+  lokasi              String   @db.VarChar(150)
+  waktuPelaksanaan    String   @map("waktu_pelaksanaan") @db.VarChar(100) // Simpan JSON array string, e.g. "[2,5]" untuk bulan ke-2 dan ke-5
+  mitra               String   @db.VarChar(150)
+  indikatorKeberhasilan String @map("indikator_keberhasilan") @db.Text
+  keterangan          String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("buku_program_kerja_pokja_4")
+}
+
+model BukuPelaksanaanPokjaIV {
+  id                  Int      @id @default(autoincrement())
+  programPokok        String   @map("program_pokok") @db.VarChar(100)
+  programPokja4       String   @map("program_pokja_4") @db.VarChar(100)
+  kegiatan            String   @db.VarChar(200)
+  tujuanKegiatan      String   @map("tujuan_kegiatan") @db.Text
+  sasaran             String   @db.VarChar(150)
+  pelaksana           String   @db.VarChar(150)
+  waktu               DateTime
+  lokasi              String   @db.VarChar(150)
+  output              String   @db.Text
+  outcome             String   @db.Text
+  monitoringEvaluasi  String   @map("monitoring_evaluasi") @db.Text
+  keterangan          String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("buku_pelaksanaan_pokja_4")
+}
+
+model BukuKegiatanPokjaIV {
+  id                  Int      @id @default(autoincrement())
+  nama                String   @db.VarChar(150)
+  jabatan             String   @db.VarChar(100)
+  tanggal             DateTime
+  tempat              String   @db.VarChar(150)
+  uraian              String   @db.Text
+  keterangan          String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("buku_kegiatan_pokja_4")
+}
+
+model BukuNotulenPokjaIV {
+  id                  Int      @id @default(autoincrement())
+  tanggal             DateTime
+  waktu               String   @db.VarChar(50)
+  tempat              String   @db.VarChar(150)
+  jenisRapat          String   @map("jenis_rapat") @db.VarChar(100)
+  pimpinanRapatId     Int?     @map("pimpinan_rapat_id")
+  pembuatNotulenId    Int?     @map("pembuat_notulen_id")
+  jumlahDiundang      Int      @map("jumlah_diundang")
+  jumlahHadir         Int      @map("jumlah_hadir")
+  jumlahTidakHadir    Int      @map("jumlah_tidak_hadir")
+  susunanAcara        String   @map("susunan_acara") @db.Text
+  kesimpulan          String   @db.Text
+  penutup             String   @db.Text
+  dokumentasi         String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  pimpinanRapat       KaderPkk? @relation("pimpinan_rapat", fields: [pimpinanRapatId], references: [id], onDelete: SetNull)
+  pembuatNotulen      KaderPkk? @relation("pembuat_notulen", fields: [pembuatNotulenId], references: [id], onDelete: SetNull)
+
+  @@map("buku_notulen_pokja_4")
 }

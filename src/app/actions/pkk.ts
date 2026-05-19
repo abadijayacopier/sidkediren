@@ -53,7 +53,7 @@ export async function getWargaBalitaList() {
     () => {
       const fiveYearsAgo = new Date();
       fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
-      
+
       return prisma.penduduk.findMany({
         where: {
           tanggalLahir: {
@@ -84,9 +84,9 @@ export async function getWargaList() {
     () => {
       const seventeenYearsAgo = new Date();
       seventeenYearsAgo.setFullYear(seventeenYearsAgo.getFullYear() - 17);
-      
+
       return prisma.penduduk.findMany({
-        where: { 
+        where: {
           isHidup: true,
           tanggalLahir: {
             lte: seventeenYearsAgo
@@ -113,7 +113,7 @@ export async function getWargaList() {
 export async function seedPkkData() {
   // Hanya melakukan seeding jika tabel kosong
   const posyanduCount = await prisma.posyandu.count();
-  
+
   if (posyanduCount === 0) {
     // 1. Seed Posyandu
     const p1 = await prisma.posyandu.create({ data: { nama: 'Posyandu Mawar 1', dusun: 'Krajan' } });
@@ -139,7 +139,7 @@ export async function seedPkkData() {
     revalidatePath('/admin/pkk');
     return { success: true, message: 'Seeding berhasil' };
   }
-  
+
   // Seed berita juara PKK jika belum ada
   const beritaCount = await prisma.berita.count({
     where: { slug: 'desa-kediren-sabet-juara-ii-lomba-pkk-kabupaten-magetan' }
@@ -257,10 +257,110 @@ Selamat kepada seluruh pengurus, kader, dan warga Desa Kediren! Semoga prestasi 
         sumberDana: 'Kas Dasawisma'
       }
     });
-    
+
+    // Seed Buku Program Kerja Pokja IV
+    const pKerjaCount = await (prisma as any).bukuProgramKerjaPokjaIv.count();
+    if (pKerjaCount === 0) {
+      await (prisma as any).bukuProgramKerjaPokjaIv.createMany({
+        data: [
+          {
+            programPokok: 'Kesehatan',
+            programPokja4: 'GKSTTB',
+            kegiatan: 'Penyuluhan Posyandu Terintegrasi',
+            sasaran: 'Ibu dan Balita',
+            lokasi: 'RT 001 / RW 002 Dusun Selungguh',
+            waktuPelaksanaan: '[2,8]',
+            mitra: 'Puskesmas',
+            indikatorKeberhasilan: 'Jumlah balita stunting menurun dan cakupan imunisasi 100%',
+            keterangan: 'Terintegrasi e-KMS dan PMT Balita'
+          },
+          {
+            programPokok: 'Kelestarian Lingkungan Hidup',
+            programPokja4: 'STBM',
+            kegiatan: 'Kampanye & Pemicuan Jamban Sehat',
+            sasaran: 'Keluarga BABS Mandiri',
+            lokasi: 'Dusun Sekadalan',
+            waktuPelaksanaan: '[5]',
+            mitra: 'Sanitarian Puskesmas',
+            indikatorKeberhasilan: 'Lingkungan Sehat bebas BABS (ODF)',
+            keterangan: 'Swadaya pembuatan septic tank sehat'
+          },
+          {
+            programPokok: 'Perencanaan Sehat',
+            programPokja4: 'KB dan Kespro',
+            kegiatan: 'Penyuluhan KB MKJP',
+            sasaran: 'Pasangan Usia Subur (PUS)',
+            lokasi: 'Dusun Ledok',
+            waktuPelaksanaan: '[6]',
+            mitra: 'Dinas PPKB dan PA',
+            indikatorKeberhasilan: 'Jumlah akseptor KB aktif meningkat',
+            keterangan: 'Fokus KB jangka panjang'
+          }
+        ]
+      });
+    }
+
+    // Seed Buku Pelaksanaan Program Kerja Pokja IV
+    const pelCount = await (prisma as any).bukuPelaksanaanPokjaIv.count();
+    if (pelCount === 0) {
+      await (prisma as any).bukuPelaksanaanPokjaIv.create({
+        data: {
+          programPokok: 'Kesehatan',
+          programPokja4: 'GKSTTB',
+          kegiatan: 'Penyuluhan Pengelolaan Sampah Rumah Tangga',
+          tujuanKegiatan: 'Meningkatkan pemahaman keluarga terkait pemilahan dan pengelolaan sampah organik/anorganik',
+          sasaran: 'Keluarga & Dasawisma',
+          pelaksana: 'Pokja IV dan Kader Lingkungan',
+          waktu: new Date('2026-05-02'),
+          lokasi: 'Balai Pertemuan Dusun Selungguh',
+          output: 'Pengetahuan pemilahan sampah meningkat',
+          outcome: 'Sampah dipilah-pilah sesuai jenisnya dan siap disetor ke Bank Sampah',
+          monitoringEvaluasi: 'Monitoring bulanan dan evaluasi volume sampah dusun',
+          keterangan: 'Terbentuk kepengurusan Bank Sampah baru'
+        }
+      });
+    }
+
+    // Seed Buku Kegiatan Pokja IV
+    const kegCount = await (prisma as any).bukuKegiatanPokjaIv.count();
+    if (kegCount === 0) {
+      await (prisma as any).bukuKegiatanPokjaIv.create({
+        data: {
+          nama: 'Ny. Luluk P',
+          jabatan: 'Sekretaris Pokja IV',
+          tanggal: new Date('2026-02-12T10:00:00'),
+          tempat: 'Gedung Pertemuan Kelurahan Kediren',
+          uraian: 'Penyuluhan pengelolaan sampah secara mandiri di tingkat rumah tangga.\nHasil :\n- Kegiatan diikuti oleh warga RT 003 Dusun Selungguh sejumlah 35 orang\n- Narasumber oleh DLH Kabupaten Magetan\n- Terbentuk rintisan bank sampah keluarga',
+          keterangan: 'Berjalan lancar dan tertib'
+        }
+      });
+    }
+
+    // Seed Buku Notulen Pokja IV
+    const notCount = await (prisma as any).bukuNotulenPokjaIv.count();
+    if (notCount === 0) {
+      await (prisma as any).bukuNotulenPokjaIv.create({
+        data: {
+          tanggal: new Date('2026-05-15'),
+          waktu: '09:00 - 11:30 WIB',
+          tempat: 'Ruang Rapat PKK Desa Kediren',
+          jenisRapat: 'Rapat Pleno Bulanan Pokja IV',
+          pimpinanRapatId: kaderId,
+          pembuatNotulenId: kaderId,
+          jumlahDiundang: 25,
+          jumlahHadir: 22,
+          jumlahTidakHadir: 3,
+          susunanAcara: '1. Pembukaan oleh Pimpinan Rapat\n2. Evaluasi Imunisasi Vitamin A bulan Februari\n3. Pembahasan Lomba Jumantik\n4. Penutup',
+          kesimpulan: 'Disepakati pelaksanaan gerakan serentak pemberantasan sarang nyamuk (PSN) di Dusun Selungguh hari Minggu besok.',
+          penutup: 'Rapat ditutup oleh Pimpinan Rapat pada pukul 11:30 WIB dengan doa bersama.',
+          dokumentasi: ''
+        }
+      });
+    }
+
     revalidatePath('/admin/pkk');
   }
-  
+
   return { success: true, message: 'Data sudah ada' };
 }
 
@@ -481,6 +581,282 @@ export async function deleteKegiatan(id: number) {
   return withDriftRetry(
     async () => {
       await (prisma as any).kegiatanPkk.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// ==========================================
+// === BUKU BAKU POKJA IV SERVER ACTIONS ===
+// ==========================================
+
+// 1. BUKU PROGRAM KERJA POKJA IV
+export async function getBukuProgramKerjaList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuProgramKerjaPokjaIv.findMany({
+      orderBy: { id: 'asc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuProgramKerja(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja4 = formData.get('programPokja4') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const lokasi = formData.get('lokasi') as string;
+      const waktuPelaksanaan = formData.get('waktuPelaksanaan') as string; // JSON String e.g. "[2,5]"
+      const mitra = formData.get('mitra') as string;
+      const indikatorKeberhasilan = formData.get('indikatorKeberhasilan') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = {
+        programPokok,
+        programPokja4,
+        kegiatan,
+        sasaran,
+        lokasi,
+        waktuPelaksanaan,
+        mitra,
+        indikatorKeberhasilan,
+        keterangan
+      };
+
+      if (id) {
+        await (prisma as any).bukuProgramKerjaPokjaIv.update({
+          where: { id },
+          data
+        });
+      } else {
+        await (prisma as any).bukuProgramKerjaPokjaIv.create({
+          data
+        });
+      }
+
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuProgramKerja(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuProgramKerjaPokjaIv.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// 2. BUKU PELAKSANAAN PROGRAM KERJA
+export async function getBukuPelaksanaanList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuPelaksanaanPokjaIv.findMany({
+      orderBy: { waktu: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuPelaksanaan(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja4 = formData.get('programPokja4') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const tujuanKegiatan = formData.get('tujuanKegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const pelaksana = formData.get('pelaksana') as string;
+      const waktu = new Date(formData.get('waktu') as string);
+      const lokasi = formData.get('lokasi') as string;
+      const output = formData.get('output') as string;
+      const outcome = formData.get('outcome') as string;
+      const monitoringEvaluasi = formData.get('monitoringEvaluasi') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = {
+        programPokok,
+        programPokja4,
+        kegiatan,
+        tujuanKegiatan,
+        sasaran,
+        pelaksana,
+        waktu,
+        lokasi,
+        output,
+        outcome,
+        monitoringEvaluasi,
+        keterangan
+      };
+
+      if (id) {
+        await (prisma as any).bukuPelaksanaanPokjaIv.update({
+          where: { id },
+          data
+        });
+      } else {
+        await (prisma as any).bukuPelaksanaanPokjaIv.create({
+          data
+        });
+      }
+
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuPelaksanaan(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuPelaksanaanPokjaIv.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// 3. BUKU KEGIATAN POKJA IV
+export async function getBukuKegiatanList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuKegiatanPokjaIv.findMany({
+      orderBy: { tanggal: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuKegiatan(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const nama = formData.get('nama') as string;
+      const jabatan = formData.get('jabatan') as string;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const tempat = formData.get('tempat') as string;
+      const uraian = formData.get('uraian') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = {
+        nama,
+        jabatan,
+        tanggal,
+        tempat,
+        uraian,
+        keterangan
+      };
+
+      if (id) {
+        await (prisma as any).bukuKegiatanPokjaIv.update({
+          where: { id },
+          data
+        });
+      } else {
+        await (prisma as any).bukuKegiatanPokjaIv.create({
+          data
+        });
+      }
+
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuKegiatan(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuKegiatanPokjaIv.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// 4. BUKU NOTULEN POKJA IV
+export async function getBukuNotulenList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuNotulenPokjaIv.findMany({
+      include: {
+        pimpinanRapat: { select: { nama: true, jabatan: true } },
+        pembuatNotulen: { select: { nama: true, jabatan: true } }
+      },
+      orderBy: { tanggal: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuNotulen(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const waktu = formData.get('waktu') as string;
+      const tempat = formData.get('tempat') as string;
+      const jenisRapat = formData.get('jenisRapat') as string;
+      const pimpinanRapatId = formData.get('pimpinanRapatId') ? Number(formData.get('pimpinanRapatId')) : null;
+      const pembuatNotulenId = formData.get('pembuatNotulenId') ? Number(formData.get('pembuatNotulenId')) : null;
+      const jumlahDiundang = Number(formData.get('jumlahDiundang'));
+      const jumlahHadir = Number(formData.get('jumlahHadir'));
+      const jumlahTidakHadir = Number(formData.get('jumlahTidakHadir'));
+      const susunanAcara = formData.get('susunanAcara') as string;
+      const kesimpulan = formData.get('kesimpulan') as string;
+      const penutup = formData.get('penutup') as string;
+      const dokumentasi = formData.get('dokumentasi') as string || '';
+
+      const data = {
+        tanggal,
+        waktu,
+        tempat,
+        jenisRapat,
+        pimpinanRapatId,
+        pembuatNotulenId,
+        jumlahDiundang,
+        jumlahHadir,
+        jumlahTidakHadir,
+        susunanAcara,
+        kesimpulan,
+        penutup,
+        dokumentasi
+      };
+
+      if (id) {
+        await (prisma as any).bukuNotulenPokjaIv.update({
+          where: { id },
+          data
+        });
+      } else {
+        await (prisma as any).bukuNotulenPokjaIv.create({
+          data
+        });
+      }
+
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuNotulen(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuNotulenPokjaIv.delete({ where: { id } });
       revalidatePath('/admin/pkk');
       return { success: true };
     },
