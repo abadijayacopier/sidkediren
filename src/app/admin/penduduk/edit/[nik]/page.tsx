@@ -7,6 +7,12 @@ import { updatePenduduk } from '@/app/actions/penduduk';
 import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 
+const getAvatarUrl = (w: any) => {
+  if (!w) return '';
+  if (w.foto) return w.foto;
+  return w.jenisKelamin === 'L' ? '/avatars/male.svg' : '/avatars/female.svg';
+};
+
 export default function EditPendudukPage() {
   const params = useParams();
   const router = useRouter();
@@ -228,14 +234,12 @@ export default function EditPendudukPage() {
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Foto Profil Warga</label>
               
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-white border rounded-xl overflow-hidden shadow-sm flex items-center justify-center shrink-0">
-                  {warga.foto ? (
-                    <img src={warga.foto} alt="Foto Profil" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-slate-300">
-                      <User size={32} />
-                    </div>
-                  )}
+                <div className="w-20 h-20 bg-white border rounded-xl overflow-hidden shadow-sm flex items-center justify-center shrink-0 relative group/avatar">
+                  <img 
+                    src={getAvatarUrl(warga)} 
+                    alt="Foto Profil" 
+                    className="w-full h-full object-cover group-hover/avatar:scale-105 transition-transform duration-300" 
+                  />
                 </div>
                 <div className="space-y-1 flex-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unggah Foto Baru</p>

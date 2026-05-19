@@ -1,12 +1,46 @@
 import React from 'react';
 import prisma from '@/lib/prisma';
 import { Users, UserCheck, FileText, PieChart, TrendingUp, ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function AdminDashboard() {
   // Ambil statistik real dari database
-  const totalPenduduk = await prisma.penduduk.count();
+  const totalPenduduk = await prisma.penduduk.count({ where: { isHidup: true } });
   const totalKeluarga = await prisma.keluarga.count();
   const totalSurat = await prisma.riwayatSurat.count();
+
+  // Hitung realisasi APBDes dinamis dari tabel apbdes_item
+  const apbdesItems = await prisma.apbdesItem.findMany();
+  let totalAnggaran = 0;
+  let totalRealisasi = 0;
+  apbdesItems.forEach((item) => {
+    totalAnggaran += Number(item.anggaran || 0);
+    totalRealisasi += Number(item.realisasi || 0);
+  });
+  const realisasiPercentage = totalAnggaran > 0 ? Math.round((totalRealisasi / totalAnggaran) * 100) : 64;
+
+  // Ambil aktivitas pelayanan terbaru real dari database
+  const recentSurat = await prisma.riwayatSurat.findMany({
+    take: 5,
+    orderBy: { tanggalSurat: 'desc' },
+    include: {
+      penduduk: true,
+      masterSurat: true
+    }
+  });
+
+  // Helper untuk formatting waktu relatif
+  const getRelativeTime = (date: Date) => {
+    const diffMs = new Date().getTime() - new Date(date).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "Baru saja";
+    if (diffMins < 60) return `${diffMins} menit yang lalu`;
+    if (diffHours < 24) return `${diffHours} jam yang lalu`;
+    return `${diffDays} hari yang lalu`;
+  };
 
   return (
     <div className="space-y-8">
@@ -20,28 +54,28 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <StatCard 
           title="Total Penduduk" 
-          value={totalPenduduk.toLocaleString()} 
-          change="Warga terdaftar"
+          value={totalPenduduk.toLocaleString('id-ID')} 
+          change="Warga aktif"
           icon={<Users size={24} className="text-blue-600" />}
           color="bg-blue-50"
         />
         <StatCard 
           title="Kepala Keluarga" 
-          value={totalKeluarga.toLocaleString()} 
+          value={totalKeluarga.toLocaleString('id-ID')} 
           change="Kartu Keluarga"
           icon={<UserCheck size={24} className="text-emerald-600" />}
           color="bg-emerald-50"
         />
         <StatCard 
           title="Permohonan Surat" 
-          value={totalSurat.toString()} 
-          change="Menunggu proses"
+          value={totalSurat.toLocaleString('id-ID')} 
+          change="Total pengajuan"
           icon={<FileText size={24} className="text-amber-600" />}
           color="bg-amber-50"
         />
         <StatCard 
           title="Realisasi APBDes" 
-          value="64%" 
+          value={`${realisasiPercentage}%`} 
           change="Tahun Anggaran 2026"
           icon={<PieChart size={24} className="text-purple-600" />}
           color="bg-purple-50"
@@ -53,27 +87,24 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center">
             <h3 className="font-bold text-slate-800">Aktivitas Pelayanan Terbaru</h3>
-            <button className="text-sm text-emerald-600 font-semibold hover:underline">Lihat Semua</button>
+            <Link href="/admin/surat" className="text-sm text-emerald-600 font-semibold hover:underline">Lihat Semua</Link>
           </div>
           <div className="divide-y divide-slate-50">
-            <ActivityItem 
-              name="Ahmad Fauzi" 
-              type="Surat Keterangan Domisili" 
-              time="10 menit yang lalu" 
-              status="Selesai"
-            />
-            <ActivityItem 
-              name="Siti Aminah" 
-              type="Surat Pengantar Nikah" 
-              time="45 menit yang lalu" 
-              status="Diproses"
-            />
-            <ActivityItem 
-              name="Budi Santoso" 
-              type="Update Data Keluarga" 
-              time="2 jam yang lalu" 
-              status="Selesai"
-            />
+            {recentSurat.length > 0 ? (
+              recentSurat.map((surat) => (
+                <ActivityItem 
+                  key={surat.id}
+                  name={surat.penduduk.namaLengkap} 
+                  type={surat.masterSurat.namaSurat} 
+                  time={getRelativeTime(surat.tanggalSurat)} 
+                  status={surat.statusSurat === 'Approved' ? 'Selesai' : surat.statusSurat === 'Pending' ? 'Diproses' : 'Ditolak'}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center text-slate-400 text-sm">
+                Belum ada aktivitas pengajuan surat terbaru.
+              </div>
+            )}
           </div>
         </div>
 
@@ -82,15 +113,16 @@ export default async function AdminDashboard() {
           <div className="absolute top-0 right-0 p-4 opacity-20">
             <TrendingUp size={120} />
           </div>
-          <div className="relative z-10">
-            <h3 className="text-xl font-bold mb-4">Update APBDes</h3>
-            <p className="text-emerald-50 mb-6 text-sm leading-relaxed">
-              Realisasi anggaran bulan Mei meningkat 12% dibandingkan bulan sebelumnya. 
-              Segera selesaikan laporan untuk termin kedua.
-            </p>
-            <button className="bg-white text-emerald-700 px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-emerald-50 transition-all">
-              Detail Laporan <ArrowUpRight size={16} />
-            </button>
+          <div className="relative z-10 flex flex-col h-full justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-4 font-black tracking-tight">Infrastruktur APBDes</h3>
+              <p className="text-emerald-50 mb-6 text-xs sm:text-sm leading-relaxed opacity-95">
+                Realisasi serapan APBDes telah mencapai <span className="font-black underline text-amber-300">{realisasiPercentage}%</span> secara transparan dan akuntabel.
+              </p>
+            </div>
+            <Link href="/admin/settings/transparansi" className="bg-white text-emerald-700 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-emerald-50 transition-all w-fit shadow-md">
+              Detail Transparansi <ArrowUpRight size={16} />
+            </Link>
           </div>
         </div>
       </div>

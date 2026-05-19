@@ -106,6 +106,12 @@ export default async function PendudukDashboard({
     return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   };
 
+  // Fungsi Mendapatkan URL Avatar Premium Berdasarkan Gender
+  const getAvatarUrl = (w: any) => {
+    if (w.foto) return w.foto;
+    return w.jenisKelamin === 'L' ? '/avatars/male.svg' : '/avatars/female.svg';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -149,8 +155,10 @@ export default async function PendudukDashboard({
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+      {/* TABLE & MOBILE CARD RESPONSIVE WRAPPER */}
+      
+      {/* 1. Tampilan Desktop (Table View) - Hanya muncul di layar medium/besar (md) ke atas */}
+      <div className="hidden md:block bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-100">
@@ -167,8 +175,12 @@ export default async function PendudukDashboard({
               <tr key={warga.nik} className="hover:bg-slate-50/50 transition-all group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 border overflow-hidden shrink-0">
-                      {warga.foto ? <img src={warga.foto} alt={`Foto Profil ${warga.namaLengkap}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
+                    <div className="w-10 h-10 rounded-full bg-slate-100 border overflow-hidden shrink-0 shadow-sm relative group/avatar">
+                      <img 
+                        src={getAvatarUrl(warga)} 
+                        alt={`Foto Profil ${warga.namaLengkap}`} 
+                        className="w-full h-full object-cover group-hover/avatar:scale-110 transition-transform duration-300" 
+                      />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-800 leading-tight">{warga.namaLengkap}</p>
@@ -209,9 +221,83 @@ export default async function PendudukDashboard({
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {/* Pagination Desktop */}
         {totalPages > 1 && (
           <div className="px-6 py-4 bg-slate-50/50 border-t flex items-center justify-between">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Halaman {currentPage} dari {totalPages}</p>
+            <div className="flex gap-2">
+              <Link href={buildUrl(params, { page: (currentPage - 1).toString() })} className={`p-2 border rounded-lg ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'bg-white'}`}><ChevronLeft size={16}/></Link>
+              <Link href={buildUrl(params, { page: (currentPage + 1).toString() })} className={`p-2 border rounded-lg ${currentPage === totalPages ? 'pointer-events-none opacity-30' : 'bg-white'}`}><ChevronRight size={16}/></Link>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Tampilan Seluler (Mobile Card List View) - Hanya muncul di layar ponsel (di bawah md) */}
+      <div className="block md:hidden space-y-4">
+        {penduduk.length > 0 ? (
+          penduduk.map((warga: any) => (
+            <div key={warga.nik} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4 hover:shadow-md transition-all">
+              {/* Info Atas & Avatar */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-slate-100 border overflow-hidden shrink-0 shadow-sm relative">
+                  <img 
+                    src={getAvatarUrl(warga)} 
+                    alt={`Foto Profil ${warga.namaLengkap}`} 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-slate-800 truncate leading-snug">{warga.namaLengkap}</h3>
+                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{warga.nik}</p>
+                </div>
+                <div className="flex flex-col gap-1 items-end shrink-0">
+                   <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[8px] font-extrabold border border-emerald-100 uppercase tracking-wider">HIDUP</span>
+                   <span className={`px-2 py-0.5 rounded-md text-[8px] font-extrabold uppercase ${warga.statusDalamKeluarga === 'KEPALA KELUARGA' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>{warga.statusDalamKeluarga}</span>
+                </div>
+              </div>
+
+              {/* Grid Status & Relasi */}
+              <div className="grid grid-cols-2 gap-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100 text-xs">
+                 <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Kepala Keluarga</p>
+                    <div className="flex items-center gap-1.5 mt-1 text-slate-700 font-semibold truncate">
+                       <Home size={12} className="text-slate-400 shrink-0" />
+                       <span>{warga.keluarga?.penduduk?.[0]?.namaLengkap || '-'}</span>
+                    </div>
+                 </div>
+                 <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Umur & Dusun</p>
+                    <p className="mt-1 text-slate-700 font-bold">
+                       {calculateAge(warga.tanggalLahir)} Th <span className="text-slate-300 font-light mx-1">|</span> <span className="uppercase text-emerald-600 font-extrabold">{warga.keluarga?.dusun || '-'}</span>
+                    </p>
+                 </div>
+              </div>
+
+              {/* Bar Tombol Aksi Sentuh Premium */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    RT {warga.keluarga?.rt || '00'}/RW {warga.keluarga?.rw || '00'}
+                 </div>
+                 <div className="flex items-center gap-1.5">
+                    <Link href={`/admin/penduduk/view/${warga.nik}`} title="Preview" className="p-2 text-slate-500 hover:text-indigo-600 active:bg-indigo-100 rounded-xl transition-all border border-slate-200 bg-slate-50"><Eye size={16} /></Link>
+                    <PrintBiodata warga={warga} iconOnly={true} />
+                    <Link href={`/admin/penduduk/edit/${warga.nik}`} title="Edit" className="p-2 text-slate-500 hover:text-emerald-600 active:bg-emerald-100 rounded-xl transition-all border border-slate-200 bg-slate-50"><Edit size={16} /></Link>
+                    <MutasiButton warga={warga} />
+                    <DeletePenduduk nik={warga.nik} />
+                 </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white p-12 text-center text-slate-400 text-sm rounded-3xl border">
+             Tidak ada data warga ditemukan.
+          </div>
+        )}
+
+        {/* Pagination Mobile */}
+        {totalPages > 1 && (
+          <div className="p-4 bg-white border border-slate-200 rounded-3xl flex items-center justify-between">
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Halaman {currentPage} dari {totalPages}</p>
             <div className="flex gap-2">
               <Link href={buildUrl(params, { page: (currentPage - 1).toString() })} className={`p-2 border rounded-lg ${currentPage === 1 ? 'pointer-events-none opacity-30' : 'bg-white'}`}><ChevronLeft size={16}/></Link>

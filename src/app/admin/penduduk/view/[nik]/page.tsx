@@ -16,6 +16,11 @@ import {
 import Link from 'next/link';
 import PrintBiodata from '@/components/PrintBiodata';
 
+const getAvatarUrl = (w: any) => {
+  if (w.foto) return w.foto;
+  return w.jenisKelamin === 'L' ? '/avatars/male.svg' : '/avatars/female.svg';
+};
+
 export default async function ViewPendudukPage({
   params,
 }: {
@@ -53,14 +58,12 @@ export default async function ViewPendudukPage({
         {/* Left Column: Avatar & Quick Info */}
         <div className="md:col-span-1 space-y-6">
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 text-center">
-            <div className="w-32 h-32 bg-slate-100 rounded-full mx-auto flex items-center justify-center mb-6 overflow-hidden border-4 border-white shadow-md">
-              {warga.foto ? (
-                <img src={warga.foto} alt={warga.namaLengkap} className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-slate-300">
-                   <User size={64} />
-                </div>
-              )}
+            <div className="w-32 h-32 bg-slate-100 rounded-full mx-auto flex items-center justify-center mb-6 overflow-hidden border-4 border-white shadow-md relative group/avatar">
+              <img 
+                src={getAvatarUrl(warga)} 
+                alt={warga.namaLengkap} 
+                className="w-full h-full object-cover group-hover/avatar:scale-105 transition-transform duration-300" 
+              />
             </div>
             <h2 className="text-xl font-bold text-slate-800 mb-1">{warga.namaLengkap}</h2>
             <p className="text-sm font-mono text-emerald-600 font-bold mb-4">{warga.nik}</p>
@@ -94,12 +97,12 @@ export default async function ViewPendudukPage({
                 <Info size={20} /> Data Kelahiran & Personal
              </div>
              <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                <DetailRow label="Tempat Lahir" value={warga.tempatLahir} />
-                <DetailRow label="Tanggal Lahir" value={new Date(warga.tanggalLahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} />
+                <DetailRow label="Tempat Lahir" value={warga.tempatLahir || '-'} />
+                <DetailRow label="Tanggal Lahir" value={warga.tanggalLahir ? new Date(warga.tanggalLahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} />
                 <DetailRow label="Jenis Kelamin" value={warga.jenisKelamin === 'L' ? 'LAKI-LAKI' : 'PEREMPUAN'} />
                 <DetailRow label="Agama" value={warga.agama || '-'} />
                 <DetailRow label="Golongan Darah" value={warga.golonganDarah || '-'} />
-                <DetailRow label="Kewarganegaraan" value={warga.kewarganegaraan} />
+                <DetailRow label="Kewarganegaraan" value={warga.kewarganegaraan || 'WNI'} />
              </div>
           </div>
 

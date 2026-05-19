@@ -1,0 +1,18 @@
+{
+  "name": "SID Desa Kediren",
+  "short_name": "SID Kediren",
+  "description": "Sistem Informasi Desa & Portal Layanan Mandiri Digital Desa Kediren, Kecamatan Lembeyan, Magetan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1c30",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/sid_kediren_icon_1778599467450.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
