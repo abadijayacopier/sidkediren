@@ -10,7 +10,7 @@ export default function Footer({ profil }: { profil: any }) {
   return (
     <footer className="bg-slate-900 text-white pt-24 pb-12 overflow-hidden relative">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
-      
+
       <div className="max-w-[1280px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           {/* Brand Section */}
@@ -95,8 +95,8 @@ export default function Footer({ profil }: { profil: any }) {
 
 function SocialLink({ href, icon }: { href: string, icon: React.ReactNode }) {
   return (
-    <a 
-      href={href} 
+    <a
+      href={href}
       className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 hover:bg-emerald-600 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-black/20"
     >
       {icon}
