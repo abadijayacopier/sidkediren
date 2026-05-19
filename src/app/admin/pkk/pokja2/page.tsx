@@ -4,18 +4,19 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   BookOpen, FileText, Calendar, Users, MapPin, Plus, Search, Edit3, Trash2, X, Save, 
-  ArrowLeft, CheckSquare, Printer, ChevronRight, Check, AlertCircle, Info
+  ArrowLeft, CheckSquare, Printer, ChevronRight, Check, AlertCircle, Info, Heart, Shield, Award, GraduationCap, TrendingUp
 } from 'lucide-react';
 import { 
   getKaderPkkList, seedPkkData,
   getBukuProgramKerjaPokjaIIList, saveBukuProgramKerjaPokjaII, deleteBukuProgramKerjaPokjaII,
   getBukuPelaksanaanPokjaIIList, saveBukuPelaksanaanPokjaII, deleteBukuPelaksanaanPokjaII,
   getBukuKegiatanPokjaIIList, saveBukuKegiatanPokjaII, deleteBukuKegiatanPokjaII,
-  getBukuNotulenPokjaIIList, saveBukuNotulenPokjaII, deleteBukuNotulenPokjaII
+  getBukuNotulenPokjaIIList, saveBukuNotulenPokjaII, deleteBukuNotulenPokjaII,
+  getPokja2ReportData
 } from '@/app/actions/pkk';
 import Swal from 'sweetalert2';
 
-type TabType = 'program' | 'pelaksanaan' | 'kegiatan' | 'notulen';
+type TabType = 'program' | 'pelaksanaan' | 'kegiatan' | 'notulen' | 'laporan';
 
 export default function PokjaIIBukuBakuPage() {
   const [activeTab, setActiveTab] = useState<TabType>('program');
@@ -28,11 +29,21 @@ export default function PokjaIIBukuBakuPage() {
   const [kegiatanList, setKegiatanList] = useState<any[]>([]);
   const [notulenList, setNotulenList] = useState<any[]>([]);
 
+  // e-Laporan States
+  const [reportData, setReportData] = useState<any>({
+    anakSekolah: [],
+    putusSekolah: [],
+    dusunStats: []
+  });
+  const [activeReportSubTab, setActiveReportSubTab] = useState<'sekolah' | 'putus_sekolah' | 'ekonomi_up2k'>('sekolah');
+  const [selectedDusunFilter, setSelectedDusunFilter] = useState<string>('ALL');
+
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals
   const [showModal, setShowModal] = useState(false);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
 
   // --- FORM STATES ---
@@ -102,10 +113,73 @@ export default function PokjaIIBukuBakuPage() {
 
       const b4 = await getBukuNotulenPokjaIIList() as any[];
       setNotulenList(b4);
+
+      const rData = await getPokja2ReportData();
+      setReportData(rData);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getUniqueDusuns = () => {
+    const list = new Set<string>();
+    reportData.anakSekolah.forEach((item: any) => {
+      if (item.dusun) list.add(item.dusun.trim().toUpperCase());
+    });
+    reportData.putusSekolah.forEach((item: any) => {
+      if (item.dusun) list.add(item.dusun.trim().toUpperCase());
+    });
+    return Array.from(list);
+  };
+
+  const getFilteredAnakSekolahData = () => {
+    if (selectedDusunFilter === 'ALL') return reportData.anakSekolah;
+    return reportData.anakSekolah.filter((item: any) => item.dusun && item.dusun.trim().toUpperCase() === selectedDusunFilter.toUpperCase());
+  };
+
+  const getFilteredPutusSekolahData = () => {
+    if (selectedDusunFilter === 'ALL') return reportData.putusSekolah;
+    return reportData.putusSekolah.filter((item: any) => item.dusun && item.dusun.trim().toUpperCase() === selectedDusunFilter.toUpperCase());
+  };
+
+  const handlePrint = () => {
+    const printContent = document.getElementById('report-print-preview-content');
+    const windowUrl = 'about:blank';
+    const uniqueName = new Date().getTime();
+    const windowName = 'Print' + uniqueName;
+    const printWindow = window.open(windowUrl, windowName, 'left=0,top=0,width=1100,height=800,toolbar=0,scrollbars=0,status=0');
+    
+    if (printWindow && printContent) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>LAPORAN POKJA II - TP PKK KEDIREN</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @media print {
+                @page { size: portrait; margin: 1.5cm; }
+                body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+              }
+              body { font-family: 'Times New Roman', Times, serif; }
+              table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 11px; }
+              th { background-color: #f8fafc; font-weight: bold; }
+            </style>
+          </head>
+          <body class="bg-white p-6">
+            ${printContent.innerHTML}
+            <script>
+              window.onload = () => {
+                window.print();
+                window.onafterprint = () => window.close();
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
     }
   };
 
@@ -428,6 +502,7 @@ export default function PokjaIIBukuBakuPage() {
             { id: 'pelaksanaan', label: 'Buku 2: Pelaksanaan Kerja', desc: 'Realisasi & evaluasi program', icon: CheckSquare },
             { id: 'kegiatan', label: 'Buku 3: Log Kegiatan', desc: 'Buku catatan peristiwa khusus', icon: Calendar },
             { id: 'notulen', label: 'Buku 4: Notulen Rapat', desc: 'Hasil pleno & rapat koordinasi', icon: Users },
+            { id: 'laporan', label: 'e-Laporan & Buku Bantu', desc: 'Laporan otomatis realtime warga', icon: FileText },
           ].map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -680,6 +755,253 @@ export default function PokjaIIBukuBakuPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* 5. RENDER TAB 5: E-LAPORAN & BUKU BANTU OTOMATIS */}
+            {activeTab === 'laporan' && (
+              <div className="p-6 space-y-6">
+                {/* Kop Dinas Laporan Fisik */}
+                <div className="hidden print:block text-center border-b-4 double border-slate-900 pb-4 mb-8">
+                  <h2 className="text-xl font-black uppercase text-slate-900 tracking-tight">TIM PENGGERAK PKK DESA KEDIREN</h2>
+                  <h3 className="text-base font-bold uppercase text-slate-700 mt-1">POKJA II (PENDIDIKAN & EKONOMI KELUARGA)</h3>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-1">
+                    {activeReportSubTab === 'sekolah' && 'LAPORAN REKAPITULASI DATA ANAK USIA SEKOLAH (6-18 TAHUN)'}
+                    {activeReportSubTab === 'putus_sekolah' && 'LAPORAN REKAPITULASI ANAK PUTUS SEKOLAH'}
+                    {activeReportSubTab === 'ekonomi_up2k' && 'LAPORAN REKAPITULASI DUSUN - USAHA EKONOMI UP2K & KOPERASI'}
+                  </h4>
+                  {selectedDusunFilter !== 'ALL' && (
+                    <p className="text-xs font-bold text-slate-700 mt-2 uppercase">WILAYAH DUSUN: {selectedDusunFilter}</p>
+                  )}
+                </div>
+
+                {/* Sub-tab Selection */}
+                <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-4 mb-6 print:hidden">
+                  <button
+                    onClick={() => { setActiveReportSubTab('sekolah'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'sekolah'
+                        ? 'bg-sky-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <GraduationCap size={14} /> Anak Usia Sekolah (6-18)
+                  </button>
+                  <button
+                    onClick={() => { setActiveReportSubTab('putus_sekolah'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'putus_sekolah'
+                        ? 'bg-sky-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <AlertCircle size={14} /> Anak Putus Sekolah
+                  </button>
+                  <button
+                    onClick={() => { setActiveReportSubTab('ekonomi_up2k'); setSelectedDusunFilter('ALL'); }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                      activeReportSubTab === 'ekonomi_up2k'
+                        ? 'bg-sky-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <TrendingUp size={14} /> UP2K & Koperasi Dusun
+                  </button>
+                </div>
+
+                {/* Print & Filter Toolbar */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 print:hidden">
+                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Filter Wilayah Dusun:</span>
+                    {(activeReportSubTab === 'sekolah' || activeReportSubTab === 'putus_sekolah') ? (
+                      <select
+                        value={selectedDusunFilter}
+                        onChange={(e) => setSelectedDusunFilter(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 w-full sm:w-44"
+                      >
+                        <option value="ALL">Semua Dusun (Kediren)</option>
+                        {getUniqueDusuns().map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-400 italic">Filter wilayah tidak berlaku untuk rekap agregat</span>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => setShowPrintPreview(true)}
+                    className="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center gap-2 w-full sm:w-auto justify-center"
+                  >
+                    <Printer size={14} /> Cetak Laporan Fisik
+                  </button>
+                </div>
+
+                {/* Content based on sub-tab */}
+                {activeReportSubTab === 'sekolah' && (
+                  <div className="space-y-6">
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:hidden">
+                      <div className="bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-100 p-5 rounded-2xl">
+                        <span className="text-slate-500 font-bold text-xs uppercase block">Total Anak Usia Sekolah</span>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-3xl font-black text-sky-850">{getFilteredAnakSekolahData().length}</span>
+                          <span className="text-xs text-sky-600 font-bold">Jiwa</span>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-slate-50 to-emerald-50 border border-slate-200 p-5 rounded-2xl">
+                        <span className="text-slate-500 font-bold text-xs uppercase block">Informasi Pokja II (Pendidikan)</span>
+                        <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
+                          Menyajikan daftar warga usia wajib belajar (6 s/d 18 tahun) untuk mengawal program PAUD, Kejar Paket, serta pemenuhan wajib belajar 12 tahun di Desa Kediren.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden print:border-slate-300">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 print:bg-slate-100 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                            <th className="px-4 py-3 border w-12 text-center">No</th>
+                            <th className="px-4 py-3 border">Nama Lengkap</th>
+                            <th className="px-4 py-3 border text-center w-24">Usia</th>
+                            <th className="px-4 py-3 border text-center w-24">Gender</th>
+                            <th className="px-4 py-3 border">Agama</th>
+                            <th className="px-4 py-3 border">Dusun</th>
+                            <th className="px-4 py-3 border text-center w-24">RT/RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredAnakSekolahData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Belum ada data anak usia sekolah.</td>
+                            </tr>
+                          ) : (
+                            getFilteredAnakSekolahData().map((item: any, idx: number) => (
+                              <tr key={item.nik} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-slate-800">{item.nama}</td>
+                                <td className="px-4 py-3 border text-center font-black text-slate-700">{item.usia} Tahun</td>
+                                <td className="px-4 py-3 border text-center font-semibold text-slate-600">{item.jenisKelamin}</td>
+                                <td className="px-4 py-3 border text-slate-600">{item.agama}</td>
+                                <td className="px-4 py-3 border font-bold text-slate-700 uppercase">{item.dusun}</td>
+                                <td className="px-4 py-3 border text-center font-mono">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {activeReportSubTab === 'putus_sekolah' && (
+                  <div className="space-y-6">
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:hidden">
+                      <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 p-5 rounded-2xl">
+                        <span className="text-slate-500 font-bold text-xs uppercase block">Total Anak Putus Sekolah</span>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-3xl font-black text-rose-800">{getFilteredPutusSekolahData().length}</span>
+                          <span className="text-xs text-rose-600 font-bold">Jiwa</span>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 p-5 rounded-2xl">
+                        <span className="text-slate-500 font-bold text-xs uppercase block">Tindakan Pokja II</span>
+                        <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
+                          Data ini mendeteksi anak usia sekolah yang tidak bersekolah di Desa Kediren untuk memprioritaskan pemberian beasiswa, Kejar Paket A/B/C, atau pelatihan kerja.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden print:border-slate-300">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 print:bg-slate-100 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                            <th className="px-4 py-3 border w-12 text-center">No</th>
+                            <th className="px-4 py-3 border">Nama Lengkap</th>
+                            <th className="px-4 py-3 border text-center w-24">Usia</th>
+                            <th className="px-4 py-3 border text-center w-24">Gender</th>
+                            <th className="px-4 py-3 border">Pendidikan Terakhir</th>
+                            <th className="px-4 py-3 border">Dusun</th>
+                            <th className="px-4 py-3 border text-center w-24">RT/RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredPutusSekolahData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Luar biasa! Tidak terdeteksi anak putus sekolah di wilayah terpilih.</td>
+                            </tr>
+                          ) : (
+                            getFilteredPutusSekolahData().map((item: any, idx: number) => (
+                              <tr key={item.nik} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-rose-800">{item.nama}</td>
+                                <td className="px-4 py-3 border text-center font-black text-slate-700">{item.usia} Tahun</td>
+                                <td className="px-4 py-3 border text-center font-semibold text-slate-600">{item.jenisKelamin}</td>
+                                <td className="px-4 py-3 border text-slate-600 font-bold text-rose-600">{item.pendidikan || 'SD/Sederajat'}</td>
+                                <td className="px-4 py-3 border font-bold text-slate-700 uppercase">{item.dusun}</td>
+                                <td className="px-4 py-3 border text-center font-mono">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {activeReportSubTab === 'ekonomi_up2k' && (
+                  <div className="space-y-6">
+                    <div className="bg-white border-l-4 border-sky-500 p-4 rounded-r-xl shadow-sm flex items-start gap-3 print:hidden">
+                      <TrendingUp size={22} className="text-sky-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-sky-600 font-bold text-xs uppercase block">Pokja II - Pemberdayaan Ekonomi</span>
+                        <h4 className="text-slate-800 font-black text-base mt-0.5">Rekapitulasi Usaha UP2K & Kehidupan Koperasi Dusun</h4>
+                        <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                          Menampilkan aggregat usaha industri rumah tangga (UP2K) binaan PKK, jumlah koperasi aktif, PAUD binaan, serta taman bacaan per dusun di Kediren.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden print:border-slate-300">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 print:bg-slate-100 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                            <th className="px-4 py-3 border w-12 text-center">No</th>
+                            <th className="px-4 py-3 border">Nama Dusun</th>
+                            <th className="px-4 py-3 border text-center bg-slate-100/50">Total KK</th>
+                            <th className="px-4 py-3 border text-center text-sky-700">Industri RT (UP2K)</th>
+                            <th className="px-4 py-3 border text-center text-indigo-750">Koperasi Aktif</th>
+                            <th className="px-4 py-3 border text-center text-emerald-700">PAUD / Kejar Paket</th>
+                            <th className="px-4 py-3 border text-center text-amber-700">Taman Bacaan (TBM)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.dusunStats && reportData.dusunStats.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Belum ada data dusun terdeteksi.</td>
+                            </tr>
+                          ) : (
+                            reportData.dusunStats?.map((item: any, idx: number) => (
+                              <tr key={item.dusun} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-slate-800 uppercase">{item.dusun}</td>
+                                <td className="px-4 py-3 border text-center font-black text-slate-700 bg-slate-100/30">{item.totalKk} KK</td>
+                                <td className="px-4 py-3 border text-center text-sky-700 font-bold bg-sky-50/20">{item.up2kHomeIndustry} Usaha</td>
+                                <td className="px-4 py-3 border text-center text-indigo-700 font-bold bg-indigo-50/20">{item.koperasiActive} Unit</td>
+                                <td className="px-4 py-3 border text-center text-emerald-700 font-bold bg-emerald-50/20">{item.paudActive} Lembaga</td>
+                                <td className="px-4 py-3 border text-center text-amber-700 font-bold bg-amber-50/20">{item.tbmActive} Unit</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1202,6 +1524,193 @@ export default function PokjaIIBukuBakuPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* --- A4 PRINT PREVIEW MODAL --- */}
+      {showPrintPreview && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <div className="bg-slate-800 rounded-3xl shadow-2xl max-w-5xl w-full border border-slate-700 overflow-hidden flex flex-col my-8 h-[90vh]">
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider bg-sky-50/20 text-sky-300 px-2.5 py-1 rounded-full">
+                  Pratinjau Cetak Fisik A4
+                </span>
+                <h3 className="text-base sm:text-lg font-black mt-1.5 flex items-center gap-2">
+                  <Printer className="w-5 h-5 text-sky-500" /> Dokumen Laporan Pokja II
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handlePrint}
+                  className="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition"
+                >
+                  <Printer className="w-4 h-4" /> Cetak Sekarang
+                </button>
+                <button
+                  onClick={() => setShowPrintPreview(false)}
+                  className="bg-slate-700 hover:bg-slate-600 text-white p-2.5 rounded-xl transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* A4 Paper Viewport Wrapper */}
+            <div className="flex-1 overflow-y-auto bg-slate-900 p-8 flex justify-center">
+              {/* The "A4 Page" */}
+              <div 
+                id="report-print-preview-content"
+                className="bg-white text-black p-[2.5cm] shadow-2xl relative select-none w-[21cm] min-h-[29.7cm] flex flex-col justify-between"
+                style={{ fontFamily: 'Times New Roman, serif' }}
+              >
+                <div>
+                  {/* Kop Dinas PKK Kediren */}
+                  <div className="text-center border-b-4 double border-slate-900 pb-3 mb-6">
+                    <h2 className="text-lg font-bold uppercase text-slate-900 tracking-wide">PEMBERDAYAAN DAN KESEJAHTERAAN KELUARGA</h2>
+                    <h2 className="text-xl font-black uppercase text-slate-900 tracking-tight mt-0.5">TIM PENGGERAK PKK DESA KEDIREN</h2>
+                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Kecamatan Lembeyan, Kabupaten Magetan, Provinsi Jawa Timur</p>
+                    <div className="border-t border-slate-400 my-1"></div>
+                    <h3 className="text-sm font-bold uppercase text-slate-800 tracking-wide mt-2">
+                      REKAPITULASI DOKUMEN LAPORAN & BUKU BANTU - POKJA II
+                    </h3>
+                    <h4 className="text-xs font-bold uppercase text-sky-850 tracking-widest mt-1">
+                      {activeReportSubTab === 'sekolah' && 'DATA REKAPITULASI WARGA USIA WAJIB BELAJAR (6-18 TAHUN)'}
+                      {activeReportSubTab === 'putus_sekolah' && 'DATA REKAPITULASI WARGA PUTUS SEKOLAH'}
+                      {activeReportSubTab === 'ekonomi_up2k' && 'REKAPITULASI PEMBERDAYAAN UP2K & EKONOMI DUSUN'}
+                    </h4>
+                    {selectedDusunFilter !== 'ALL' && (
+                      <p className="text-[10px] font-bold text-slate-700 mt-1 uppercase">WILAYAH DUSUN: {selectedDusunFilter}</p>
+                    )}
+                  </div>
+
+                  {/* Dynamic Table inside A4 Document */}
+                  {activeReportSubTab === 'sekolah' && (
+                    <div className="space-y-4">
+                      <table className="w-full text-left border-collapse text-[11px] border border-slate-400">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold uppercase border-b border-slate-400 text-[10px]">
+                            <th className="px-3 py-2 border border-slate-400 text-center w-8">No</th>
+                            <th className="px-3 py-2 border border-slate-400">Nama Lengkap Anak</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center w-16">Usia</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center w-16">Gender</th>
+                            <th className="px-3 py-2 border border-slate-400">Agama</th>
+                            <th className="px-3 py-2 border border-slate-400">Dusun</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center w-16">RT / RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredAnakSekolahData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-6">Belum ada data warga usia sekolah.</td>
+                            </tr>
+                          ) : (
+                            getFilteredAnakSekolahData().map((item: any, idx: number) => (
+                              <tr key={item.nik} className="border-b border-slate-400">
+                                <td className="px-3 py-2 border border-slate-400 text-center">{idx + 1}</td>
+                                <td className="px-3 py-2 border border-slate-400 font-bold uppercase">{item.nama}</td>
+                                <td className="px-3 py-2 border border-slate-400 text-center">{item.usia} Thn</td>
+                                <td className="px-3 py-2 border border-slate-400 text-center">{item.jenisKelamin}</td>
+                                <td className="px-3 py-2 border border-slate-400">{item.agama}</td>
+                                <td className="px-3 py-2 border border-slate-400 uppercase font-semibold">{item.dusun}</td>
+                                <td className="px-3 py-2 border border-slate-400 text-center font-mono">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {activeReportSubTab === 'putus_sekolah' && (
+                    <div className="space-y-4">
+                      <table className="w-full text-left border-collapse text-[11px] border border-slate-400">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold uppercase border-b border-slate-400 text-[10px]">
+                            <th className="px-3 py-2 border border-slate-400 text-center w-8">No</th>
+                            <th className="px-3 py-2 border border-slate-400">Nama Lengkap</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center w-16">Usia</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center w-16">Gender</th>
+                            <th className="px-3 py-2 border border-slate-400">Pendidikan Terakhir</th>
+                            <th className="px-3 py-2 border border-slate-400">Dusun</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center w-16">RT / RW</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredPutusSekolahData().length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="text-center py-6">Tidak terdeteksi anak putus sekolah di wilayah ini.</td>
+                            </tr>
+                          ) : (
+                            getFilteredPutusSekolahData().map((item: any, idx: number) => (
+                              <tr key={item.nik} className="border-b border-slate-400">
+                                <td className="px-3 py-2 border border-slate-400 text-center">{idx + 1}</td>
+                                <td className="px-3 py-2 border border-slate-400 font-bold uppercase text-rose-800">{item.nama}</td>
+                                <td className="px-3 py-2 border border-slate-400 text-center">{item.usia} Thn</td>
+                                <td className="px-3 py-2 border border-slate-400 text-center">{item.jenisKelamin}</td>
+                                <td className="px-3 py-2 border border-slate-400 font-bold text-rose-600">{item.pendidikan || 'SD/Sederajat'}</td>
+                                <td className="px-3 py-2 border border-slate-400 uppercase font-semibold">{item.dusun}</td>
+                                <td className="px-3 py-2 border border-slate-400 text-center font-mono">{item.rt} / {item.rw}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {activeReportSubTab === 'ekonomi_up2k' && (
+                    <div className="space-y-4">
+                      <table className="w-full text-left border-collapse text-[11px] border border-slate-400">
+                        <thead>
+                          <tr className="bg-slate-100 font-bold uppercase border-b border-slate-400 text-[10px]">
+                            <th className="px-3 py-2 border border-slate-400 text-center w-8">No</th>
+                            <th className="px-3 py-2 border border-slate-400">Nama Wilayah Dusun</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center">Total KK</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center">Industri RT (UP2K)</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center">Koperasi Binaan</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center">Lembaga PAUD</th>
+                            <th className="px-3 py-2 border border-slate-400 text-center">Taman Bacaan</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.dusunStats?.map((item: any, idx: number) => (
+                            <tr key={item.dusun} className="border-b border-slate-400">
+                              <td className="px-3 py-2 border border-slate-400 text-center">{idx + 1}</td>
+                              <td className="px-3 py-2 border border-slate-400 font-bold uppercase">{item.dusun}</td>
+                              <td className="px-3 py-2 border border-slate-400 text-center font-bold">{item.totalKk} KK</td>
+                              <td className="px-3 py-2 border border-slate-400 text-center font-semibold">{item.up2kHomeIndustry} Usaha</td>
+                              <td className="px-3 py-2 border border-slate-400 text-center font-semibold">{item.koperasiActive} Unit</td>
+                              <td className="px-3 py-2 border border-slate-400 text-center font-semibold">{item.paudActive} Lembaga</td>
+                              <td className="px-3 py-2 border border-slate-400 text-center font-semibold">{item.tbmActive} Unit</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Wet Signatures block */}
+                <div className="grid grid-cols-2 gap-4 mt-12 text-xs text-slate-800">
+                  <div className="text-center">
+                    <p>Mengetahui,</p>
+                    <p className="font-bold uppercase mt-1">Ketua TP PKK Desa Kediren</p>
+                    <div className="h-16"></div>
+                    <p className="font-bold underline uppercase">NY. SRI WAHYUNI</p>
+                    <p className="text-[10px] text-slate-500">NIP. P-2026051901</p>
+                  </div>
+                  <div className="text-center">
+                    <p>Kediren, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                    <p className="font-bold uppercase mt-1">Kader Utama Pokja II</p>
+                    <div className="h-16"></div>
+                    <p className="font-bold underline uppercase">NY. SUWARNI</p>
+                    <p className="text-[10px] text-slate-500">Reg. ID: P2-2026051907</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

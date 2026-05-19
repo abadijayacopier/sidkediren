@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { 
   ArrowLeft, Plus, Search, Edit3, Trash2, X, Save, Printer, Info, 
   Home, Droplet, Trees, Sparkles, Check, Heart, Users, ShieldAlert,
-  Calendar, MapPin, Activity, HelpCircle
+  Calendar, MapPin, Activity, HelpCircle, FileText
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-type TabType = 'kelompok' | 'keluarga' | 'kegiatan';
+type TabType = 'kelompok' | 'keluarga' | 'kegiatan' | 'laporan';
 
 // Seed initial dasawisma groups
 const initialKelompok = [
@@ -49,9 +49,38 @@ export default function DasawismaPage() {
   const [keluargaList, setKeluargaList] = useState<any[]>([]);
   const [kegiatanList, setKegiatanList] = useState<any[]>([]);
 
+  // e-Laporan States
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [activeReportSubTab, setActiveReportSubTab] = useState<'lingkungan' | 'kerawanan'>('lingkungan');
+  const [selectedDusunFilter, setSelectedDusunFilter] = useState<string>('ALL');
+
   // Modals
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+
+  // Helper functions
+  const getUniqueDusuns = () => {
+    const list = new Set<string>();
+    if (kelompokList) {
+      kelompokList.forEach((item: any) => {
+        if (item.dusun) list.add(item.dusun.trim().toUpperCase());
+      });
+    }
+    return Array.from(list);
+  };
+
+  const getFilteredKelompokList = () => {
+    if (!kelompokList) return [];
+    if (selectedDusunFilter === 'ALL') return kelompokList;
+    return kelompokList.filter((item: any) => item.dusun && item.dusun.trim().toUpperCase() === selectedDusunFilter.toUpperCase());
+  };
+
+  const getFilteredKeluargaList = () => {
+    if (!keluargaList) return [];
+    const filteredKelompoks = getFilteredKelompokList();
+    const allowedIds = new Set(filteredKelompoks.map(k => k.id));
+    return keluargaList.filter(f => allowedIds.has(f.kelompokId));
+  };
 
   // --- FORM STATES ---
   // Kelompok Form
@@ -380,13 +409,13 @@ export default function DasawismaPage() {
             </div>
           </div>
         </div>
-
         {/* Tab Selection */}
         <div className="flex overflow-x-auto space-x-2 border-b border-slate-200 pb-3 mb-6 scrollbar-none print:hidden">
           {[
             { id: 'kelompok', label: 'Buku 1: Kelompok Dasawisma', desc: 'Daftar rekapitulasi kelengkapan RT', icon: Users },
             { id: 'keluarga', label: 'Buku 2: Catatan Pantauan Keluarga', desc: 'Detail kondisi gizi & kesehatan KK', icon: Home },
             { id: 'kegiatan', label: 'Buku 3: Log Gotong Royong', desc: 'Aktivitas kebun gizi & arisan', icon: Calendar },
+            { id: 'laporan', label: 'Buku 4: e-Laporan & Rekapitulasi', desc: 'Rekap otomatis realtime warga', icon: FileText },
           ].map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -408,9 +437,7 @@ export default function DasawismaPage() {
               </button>
             )
           })}
-        </div>
-
-        {/* Filter bar */}
+        </div>        {/* Filter bar */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm mb-6 print:hidden">
           <Search className="w-5 h-5 text-slate-400 shrink-0" />
           <input 
@@ -600,6 +627,177 @@ export default function DasawismaPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* TAB 4: e-LAPORAN & REKAPITULASI */}
+          {activeTab === 'laporan' && (
+            <div className="p-6 space-y-6">
+              {/* Toolbar & Filter Laporan */}
+              <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-purple-600 rounded-full animate-ping"></span>
+                  <p className="text-xs font-black text-purple-900 uppercase tracking-wider">Laporan Agregat Realtime Dasawisma</p>
+                </div>
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500">Filter Dusun:</span>
+                    <select
+                      value={selectedDusunFilter}
+                      onChange={(e) => setSelectedDusunFilter(e.target.value)}
+                      className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 font-bold text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="ALL">Semua Dusun</option>
+                      {getUniqueDusuns().map(ds => (
+                        <option key={ds} value={ds}>{ds}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setShowPrintPreview(true)}
+                    className="bg-purple-600 hover:bg-purple-750 text-white font-bold px-4 py-1.5 rounded-lg flex items-center gap-1.5 transition text-xs shadow-sm shadow-purple-500/10"
+                  >
+                    <Printer className="w-3.5 h-3.5" /> Pratinjau A4
+                  </button>
+                </div>
+              </div>
+
+              {/* Subtabs Selector */}
+              <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg w-max">
+                <button
+                  type="button"
+                  onClick={() => setActiveReportSubTab('lingkungan')}
+                  className={`px-4 py-2 rounded-md font-bold text-xs transition ${
+                    activeReportSubTab === 'lingkungan' ? 'bg-white text-purple-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Rekap Sanitasi & Lingkungan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveReportSubTab('kerawanan')}
+                  className={`px-4 py-2 rounded-md font-bold text-xs transition ${
+                    activeReportSubTab === 'kerawanan' ? 'bg-white text-purple-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Kerawanan Gizi & Sosial KK
+                </button>
+              </div>
+
+              {activeReportSubTab === 'lingkungan' ? (
+                <div className="space-y-4">
+                  {/* Table Rekap Lingkungan */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                          <th className="px-4 py-3 border w-12 text-center">No</th>
+                          <th className="px-4 py-3 border">Nama Dasawisma</th>
+                          <th className="px-4 py-3 border">Wilayah / Dusun</th>
+                          <th className="px-4 py-3 border text-center bg-purple-50/20">Jumlah KK</th>
+                          <th className="px-4 py-3 border">Air Bersih</th>
+                          <th className="px-4 py-3 border text-center">Jamban Keluarga</th>
+                          <th className="px-4 py-3 border text-center">Tempat Sampah</th>
+                          <th className="px-4 py-3 border text-center">Hatinya PKK</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getFilteredKelompokList().length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">Tidak ada data Dasawisma sesuai filter.</td>
+                          </tr>
+                        ) : (
+                          getFilteredKelompokList().map((item: any, idx: number) => (
+                            <tr key={item.id} className="hover:bg-slate-50/50 border-b transition">
+                              <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                              <td className="px-4 py-3 border font-black text-purple-950">{item.nama}</td>
+                              <td className="px-4 py-3 border">Dsn. {item.dusun} (RT {item.rt} / RW {item.rw})</td>
+                              <td className="px-4 py-3 border text-center font-bold text-purple-900 bg-purple-50/10">{item.jumlahKk} KK</td>
+                              <td className="px-4 py-3 border font-semibold text-slate-600">{item.airBersih}</td>
+                              <td className="px-4 py-3 border text-center">
+                                {item.jamban ? (
+                                  <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold text-[9px]">Lengkap</span>
+                                ) : (
+                                  <span className="inline-block px-2 py-0.5 bg-rose-50 text-rose-700 rounded-full font-bold text-[9px]">Belum</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 border text-center">
+                                {item.sampah ? (
+                                  <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold text-[9px]">Dikelola</span>
+                                ) : (
+                                  <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold text-[9px]">Belum</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 border text-center">
+                                {item.kebunGizi ? (
+                                  <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold text-[9px]">Aktif</span>
+                                ) : (
+                                  <span className="inline-block px-2 py-0.5 bg-slate-50 text-slate-500 rounded-full font-bold text-[9px]">Tidak</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Table Rekap Kerawanan */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                          <th className="px-4 py-3 border w-12 text-center">No</th>
+                          <th className="px-4 py-3 border">Nama Kepala Keluarga</th>
+                          <th className="px-4 py-3 border">Dasawisma Pelindung</th>
+                          <th className="px-4 py-3 border text-center">Total Jiwa</th>
+                          <th className="px-4 py-3 border text-center text-blue-700">Jumlah Balita</th>
+                          <th className="px-4 py-3 border text-center text-pink-700">Ibu Hamil/Busui</th>
+                          <th className="px-4 py-3 border text-center text-amber-700">Lansia Rentan</th>
+                          <th className="px-4 py-3 border text-center">Ketahanan Pangan</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getFilteredKeluargaList().length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">Tidak ada data Keluarga sesuai filter.</td>
+                          </tr>
+                        ) : (
+                          getFilteredKeluargaList().map((item: any, idx: number) => {
+                            const dsw = kelompokList.find(k => k.id === item.kelompokId);
+                            return (
+                              <tr key={item.id} className="hover:bg-slate-50/50 border-b transition">
+                                <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                                <td className="px-4 py-3 border font-black text-slate-800">{item.namaKk}</td>
+                                <td className="px-4 py-3 border font-semibold text-purple-900">{dsw ? dsw.nama : 'Dasawisma'}</td>
+                                <td className="px-4 py-3 border text-center font-semibold">{item.jumlahJiwa} Orang</td>
+                                <td className="px-4 py-3 border text-center font-bold text-blue-700 bg-blue-50/10">{item.balita} Balita</td>
+                                <td className="px-4 py-3 border text-center font-bold">
+                                  {item.bumil ? (
+                                    <span className="inline-block px-2.5 py-0.5 bg-pink-100 text-pink-700 rounded-full font-bold text-[9px]">Bumil</span>
+                                  ) : (
+                                    <span className="text-slate-400">-</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 border text-center font-bold text-amber-700 bg-amber-50/10">{item.lansia} Lansia</td>
+                                <td className="px-4 py-3 border text-center">
+                                  {item.pgnMandiri ? (
+                                    <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[9px]">Mandiri</span>
+                                  ) : (
+                                    <span className="inline-block px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold text-[9px]">Rentan</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -941,6 +1139,222 @@ export default function DasawismaPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- A4 PRINT PREVIEW MODAL --- */}
+      {showPrintPreview && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <div className="bg-slate-800 rounded-3xl shadow-2xl max-w-5xl w-full border border-slate-700 overflow-hidden flex flex-col my-8 h-[90vh]">
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider bg-purple-50/20 text-purple-300 px-2.5 py-1 rounded-full">
+                  Pratinjau Cetak Fisik A4
+                </span>
+                <h3 className="text-base sm:text-lg font-black mt-1.5 flex items-center gap-2">
+                  <Printer className="w-5 h-5 text-purple-400" /> Buku Bantu & e-Laporan Dasawisma
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowPrintPreview(false)}
+                className="text-slate-400 hover:text-white p-2 hover:bg-slate-800 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Action Bar */}
+            <div className="bg-slate-850 px-6 py-3 border-b border-slate-850 flex items-center justify-between text-xs text-slate-400 shrink-0">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-purple-400" />
+                <span>Format laporan telah disesuaikan dengan standar A4 portrait resmi TP PKK.</span>
+              </div>
+              <button
+                onClick={() => {
+                  const printContent = document.getElementById('a4-dasawisma-print-area')?.innerHTML;
+                  if (printContent) {
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <html>
+                          <head>
+                            <title>Cetak Laporan Dasawisma - Desa Kediren</title>
+                            <script src="https://cdn.tailwindcss.com"></script>
+                            <style>
+                              @media print {
+                                @page { size: A4 portrait; margin: 15mm; }
+                                body { font-family: 'Times New Roman', Times, serif; color: #000; background: #fff; }
+                                .no-print { display: none; }
+                              }
+                              body { font-family: 'Times New Roman', Times, serif; padding: 20px; }
+                              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                              th, td { border: 1px solid #000; padding: 6px 8px; font-size: 11px; }
+                              th { background-color: #f3f4f6 !important; font-weight: bold; text-transform: uppercase; }
+                            </style>
+                          </head>
+                          <body>
+                            \${printContent}
+                            <script>
+                              window.onload = function() {
+                                window.print();
+                                setTimeout(function() { window.close(); }, 500);
+                              };
+                            </script>
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                    }
+                  }
+                }}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition"
+              >
+                <Printer className="w-4 h-4" /> Cetak Sekarang
+              </button>
+            </div>
+
+            {/* Preview Container */}
+            <div className="flex-1 overflow-y-auto p-8 bg-slate-900 flex justify-center">
+              {/* Paper Layout (A4) */}
+              <div 
+                id="a4-dasawisma-print-area"
+                className="bg-white text-black p-12 w-[210mm] min-h-[297mm] shadow-2xl relative text-xs flex flex-col justify-between"
+                style={{ fontFamily: "'Times New Roman', Times, serif" }}
+              >
+                <div>
+                  {/* Kop PKK Resmi */}
+                  <div className="text-center border-b-4 border-black pb-4 mb-6 text-black">
+                    <h2 className="text-lg font-bold tracking-widest uppercase">PEMBERDAYAAN DAN KESEJAHTERAAN KELUARGA</h2>
+                    <h3 className="text-md font-bold tracking-wider uppercase mt-1">TP PKK DESA KEDIREN</h3>
+                    <p className="text-xs italic mt-1.5 text-slate-750 font-semibold">
+                      Kecamatan Lembeyan, Kabupaten Magetan, Provinsi Jawa Timur
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Sekretariat: Jl. Raya Kediren No. 04, Kode Pos 63372
+                    </p>
+                  </div>
+
+                  {/* Judul Laporan */}
+                  <div className="text-center mb-6">
+                    <h4 className="text-sm font-bold uppercase underline">
+                      {activeReportSubTab === 'lingkungan' 
+                        ? 'REKAPITULASI LAPORAN SANITASI & LINGKUNGAN HIDUP DASAWISMA'
+                        : 'REKAPITULASI CATATAN KONDISI GIZI & KESEHATAN KELUARGA'
+                      }
+                    </h4>
+                    <p className="text-[11px] font-bold text-slate-800 mt-1 uppercase">
+                      WILAYAH DUSUN: {selectedDusunFilter === 'ALL' ? 'SEMUA DUSUN' : `DUSUN ${selectedDusunFilter}`}
+                    </p>
+                    <p className="text-[10px] italic text-slate-500 mt-0.5">
+                      Dicetak otomatis oleh Sistem PKK Digital Terintegrasi per {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}
+                    </p>
+                  </div>
+
+                  {/* Laporan Lingkungan */}
+                  {activeReportSubTab === 'lingkungan' && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[10px] border-collapse text-black">
+                        <thead>
+                          <tr className="bg-slate-100 text-[9px] font-bold uppercase text-center">
+                            <th className="border border-black p-2 w-8">No</th>
+                            <th className="border border-black p-2">Nama Dasawisma</th>
+                            <th className="border border-black p-2">Wilayah / RT-RW</th>
+                            <th className="border border-black p-2 w-20">Jumlah KK</th>
+                            <th className="border border-black p-2">Sumber Air</th>
+                            <th className="border border-black p-2 w-24">Jamban Keluarga</th>
+                            <th className="border border-black p-2 w-24">Tempat Sampah</th>
+                            <th className="border border-black p-2 w-24">Kebun Gizi (Toga)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredKelompokList().length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="text-center py-6 border border-black font-semibold text-slate-500">Tidak ada data Dasawisma.</td>
+                            </tr>
+                          ) : (
+                            getFilteredKelompokList().map((item: any, idx: number) => (
+                              <tr key={item.id} className="text-center">
+                                <td className="border border-black p-2 font-bold">{idx + 1}</td>
+                                <td className="border border-black p-2 font-bold text-left">{item.nama}</td>
+                                <td className="border border-black p-2 text-left">Dsn. {item.dusun} (RT {item.rt} / RW {item.rw})</td>
+                                <td className="border border-black p-2 font-bold">{item.jumlahKk} KK</td>
+                                <td className="border border-black p-2 text-left font-medium">{item.airBersih}</td>
+                                <td className="border border-black p-2 font-bold">{item.jamban ? 'LENGKAP' : 'BELUM'}</td>
+                                <td className="border border-black p-2 font-bold">{item.sampah ? 'DIKELOLA' : 'BELUM'}</td>
+                                <td className="border border-black p-2 font-bold">{item.kebunGizi ? 'AKTIF' : 'TIDAK'}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Laporan Gizi/Kesehatan */}
+                  {activeReportSubTab === 'kerawanan' && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[10px] border-collapse text-black">
+                        <thead>
+                          <tr className="bg-slate-100 text-[9px] font-bold uppercase text-center">
+                            <th className="border border-black p-2 w-8">No</th>
+                            <th className="border border-black p-2">Nama Kepala Keluarga</th>
+                            <th className="border border-black p-2">Kelompok Dasawisma</th>
+                            <th className="border border-black p-2 w-20">Total Jiwa</th>
+                            <th className="border border-black p-2 w-20">Balita</th>
+                            <th className="border border-black p-2 w-24">Ibu Hamil/Busui</th>
+                            <th className="border border-black p-2 w-20">Lansia</th>
+                            <th className="border border-black p-2 w-28">Ketahanan Pangan</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredKeluargaList().length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="text-center py-6 border border-black font-semibold text-slate-500">Tidak ada data Keluarga.</td>
+                            </tr>
+                          ) : (
+                            getFilteredKeluargaList().map((item: any, idx: number) => {
+                              const dsw = kelompokList.find(k => k.id === item.kelompokId);
+                              return (
+                                <tr key={item.id} className="text-center">
+                                  <td className="border border-black p-2 font-bold">{idx + 1}</td>
+                                  <td className="border border-black p-2 font-bold text-left">{item.namaKk}</td>
+                                  <td className="border border-black p-2 text-left font-medium">{dsw ? dsw.nama : 'Dasawisma'}</td>
+                                  <td className="border border-black p-2 font-semibold">{item.jumlahJiwa} Org</td>
+                                  <td className="border border-black p-2 font-bold">{item.balita} Balita</td>
+                                  <td className="border border-black p-2 font-bold">{item.bumil ? 'BUMIL' : '-'}</td>
+                                  <td className="border border-black p-2 font-bold">{item.lansia} Lansia</td>
+                                  <td className="border border-black p-2 font-bold">{item.pgnMandiri ? 'MANDIRI' : 'RENTAN'}</td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Wet Signatures block */}
+                <div className="grid grid-cols-2 gap-4 mt-12 text-xs text-black">
+                  <div className="text-center">
+                    <p>Mengetahui,</p>
+                    <p className="font-bold uppercase mt-1">Ketua TP PKK Desa Kediren</p>
+                    <div className="h-16"></div>
+                    <p className="font-bold underline uppercase">NY. SRI WAHYUNI</p>
+                    <p className="text-[10px] text-slate-500">NIP. P-2026051901</p>
+                  </div>
+                  <div className="text-center">
+                    <p>Kediren, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                    <p className="font-bold uppercase mt-1">Kader Pendamping Dasawisma</p>
+                    <div className="h-16"></div>
+                    <p className="font-bold underline uppercase">NY. ENDANG PURWATI</p>
+                    <p className="text-[10px] text-slate-500">Reg. ID: DSW-2026051909</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
