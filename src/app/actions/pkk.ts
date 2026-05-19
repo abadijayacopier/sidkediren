@@ -48,6 +48,37 @@ export async function getBalitaKmsList() {
   );
 }
 
+export async function getWargaBalitaList() {
+  return withDriftRetry(
+    () => {
+      const fiveYearsAgo = new Date();
+      fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+      
+      return prisma.penduduk.findMany({
+        where: {
+          tanggalLahir: {
+            gte: fiveYearsAgo
+          },
+          isHidup: true
+        },
+        select: {
+          nik: true,
+          namaLengkap: true,
+          namaIbu: true,
+          tanggalLahir: true,
+          keluarga: {
+            select: {
+              dusun: true
+            }
+          }
+        },
+        orderBy: { namaLengkap: 'asc' }
+      });
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
 export async function seedPkkData() {
   // Hanya melakukan seeding jika tabel kosong
   const posyanduCount = await prisma.posyandu.count();
@@ -92,10 +123,13 @@ export async function saveBalita(formData: FormData) {
     const tinggiBadan = Number(formData.get('tinggiBadan'));
     const posyanduId = Number(formData.get('posyanduId'));
 
-    // Hitung status gizi sederhana
-    let statusGizi = 'Normal';
-    if (beratBadan < (usiaBulan * 0.4)) statusGizi = 'Gizi Kurang';
-    if (tinggiBadan < (usiaBulan * 2.5)) statusGizi = 'Stunting';
+    // Hitung status gizi dengan input dari client jika ada, jika tidak pakai fallback
+    let statusGizi = formData.get('statusGizi') as string;
+    if (!statusGizi) {
+      statusGizi = 'Normal';
+      if (beratBadan < (usiaBulan * 0.4)) statusGizi = 'Gizi Kurang';
+      if (tinggiBadan < (usiaBulan * 2.5)) statusGizi = 'Stunting';
+    }
 
     await prisma.balitaKms.create({
       data: {
@@ -121,6 +155,42 @@ export async function saveBalita(formData: FormData) {
 export async function deleteBalita(id: number) {
   try {
     await prisma.balitaKms.delete({ where: { id } });
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function saveJadwal(formData: FormData) {
+  try {
+    const posyanduId = Number(formData.get('posyanduId'));
+    const kaderId = Number(formData.get('kaderId'));
+    const tanggal = new Date(formData.get('tanggal') as string);
+    const waktu = formData.get('waktu') as string;
+    const sasaran = formData.get('sasaran') as string;
+
+    await prisma.jadwalPosyandu.create({
+      data: {
+        posyanduId,
+        kaderId,
+        tanggal,
+        waktu,
+        sasaran
+      }
+    });
+
+    revalidatePath('/admin/pkk');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error saving Jadwal:', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteJadwal(id: number) {
+  try {
+    await prisma.jadwalPosyandu.delete({ where: { id } });
     revalidatePath('/admin/pkk');
     return { success: true };
   } catch (error: any) {
