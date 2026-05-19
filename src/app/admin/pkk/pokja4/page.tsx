@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   BookOpen, FileText, Calendar, Users, MapPin, Plus, Search, Edit3, Trash2, X, Save, 
-  ArrowLeft, CheckSquare, Printer, ChevronRight, Check, AlertCircle, Clock, Info
+  ArrowLeft, CheckSquare, Printer, ChevronRight, Check, AlertCircle, Info
 } from 'lucide-react';
 import { 
   getKaderPkkList, seedPkkData,
@@ -42,7 +42,7 @@ export default function PokjaIVBukuBakuPage() {
   const [b1Kegiatan, setB1Kegiatan] = useState('');
   const [b1Sasaran, setB1Sasaran] = useState('');
   const [b1Lokasi, setB1Lokasi] = useState('');
-  const [b1WaktuBulan, setB1WaktuBulan] = useState<number[]>([]); // Array of months (1-12)
+  const [b1WaktuBulan, setB1WaktuBulan] = useState<number[]>([]); 
   const [b1Mitra, setB1Mitra] = useState('');
   const [b1Indikator, setB1Indikator] = useState('');
   const [b1Keterangan, setB1Keterangan] = useState('');
@@ -230,7 +230,7 @@ export default function PokjaIVBukuBakuPage() {
       text: "Data administrasi terpilih akan dihapus permanen dari sistem.",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#f43f5e',
+      confirmButtonColor: '#e11d48',
       cancelButtonColor: '#64748b',
       confirmButtonText: 'Ya, Hapus!',
       cancelButtonText: 'Batal'
@@ -339,48 +339,6 @@ export default function PokjaIVBukuBakuPage() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Helper render months checkboxes
-  const renderMonthHeaders = () => {
-    const months = Array.from({ length: 12 }, (_, i) => i + 1);
-    return months.map(m => (
-      <th key={m} className="px-2 py-3 text-center border text-[10px] font-black text-slate-500 w-8 bg-slate-50">{m}</th>
-    ));
-  };
-
-  const renderMonthCells = (waktuPelaksanaanStr: string) => {
-    let monthsArr: number[] = [];
-    try {
-      monthsArr = JSON.parse(waktuPelaksanaanStr || '[]');
-    } catch (e) {
-      monthsArr = [];
-    }
-
-    return Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-      <td key={m} className="px-2 py-3 text-center border text-xs font-bold w-8">
-        {monthsArr.includes(m) ? (
-          <span className="inline-block w-4 h-4 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center mx-auto text-[10px] font-black">✓</span>
-        ) : '-'}
-      </td>
-    ));
-  };
-
-  // Formatting helpers
-  const formatMonthNames = (waktuPelaksanaanStr: string) => {
-    let monthsArr: number[] = [];
-    try {
-      monthsArr = JSON.parse(waktuPelaksanaanStr || '[]');
-    } catch (e) {
-      monthsArr = [];
-    }
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-    return monthsArr.map(m => monthNames[m - 1]).join(', ') || 'Belum diatur';
-  };
-
-  // Filters based on active tab and search query
   const getFilteredData = () => {
     if (activeTab === 'program') {
       return programList.filter(item => 
@@ -399,811 +357,752 @@ export default function PokjaIVBukuBakuPage() {
         item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.uraian.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    } else {
+    } else if (activeTab === 'notulen') {
       return notulenList.filter(item =>
         item.jenisRapat.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tempat.toLowerCase().includes(searchQuery.toLowerCase())
+        item.tempat.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.kesimpulan.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+    return [];
   };
 
-  const filteredData = getFilteredData();
+  const renderMonthCells = (waktuPelaksanaanStr: string) => {
+    let monthsArr: number[] = [];
+    try {
+      monthsArr = JSON.parse(waktuPelaksanaanStr || '[]');
+    } catch (e) {
+      monthsArr = [];
+    }
+
+    return Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+      <td key={m} className="px-2 py-3 text-center border text-xs font-bold w-8">
+        {monthsArr.includes(m) ? (
+          <span className="inline-block w-4 h-4 bg-rose-100 text-rose-700 rounded flex items-center justify-center mx-auto text-[10px] font-black">✓</span>
+        ) : '-'}
+      </td>
+    ));
+  };
 
   return (
-    <div className="space-y-8 print:space-y-4 print:p-0">
-      {/* CSS Cetak Khusus */}
-      <style jsx global>{`
-        @media print {
-          body {
-            background-color: white !important;
-            color: black !important;
-            font-size: 10px !important;
-          }
-          aside, nav, header, button, .no-print, input, .flex-row-header {
-            display: none !important;
-          }
-          .print-full-width {
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-          }
-          table {
-            border-collapse: collapse !important;
-            width: 100% !important;
-            font-size: 9px !important;
-          }
-          th, td {
-            border: 1px solid #000 !important;
-            padding: 4px !important;
-            color: black !important;
-          }
-          .print-title {
-            display: block !important;
-            text-align: center !important;
-            margin-bottom: 20px !important;
-          }
-        }
-      `}</style>
-
-      {/* Header Halaman (No Print) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print flex-row-header">
-        <div>
-          <Link href="/admin/pkk" className="text-rose-600 font-semibold text-xs flex items-center gap-1.5 hover:underline mb-2">
-            <ArrowLeft size={14} /> Kembali ke Dashboard
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-             <div className="w-10 h-10 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center">
-               <BookOpen size={20} />
-             </div>
-             Buku Baku Administrasi Pokja IV
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">Pembinaan program Kesehatan, Kelestarian Lingkungan Hidup, & Perencanaan Sehat.</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-           <button 
-             onClick={handlePrint}
-             className="px-4 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-200 transition-all shadow-sm"
-           >
-             <Printer size={16} /> Cetak Buku Administrasi
-           </button>
-           <button 
-             onClick={handleOpenAdd}
-             className="px-4 py-2.5 bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-amber-700 shadow-sm transition-all shadow-amber-200"
-           >
-             <Plus size={16} /> Tambah Log Data
-           </button>
-        </div>
-      </div>
-
-      {/* Rambu Info Lomba (No Print) */}
-      <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 flex gap-4 items-start no-print">
-        <div className="p-2.5 bg-amber-100 text-amber-800 rounded-xl">
-          <Info size={20} />
-        </div>
-        <div className="space-y-1">
-          <h4 className="font-bold text-slate-800 text-sm">Dokumentasi Baku Administrasi PKK</h4>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Halaman ini memfasilitasi 4 Buku Baku Utama administrasi yang wajib dimiliki oleh Pokja IV PKK sesuai panduan penilaian tingkat kabupaten. Format tabel, penanggalan, dan kolom notulen telah disesuaikan 100% presisi dengan format cetak resmi.
-          </p>
-        </div>
-      </div>
-
-      {/* Judul Khusus Cetak (Hanya Muncul Saat Print) */}
-      <div className="hidden print:block text-center mb-6">
-        <h1 className="text-xl font-bold uppercase tracking-wide">Pemberdayaan Kesejahteraan Keluarga (PKK)</h1>
-        <h2 className="text-lg font-bold uppercase tracking-wide mt-1">Tim Penggerak PKK Desa Kediren - Kecamatan Lembeyan</h2>
-        <h3 className="text-md font-bold uppercase tracking-wide border-b border-black pb-3 mt-1 text-slate-700">
-          {activeTab === 'program' && 'BUKU 1: PROGRAM KERJA POKJA IV'}
-          {activeTab === 'pelaksanaan' && 'BUKU 2: PELAKSANAAN PROGRAM KERJA POKJA IV'}
-          {activeTab === 'kegiatan' && 'BUKU 3: BUKU KEGIATAN KADER POKJA IV'}
-          {activeTab === 'notulen' && 'BUKU 4: BUKU NOTULEN RAPAT POKJA IV'}
-        </h3>
-      </div>
-
-      {/* Tab Navigasi Buku (No Print) */}
-      <div className="flex border-b border-slate-200 gap-1 overflow-x-auto no-print">
-        <button 
-          onClick={() => { setActiveTab('program'); setSearchQuery(''); }}
-          className={`px-5 py-3.5 text-xs font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'program' ? 'border-amber-600 text-amber-700 bg-amber-50/20' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}
-        >
-          <FileText size={16} /> 1. Buku Program Kerja
-        </button>
-        <button 
-          onClick={() => { setActiveTab('pelaksanaan'); setSearchQuery(''); }}
-          className={`px-5 py-3.5 text-xs font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'pelaksanaan' ? 'border-amber-600 text-amber-700 bg-amber-50/20' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}
-        >
-          <CheckSquare size={16} /> 2. Buku Pelaksanaan
-        </button>
-        <button 
-          onClick={() => { setActiveTab('kegiatan'); setSearchQuery(''); }}
-          className={`px-5 py-3.5 text-xs font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'kegiatan' ? 'border-amber-600 text-amber-700 bg-amber-50/20' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}
-        >
-          <Calendar size={16} /> 3. Buku Kegiatan Kader
-        </button>
-        <button 
-          onClick={() => { setActiveTab('notulen'); setSearchQuery(''); }}
-          className={`px-5 py-3.5 text-xs font-bold border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'notulen' ? 'border-amber-600 text-amber-700 bg-amber-50/20' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}
-        >
-          <Clock size={16} /> 4. Buku Notulen Rapat
-        </button>
-      </div>
-
-      {/* Main Content Box */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm print-full-width">
-         {/* Search Bar (No Print) */}
-         <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white no-print">
-            <div className="relative max-w-md w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari program, kegiatan, lokasi atau nama..." 
-                className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-              />
+    <div className="min-h-screen bg-[#f8fafc] pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-rose-700 to-pink-850 text-white shadow-lg sticky top-0 z-10 print:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <Link href="/admin/pkk" className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <span className="bg-rose-100/20 text-rose-200 text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                Pokja IV (Kesehatan, Kelestarian Lingkungan, Perencanaan Sehat)
+              </span>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1">4 Buku Administrasi Baku</h1>
             </div>
-            <div className="text-xs text-slate-400 font-bold">
-              Menampilkan {filteredData.length} data laporan
-            </div>
-         </div>
-
-         {/* 1. BUKU PROGRAM KERJA TAB */}
-         {activeTab === 'program' && (
-           <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
-               <thead>
-                 <tr className="bg-slate-50/80">
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">No</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Program Pokok PKK</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Program Pokja IV</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Kegiatan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Sasaran</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Lokasi</th>
-                   {/* Column 1 to 12 header */}
-                   {renderMonthHeaders()}
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Mitra</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Indikator</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Keterangan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100 text-right no-print">Aksi</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 {loading ? (
-                   <tr>
-                     <td colSpan={23} className="p-12 text-center text-slate-500 font-bold text-sm">Memuat data Buku Program Kerja...</td>
-                   </tr>
-                 ) : filteredData.length === 0 ? (
-                   <tr>
-                     <td colSpan={23} className="p-12 text-center text-slate-400 font-bold text-sm">Belum ada data program kerja tersimpan.</td>
-                   </tr>
-                 ) : (
-                   filteredData.map((item, idx) => (
-                     <tr key={item.id} className="hover:bg-slate-50/30 transition-colors">
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-600">{idx + 1}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-800">{item.programPokok}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-medium text-slate-700">{item.programPokja4}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-amber-700">{item.kegiatan}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.sasaran}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.lokasi}</td>
-                       {/* Render checkboxes cells */}
-                       {renderMonthCells(item.waktuPelaksanaan)}
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-700">{item.mitra}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600 max-w-xs truncate">{item.indikatorKeberhasilan}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-500">{item.keterangan || '-'}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-right space-x-2 no-print whitespace-nowrap">
-                         <button onClick={() => handleEdit('program', item)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 transition-colors">
-                           <Edit3 size={13} />
-                         </button>
-                         <button onClick={() => handleDelete('program', item.id)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors">
-                           <Trash2 size={13} />
-                         </button>
-                       </td>
-                     </tr>
-                   ))
-                 )}
-               </tbody>
-             </table>
-           </div>
-         )}
-
-         {/* 2. BUKU PELAKSANAAN TAB */}
-         {activeTab === 'pelaksanaan' && (
-           <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
-               <thead>
-                 <tr className="bg-slate-50/80">
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">No</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Program Pokok PKK</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Program Pokja IV</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Kegiatan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Tujuan Kegiatan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Sasaran</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Pelaksana</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Waktu</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Lokasi</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Output</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Outcome</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Monev</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Keterangan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100 text-right no-print">Aksi</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 {loading ? (
-                   <tr>
-                     <td colSpan={14} className="p-12 text-center text-slate-500 font-bold text-sm">Memuat data Buku Pelaksanaan...</td>
-                   </tr>
-                 ) : filteredData.length === 0 ? (
-                   <tr>
-                     <td colSpan={14} className="p-12 text-center text-slate-400 font-bold text-sm">Belum ada data pelaksanaan program tersimpan.</td>
-                   </tr>
-                 ) : (
-                   filteredData.map((item, idx) => (
-                     <tr key={item.id} className="hover:bg-slate-50/30 transition-colors">
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-600">{idx + 1}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-800">{item.programPokok}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-medium text-slate-700">{item.programPokja4}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-amber-700">{item.kegiatan}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600 max-w-xs truncate">{item.tujuanKegiatan}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.sasaran}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.pelaksana}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-mono text-slate-700">{new Date(item.waktu).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.lokasi}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600 max-w-xs truncate">{item.output}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600 max-w-xs truncate">{item.outcome}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600 max-w-xs truncate">{item.monitoringEvaluasi}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-500">{item.keterangan || '-'}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-right space-x-2 no-print whitespace-nowrap">
-                         <button onClick={() => handleEdit('pelaksanaan', item)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 transition-colors">
-                           <Edit3 size={13} />
-                         </button>
-                         <button onClick={() => handleDelete('pelaksanaan', item.id)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors">
-                           <Trash2 size={13} />
-                         </button>
-                       </td>
-                     </tr>
-                   ))
-                 )}
-               </tbody>
-             </table>
-           </div>
-         )}
-
-         {/* 3. BUKU KEGIATAN TAB */}
-         {activeTab === 'kegiatan' && (
-           <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
-               <thead>
-                 <tr className="bg-slate-50/80">
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">No</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Nama Pelapor</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Jabatan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Tanggal</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Tempat</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Uraian Kegiatan / Hasil</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Keterangan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100 text-right no-print">Aksi</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 {loading ? (
-                   <tr>
-                     <td colSpan={8} className="p-12 text-center text-slate-500 font-bold text-sm">Memuat data Buku Kegiatan...</td>
-                   </tr>
-                 ) : filteredData.length === 0 ? (
-                   <tr>
-                     <td colSpan={8} className="p-12 text-center text-slate-400 font-bold text-sm">Belum ada data buku kegiatan tersimpan.</td>
-                   </tr>
-                 ) : (
-                   filteredData.map((item, idx) => (
-                     <tr key={item.id} className="hover:bg-slate-50/30 transition-colors">
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-600">{idx + 1}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-800">{item.nama}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-medium text-slate-600">{item.jabatan}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-mono text-slate-700">{new Date(item.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.tempat}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-700 whitespace-pre-line leading-relaxed max-w-md">{item.uraian}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-500">{item.keterangan || '-'}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-right space-x-2 no-print whitespace-nowrap">
-                         <button onClick={() => handleEdit('kegiatan', item)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 transition-colors">
-                           <Edit3 size={13} />
-                         </button>
-                         <button onClick={() => handleDelete('kegiatan', item.id)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors">
-                           <Trash2 size={13} />
-                         </button>
-                       </td>
-                     </tr>
-                   ))
-                 )}
-               </tbody>
-             </table>
-           </div>
-         )}
-
-         {/* 4. BUKU NOTULEN TAB */}
-         {activeTab === 'notulen' && (
-           <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
-               <thead>
-                 <tr className="bg-slate-50/80">
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">No</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Rapat & Waktu</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Tempat</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Pimpinan & Notulis</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Kehadiran</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Susunan Acara</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Hasil Kesimpulan</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Dokumentasi</th>
-                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100 text-right no-print">Aksi</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 {loading ? (
-                   <tr>
-                     <td colSpan={9} className="p-12 text-center text-slate-500 font-bold text-sm">Memuat data Buku Notulen Rapat...</td>
-                   </tr>
-                 ) : filteredData.length === 0 ? (
-                   <tr>
-                     <td colSpan={9} className="p-12 text-center text-slate-400 font-bold text-sm">Belum ada data notulen rapat tersimpan.</td>
-                   </tr>
-                 ) : (
-                   filteredData.map((item, idx) => (
-                     <tr key={item.id} className="hover:bg-slate-50/30 transition-colors">
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-600">{idx + 1}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-bold text-slate-800">
-                         <div>{item.jenisRapat}</div>
-                         <div className="text-[10px] font-normal text-slate-400 mt-1">
-                           {new Date(item.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })} • {item.waktu}
-                         </div>
-                       </td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">{item.tempat}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">
-                         <div><span className="font-semibold text-slate-700">PJ:</span> {item.pimpinanRapat?.nama || '-'}</div>
-                         <div className="mt-0.5"><span className="font-semibold text-slate-700">Notulis:</span> {item.pembuatNotulen?.nama || '-'}</div>
-                       </td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600">
-                         <div>Diundang: {item.jumlahDiundang} orang</div>
-                         <div>Hadir: <span className="text-emerald-600 font-bold">{item.jumlahHadir}</span> orang</div>
-                         <div>Absen: <span className="text-rose-500 font-bold">{item.jumlahTidakHadir}</span> orang</div>
-                       </td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-600 whitespace-pre-line leading-relaxed max-w-xs">{item.susunanAcara}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs font-medium text-amber-800 whitespace-pre-line leading-relaxed max-w-xs">{item.kesimpulan}</td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-slate-500">
-                         {item.dokumentasi ? (
-                           <span className="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded-md font-mono text-[9px]">Ada Foto</span>
-                         ) : 'Tidak ada'}
-                       </td>
-                       <td className="px-4 py-3 border border-slate-100 text-xs text-right space-x-2 no-print whitespace-nowrap">
-                         <button onClick={() => handleEdit('notulen', item)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 transition-colors">
-                           <Edit3 size={13} />
-                         </button>
-                         <button onClick={() => handleDelete('notulen', item.id)} className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors">
-                           <Trash2 size={13} />
-                         </button>
-                       </td>
-                     </tr>
-                   ))
-                 )}
-               </tbody>
-             </table>
-           </div>
-         )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button onClick={() => window.print()} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition text-sm">
+              <Printer className="w-4 h-4" /> Cetak Buku
+            </button>
+            <button onClick={handleOpenAdd} className="bg-white text-rose-800 hover:bg-rose-50 px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm transition text-sm">
+              <Plus className="w-4 h-4" /> Tambah Data
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* --- FORM MODAL (No Print) --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        {/* Banner */}
+        <div className="bg-white border-l-4 border-rose-500 p-4 rounded-r-xl shadow-sm mb-6 flex items-start gap-3 print:hidden">
+          <Info className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-bold text-slate-800 text-sm">Buku Administrasi Standar TP PKK Nasional</h4>
+            <p className="text-xs text-slate-600 mt-0.5">Sistem pencatatan terpusat program Kesehatan, Kelestarian Lingkungan Hidup, Imunisasi, Posyandu, PHBS, dan Perencanaan Sehat TP PKK Desa Kediren.</p>
+          </div>
+        </div>
+
+        {/* Tab Menus */}
+        <div className="flex overflow-x-auto space-x-2 border-b border-slate-200 pb-3 mb-6 scrollbar-none print:hidden">
+          {[
+            { id: 'program', label: 'Buku 1: Program Kerja', desc: 'Rencana kerja tahunan Pokja IV', icon: BookOpen },
+            { id: 'pelaksanaan', label: 'Buku 2: Pelaksanaan Kerja', desc: 'Realisasi & evaluasi program', icon: CheckSquare },
+            { id: 'kegiatan', label: 'Buku 3: Log Kegiatan', desc: 'Buku catatan peristiwa khusus', icon: Calendar },
+            { id: 'notulen', label: 'Buku 4: Notulen Rapat', desc: 'Hasil pleno & rapat koordinasi', icon: Users },
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id as TabType); setSearchQuery(''); }}
+                className={`flex-1 min-w-[240px] text-left p-4 rounded-xl border transition ${
+                  active 
+                    ? 'bg-rose-50/50 border-rose-200 shadow-sm ring-1 ring-rose-500/20' 
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className={`w-5 h-5 ${active ? 'text-rose-600' : 'text-slate-500'}`} />
+                  <span className={`font-black text-sm ${active ? 'text-rose-800' : 'text-slate-800'}`}>{tab.label}</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">{tab.desc}</p>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm mb-6 print:hidden">
+          <Search className="w-5 h-5 text-slate-400 shrink-0" />
+          <input 
+            type="text" 
+            placeholder={`Cari data berdasarkan nama kegiatan, program pokok, pelaksana...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent text-sm focus:outline-none text-slate-800 placeholder-slate-400"
+          />
+        </div>
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="bg-white p-12 rounded-2xl border text-center shadow-sm">
+            <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-slate-500 font-medium mt-4 text-sm">Menghubungkan ke database & mensinkronkan skema...</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* 1. RENDER BUKU 1 */}
+            {activeTab === 'program' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                      <th className="px-4 py-4 border w-12 text-center">No</th>
+                      <th className="px-4 py-4 border">Program Pokok</th>
+                      <th className="px-4 py-4 border">Program Pokja IV</th>
+                      <th className="px-4 py-4 border">Kegiatan Utama</th>
+                      <th className="px-4 py-4 border">Sasaran</th>
+                      <th className="px-4 py-4 border">Lokasi</th>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                        <th key={m} className="px-2 py-4 border text-center bg-rose-50/30 w-8">{m}</th>
+                      ))}
+                      <th className="px-4 py-4 border">Mitra Kerja</th>
+                      <th className="px-4 py-4 border">Indikator Sukses</th>
+                      <th className="px-4 py-4 border">Ket</th>
+                      <th className="px-4 py-4 border text-center w-24 print:hidden">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getFilteredData().length === 0 ? (
+                      <tr>
+                        <td colSpan={23} className="text-center py-12 text-slate-400 font-medium">Belum ada rencana program kerja Pokja IV.</td>
+                      </tr>
+                    ) : (
+                      getFilteredData().map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-slate-50/50 border-b transition">
+                          <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                          <td className="px-4 py-3 border font-black text-slate-800">{item.programPokok}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-medium">{item.programPokja4}</td>
+                          <td className="px-4 py-3 border font-semibold text-rose-900">{item.kegiatan}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.sasaran}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-semibold">{item.lokasi}</td>
+                          {renderMonthCells(item.waktuPelaksanaan)}
+                          <td className="px-4 py-3 border text-slate-600 font-semibold">{item.mitra}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.indikatorKeberhasilan}</td>
+                          <td className="px-4 py-3 border text-slate-500">{item.keterangan || '-'}</td>
+                          <td className="px-4 py-3 border text-center print:hidden">
+                            <div className="flex items-center justify-center space-x-1.5">
+                              <button onClick={() => handleEdit('program', item)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete('program', item.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 2. RENDER BUKU 2 */}
+            {activeTab === 'pelaksanaan' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                      <th className="px-4 py-4 border w-12 text-center">No</th>
+                      <th className="px-4 py-4 border">Program Pokok</th>
+                      <th className="px-4 py-4 border">Program Pokja IV</th>
+                      <th className="px-4 py-4 border">Kegiatan</th>
+                      <th className="px-4 py-4 border">Tujuan</th>
+                      <th className="px-4 py-4 border">Sasaran</th>
+                      <th className="px-4 py-4 border">Pelaksana</th>
+                      <th className="px-4 py-4 border">Waktu</th>
+                      <th className="px-4 py-4 border">Lokasi</th>
+                      <th className="px-4 py-4 border">Output (Hasil)</th>
+                      <th className="px-4 py-4 border">Outcome (Dampak)</th>
+                      <th className="px-4 py-4 border">Monitoring/Evaluasi</th>
+                      <th className="px-4 py-4 border">Ket</th>
+                      <th className="px-4 py-4 border text-center w-24 print:hidden">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getFilteredData().length === 0 ? (
+                      <tr>
+                        <td colSpan={14} className="text-center py-12 text-slate-400 font-medium">Belum ada catatan pelaksanaan program.</td>
+                      </tr>
+                    ) : (
+                      getFilteredData().map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-slate-50/50 border-b transition">
+                          <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                          <td className="px-4 py-3 border font-black text-slate-800">{item.programPokok}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-medium">{item.programPokja4}</td>
+                          <td className="px-4 py-3 border font-semibold text-rose-900">{item.kegiatan}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.tujuanKegiatan}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.sasaran}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-semibold">{item.pelaksana}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-medium">{new Date(item.waktu).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-semibold">{item.lokasi}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.output}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.outcome}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-semibold text-rose-850">{item.monitoringEvaluasi}</td>
+                          <td className="px-4 py-3 border text-slate-500">{item.keterangan || '-'}</td>
+                          <td className="px-4 py-3 border text-center print:hidden">
+                            <div className="flex items-center justify-center space-x-1.5">
+                              <button onClick={() => handleEdit('pelaksanaan', item)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete('pelaksanaan', item.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 3. RENDER BUKU 3 */}
+            {activeTab === 'kegiatan' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                      <th className="px-4 py-4 border w-12 text-center">No</th>
+                      <th className="px-4 py-4 border">Nama Personel</th>
+                      <th className="px-4 py-4 border">Jabatan</th>
+                      <th className="px-4 py-4 border">Tanggal</th>
+                      <th className="px-4 py-4 border">Tempat</th>
+                      <th className="px-4 py-4 border">Uraian / Deskripsi Kegiatan</th>
+                      <th className="px-4 py-4 border">Ket</th>
+                      <th className="px-4 py-4 border text-center w-24 print:hidden">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getFilteredData().length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">Belum ada log catatan kegiatan Pokja IV.</td>
+                      </tr>
+                    ) : (
+                      getFilteredData().map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-slate-50/50 border-b transition">
+                          <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                          <td className="px-4 py-3 border font-black text-rose-900">{item.nama}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-medium">{item.jabatan}</td>
+                          <td className="px-4 py-3 border text-slate-600 font-semibold">{new Date(item.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td>
+                          <td className="px-4 py-3 border text-slate-600">{item.tempat}</td>
+                          <td className="px-4 py-3 border text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">{item.uraian}</td>
+                          <td className="px-4 py-3 border text-slate-500">{item.keterangan || '-'}</td>
+                          <td className="px-4 py-3 border text-center print:hidden">
+                            <div className="flex items-center justify-center space-x-1.5">
+                              <button onClick={() => handleEdit('kegiatan', item)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete('kegiatan', item.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 4. RENDER BUKU 4 */}
+            {activeTab === 'notulen' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700 font-bold uppercase border-b text-[10px] tracking-wider">
+                      <th className="px-4 py-4 border w-12 text-center">No</th>
+                      <th className="px-4 py-4 border">Waktu & Tanggal</th>
+                      <th className="px-4 py-4 border">Tempat</th>
+                      <th className="px-4 py-4 border">Jenis Rapat</th>
+                      <th className="px-4 py-4 border">Pimpinan / Notulis</th>
+                      <th className="px-4 py-4 border text-center">Undangan</th>
+                      <th className="px-4 py-4 border text-center">Hadir</th>
+                      <th className="px-4 py-4 border text-center">Absen</th>
+                      <th className="px-4 py-4 border">Kesimpulan</th>
+                      <th className="px-4 py-4 border">Penutup</th>
+                      <th className="px-4 py-4 border text-center w-24 print:hidden">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getFilteredData().length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="text-center py-12 text-slate-400 font-medium">Belum ada notulen rapat.</td>
+                      </tr>
+                    ) : (
+                      getFilteredData().map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-slate-50/50 border-b transition">
+                          <td className="px-4 py-3 border text-center font-bold text-slate-500">{idx + 1}</td>
+                          <td className="px-4 py-3 border">
+                            <span className="font-bold text-slate-800 block">{new Date(item.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}</span>
+                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">{item.waktu}</span>
+                          </td>
+                          <td className="px-4 py-3 border text-slate-600 font-medium">{item.tempat}</td>
+                          <td className="px-4 py-3 border font-black text-rose-950">{item.jenisRapat}</td>
+                          <td className="px-4 py-3 border">
+                            <span className="font-bold text-rose-900 block">{item.pimpinanRapat?.nama || 'Tanpa Pimpinan'}</span>
+                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Notulis: {item.pembuatNotulen?.nama || '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 border text-center font-bold text-slate-600">{item.jumlahDiundang} org</td>
+                          <td className="px-4 py-3 border text-center font-bold text-rose-700 bg-rose-50/30">{item.jumlahHadir} org</td>
+                          <td className="px-4 py-3 border text-center font-bold text-rose-700 bg-rose-50/30">{item.jumlahTidakHadir} org</td>
+                          <td className="px-4 py-3 border text-slate-600 leading-relaxed font-semibold whitespace-pre-wrap">{item.kesimpulan}</td>
+                          <td className="px-4 py-3 border text-slate-500 text-[11px]">{item.penutup}</td>
+                          <td className="px-4 py-3 border text-center print:hidden">
+                            <div className="flex items-center justify-center space-x-1.5">
+                              <button onClick={() => handleEdit('notulen', item)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete('notulen', item.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* --- FORM MODAL --- */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto no-print">
-          <div className="bg-white rounded-[2rem] border border-slate-200 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
-             <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 bg-white z-10">
-               <div>
-                 <h3 className="text-md font-bold text-slate-800 flex items-center gap-2">
-                   <BookOpen size={18} className="text-amber-600" />
-                   {editId ? 'Ubah Data Administrasi' : 'Tambah Data Administrasi Baru'}
-                 </h3>
-                 <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                   {activeTab === 'program' && 'Buku 1: Program Kerja Pokja IV'}
-                   {activeTab === 'pelaksanaan' && 'Buku 2: Pelaksanaan Program Kerja'}
-                   {activeTab === 'kegiatan' && 'Buku 3: Buku Kegiatan Kader'}
-                   {activeTab === 'notulen' && 'Buku 4: Buku Notulen Rapat'}
-                 </p>
-               </div>
-               <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all">
-                 <X size={18} />
-               </button>
-             </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full border border-slate-100 overflow-hidden flex flex-col my-8 max-h-[90vh]">
+            <div className="bg-gradient-to-r from-rose-700 to-pink-850 text-white px-6 py-4 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider bg-white/10 px-2 py-0.5 rounded">
+                  Buku Baku Pokja IV
+                </span>
+                <h3 className="text-base sm:text-lg font-black mt-0.5">
+                  {editId ? 'Ubah Data Administrasi' : 'Tambah Data Administrasi'}
+                </h3>
+              </div>
+              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-             <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                {/* 1. PROGRAM KERJA FORM */}
-                {activeTab === 'program' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 flex-1 text-sm">
+              {/* Buku 1 */}
+              {activeTab === 'program' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                       <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Program Pokok PKK</label>
-                       <input 
-                         type="text" 
-                         value={b1ProgramPokok} 
-                         onChange={(e) => setB1ProgramPokok(e.target.value)}
-                         list="program-pokok-list"
-                         placeholder="Pilih atau ketik program pokok..."
-                         className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                       />
-                       <datalist id="program-pokok-list">
-                         <option value="Kesehatan" />
-                         <option value="Kelestarian Lingkungan Hidup" />
-                         <option value="Perencanaan Sehat" />
-                       </datalist>
-                     </div>
-
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Program Pokok PKK</label>
+                      <select 
+                        value={b1ProgramPokok} 
+                        onChange={(e) => setB1ProgramPokok(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      >
+                        <option value="Kesehatan">Kesehatan</option>
+                        <option value="Kelestarian Lingkungan Hidup">Kelestarian Lingkungan Hidup</option>
+                        <option value="Perencanaan Sehat">Perencanaan Sehat</option>
+                      </select>
+                    </div>
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Program Pokja IV</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Program Pokja IV</label>
                       <input 
-                        type="text" 
+                        type="text"
+                        list="datalist-program-pokja4"
                         value={b1ProgramPokja4} 
                         onChange={(e) => setB1ProgramPokja4(e.target.value)}
-                        placeholder="Contoh: GKSTTB, STBM, KB-Kespro"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
+                      <datalist id="datalist-program-pokja4">
+                        <option value="GKSTTB (Gerakan Keluarga Sehat Tanggap Tangguh Bencana)" />
+                        <option value="Kesehatan & Penurunan Stunting (e-KMS)" />
+                        <option value="PHBS (Perilaku Hidup Bersih dan Sehat)" />
+                        <option value="LILA & Imunisasi Balita Lengkap" />
+                        <option value="Kelestarian Lingkungan Hidup & Sampah" />
+                        <option value="Perencanaan Sehat & KB Sejahtera" />
+                      </datalist>
                     </div>
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Nama Kegiatan</label>
-                      <input 
-                        type="text" 
-                        value={b1Kegiatan} 
-                        onChange={(e) => setB1Kegiatan(e.target.value)}
-                        placeholder="Contoh: Penyuluhan Imunisasi Lanjutan"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nama Kegiatan Utama</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Pemeriksaan Balita e-KMS Terintegrasi & Vitamin A"
+                      value={b1Kegiatan} 
+                      onChange={(e) => setB1Kegiatan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Sasaran Program</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Sasaran Peserta</label>
                       <input 
                         type="text" 
+                        placeholder="e.g. Balita Usia 0-5 Tahun Desa Kediren"
                         value={b1Sasaran} 
                         onChange={(e) => setB1Sasaran(e.target.value)}
-                        placeholder="Contoh: Ibu Hamil, Balita, Remaja"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Lokasi Kegiatan</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Lokasi Pelaksanaan</label>
                       <input 
                         type="text" 
+                        placeholder="e.g. Gedung Posyandu Balita"
                         value={b1Lokasi} 
                         onChange={(e) => setB1Lokasi(e.target.value)}
-                        placeholder="Contoh: RT 002 Dusun Selungguh"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Rencana Waktu Pelaksanaan (Bulan Ke 1-12)</label>
-                      <div className="grid grid-cols-6 gap-2">
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => handleMonthToggle(m)}
-                            className={`py-2 px-3 text-xs font-bold border rounded-lg transition-all ${b1WaktuBulan.includes(m) ? 'bg-amber-600 border-amber-600 text-white shadow-sm shadow-amber-200' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
-                          >
-                            Bulan {m}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Mitra Kerja / Dinas Terkait</label>
-                      <input 
-                        type="text" 
-                        value={b1Mitra} 
-                        onChange={(e) => setB1Mitra(e.target.value)}
-                        placeholder="Contoh: Puskesmas, Sanitarian"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Indikator Keberhasilan</label>
-                      <input 
-                        type="text" 
-                        value={b1Indikator} 
-                        onChange={(e) => setB1Indikator(e.target.value)}
-                        placeholder="Contoh: Balita stunting berkurang"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Keterangan Tambahan</label>
-                      <textarea 
-                        value={b1Keterangan} 
-                        onChange={(e) => setB1Keterangan(e.target.value)}
-                        placeholder="Keterangan opsional..."
-                        rows={2}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
                   </div>
-                )}
 
-                {/* 2. PELAKSANAAN PROGRAM WORK FORM */}
-                {activeTab === 'pelaksanaan' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Waktu Pelaksanaan (Pilih Bulan)</label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => handleMonthToggle(m)}
+                          className={`p-2 rounded-lg border font-bold text-xs transition ${
+                            b1WaktuBulan.includes(m)
+                              ? 'bg-rose-600 border-rose-600 text-white'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          Bulan {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Program Pokok PKK</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Mitra Kerja Utama</label>
                       <input 
                         type="text" 
+                        placeholder="e.g. Puskesmas Lembeyan & Bidan Desa"
+                        value={b1Mitra} 
+                        onChange={(e) => setB1Mitra(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Indikator Keberhasilan</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. 100% Balita terdata gizi KMS-nya"
+                        value={b1Indikator} 
+                        onChange={(e) => setB1Indikator(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Keterangan Tambahan</label>
+                    <textarea 
+                      placeholder="..."
+                      value={b1Keterangan} 
+                      onChange={(e) => setB1Keterangan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-20 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Buku 2 */}
+              {activeTab === 'pelaksanaan' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Program Pokok PKK</label>
+                      <select 
                         value={b2ProgramPokok} 
                         onChange={(e) => setB2ProgramPokok(e.target.value)}
-                        list="program-pokok-list"
-                        placeholder="Pilih atau ketik program pokok..."
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      >
+                        <option value="Kesehatan">Kesehatan</option>
+                        <option value="Kelestarian Lingkungan Hidup">Kelestarian Lingkungan Hidup</option>
+                        <option value="Perencanaan Sehat">Perencanaan Sehat</option>
+                      </select>
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Program Pokja IV</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Program Pokja IV</label>
                       <input 
-                        type="text" 
+                        type="text"
+                        list="datalist-program-pokja4"
                         value={b2ProgramPokja4} 
                         onChange={(e) => setB2ProgramPokja4(e.target.value)}
-                        placeholder="Contoh: GKSTTB, STBM"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Nama Kegiatan</label>
-                      <input 
-                        type="text" 
-                        value={b2Kegiatan} 
-                        onChange={(e) => setB2Kegiatan(e.target.value)}
-                        placeholder="Contoh: Penyuluhan Pengelolaan Sampah"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Kegiatan</label>
+                    <input 
+                      type="text" 
+                      placeholder="Nama kegiatan..."
+                      value={b2Kegiatan} 
+                      onChange={(e) => setB2Kegiatan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Tujuan Kegiatan</label>
-                      <textarea 
-                        value={b2Tujuan} 
-                        onChange={(e) => setB2Tujuan(e.target.value)}
-                        placeholder="Tujuan dilakukannya kegiatan ini..."
-                        rows={2}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tujuan Kegiatan</label>
+                    <textarea 
+                      placeholder="Jelaskan tujuan spesifik..."
+                      value={b2Tujuan} 
+                      onChange={(e) => setB2Tujuan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-20 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Sasaran</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Sasaran & Jumlah</label>
                       <input 
                         type="text" 
+                        placeholder="..."
                         value={b2Sasaran} 
                         onChange={(e) => setB2Sasaran(e.target.value)}
-                        placeholder="Contoh: Keluarga, RT 003"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Pelaksana</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Pelaksana Kegiatan</label>
                       <input 
                         type="text" 
+                        placeholder="..."
                         value={b2Pelaksana} 
                         onChange={(e) => setB2Pelaksana(e.target.value)}
-                        placeholder="Contoh: Pokja IV & Kader Dusun"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Waktu Kegiatan</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tanggal Pelaksanaan</label>
                       <input 
                         type="date" 
                         value={b2Waktu} 
                         onChange={(e) => setB2Waktu(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Lokasi / Tempat</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Lokasi Rinci</label>
                       <input 
                         type="text" 
+                        placeholder="..."
                         value={b2Lokasi} 
                         onChange={(e) => setB2Lokasi(e.target.value)}
-                        placeholder="Contoh: RT 002 Dusun Selungguh"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Output (Hasil Langsung)</label>
-                      <input 
-                        type="text" 
-                        value={b2Output} 
-                        onChange={(e) => setB2Output(e.target.value)}
-                        placeholder="Contoh: Pengetahuan pemilahan sampah meningkat"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Outcome (Dampak Jangka Panjang)</label>
-                      <input 
-                        type="text" 
-                        value={b2Outcome} 
-                        onChange={(e) => setB2Outcome(e.target.value)}
-                        placeholder="Contoh: Sampah keluarga dipilah-pilah rapi"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Monitoring & Evaluasi</label>
-                      <input 
-                        type="text" 
-                        value={b2Monev} 
-                        onChange={(e) => setB2Monev(e.target.value)}
-                        placeholder="Contoh: Evaluasi volume sampah tahunan"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Keterangan</label>
-                      <textarea 
-                        value={b2Keterangan} 
-                        onChange={(e) => setB2Keterangan(e.target.value)}
-                        placeholder="Keterangan pendukung..."
-                        rows={2}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
                   </div>
-                )}
 
-                {/* 3. BUKU KEGIATAN FORM */}
-                {activeTab === 'kegiatan' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Nama Pelapor (Kader/Pengurus)</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Output (Hasil Capaian/Jumlah Hadir)</label>
+                      <textarea 
+                        placeholder="..."
+                        value={b2Output} 
+                        onChange={(e) => setB2Output(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-20 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Outcome (Dampak/Manfaat Jangka Panjang)</label>
+                      <textarea 
+                        placeholder="..."
+                        value={b2Outcome} 
+                        onChange={(e) => setB2Outcome(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-20 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Monitoring & Evaluasi</label>
+                    <input 
+                      type="text" 
+                      placeholder="..."
+                      value={b2Monev} 
+                      onChange={(e) => setB2Monev(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Keterangan</label>
+                    <input 
+                      type="text" 
+                      placeholder="Opsional..."
+                      value={b2Keterangan} 
+                      onChange={(e) => setB2Keterangan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Buku 3 */}
+              {activeTab === 'kegiatan' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nama Anggota/Kader</label>
                       <input 
                         type="text" 
                         value={b3Nama} 
                         onChange={(e) => setB3Nama(e.target.value)}
-                        placeholder="Contoh: Ny. Luluk P"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Jabatan di TP PKK</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Jabatan di PKK</label>
                       <input 
                         type="text" 
+                        placeholder="e.g. Ketua Pokja IV, Anggota Pokja IV"
                         value={b3Jabatan} 
                         onChange={(e) => setB3Jabatan(e.target.value)}
-                        placeholder="Contoh: Sekretaris Pokja IV"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Tanggal Kegiatan</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tanggal Kegiatan</label>
                       <input 
                         type="date" 
                         value={b3Tanggal} 
                         onChange={(e) => setB3Tanggal(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Tempat / Gedung</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tempat Kegiatan</label>
                       <input 
                         type="text" 
+                        placeholder="..."
                         value={b3Tempat} 
                         onChange={(e) => setB3Tempat(e.target.value)}
-                        placeholder="Contoh: Gedung Pertemuan Desa Kediren"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Uraian / Jalannya Kegiatan & Hasil Kerja</label>
-                      <textarea 
-                        value={b3Uraian} 
-                        onChange={(e) => setB3Uraian(e.target.value)}
-                        placeholder="Tuliskan detail uraian kegiatan dan hasilnya di sini..."
-                        rows={6}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50 font-mono text-xs"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Keterangan</label>
-                      <input 
-                        type="text" 
-                        value={b3Keterangan} 
-                        onChange={(e) => setB3Keterangan(e.target.value)}
-                        placeholder="Keterangan opsional..."
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
                   </div>
-                )}
 
-                {/* 4. NOTULEN RAPAT FORM */}
-                {activeTab === 'notulen' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Uraian / Deskripsi Lengkap Kegiatan</label>
+                    <textarea 
+                      placeholder="Tulis jalannya kegiatan..."
+                      value={b3Uraian} 
+                      onChange={(e) => setB3Uraian(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-32 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Keterangan</label>
+                    <input 
+                      type="text" 
+                      placeholder="..."
+                      value={b3Keterangan} 
+                      onChange={(e) => setB3Keterangan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Buku 4 */}
+              {activeTab === 'notulen' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Jenis Pertemuan / Rapat</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tanggal Rapat</label>
+                      <input 
+                        type="date" 
+                        value={b4Tanggal} 
+                        onChange={(e) => setB4Tanggal(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Waktu Pelaksanaan</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. 09:00 - 11:30 WIB"
+                        value={b4Waktu} 
+                        onChange={(e) => setB4Waktu(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tempat Rapat</label>
+                      <input 
+                        type="text" 
+                        placeholder="..."
+                        value={b4Tempat} 
+                        onChange={(e) => setB4Tempat(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Jenis Rapat</label>
                       <input 
                         type="text" 
                         value={b4JenisRapat} 
                         onChange={(e) => setB4JenisRapat(e.target.value)}
-                        placeholder="Contoh: Rapat Pleno Bulanan Pokja IV"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Pimpinan Rapat (Dropdown Kader)</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Pimpinan Rapat (Kader)</label>
                       <select 
                         value={b4PimpinanId} 
                         onChange={(e) => setB4PimpinanId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       >
-                        <option value="">-- Pilih Kader PJ Rapat --</option>
+                        <option value="">-- Pilih Kader Pimpinan --</option>
                         {kaderList.map(k => (
                           <option key={k.id} value={k.id}>{k.nama} ({k.jabatan})</option>
                         ))}
                       </select>
                     </div>
-
                     <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Tanggal Rapat</label>
-                      <input 
-                        type="date" 
-                        value={b4Tanggal} 
-                        onChange={(e) => setB4Tanggal(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Waktu / Jam Rapat</label>
-                      <input 
-                        type="text" 
-                        value={b4Waktu} 
-                        onChange={(e) => setB4Waktu(e.target.value)}
-                        placeholder="Contoh: 09:00 - 11:30 WIB"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Tempat Pertemuan</label>
-                      <input 
-                        type="text" 
-                        value={b4Tempat} 
-                        onChange={(e) => setB4Tempat(e.target.value)}
-                        placeholder="Contoh: Ruang Rapat PKK Desa Kediren"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Pembuat Notulen (Sekretaris/Notulis)</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Pembuat Notulen (Notulis)</label>
                       <select 
                         value={b4PembuatId} 
                         onChange={(e) => setB4PembuatId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       >
                         <option value="">-- Pilih Notulis --</option>
                         {kaderList.map(k => (
@@ -1211,100 +1110,99 @@ export default function PokjaIVBukuBakuPage() {
                         ))}
                       </select>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-3 gap-3 md:col-span-2">
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Diundang (Orang)</label>
-                        <input 
-                          type="number" 
-                          value={b4Diundang} 
-                          onChange={(e) => setB4Diundang(Number(e.target.value))}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Hadir (Orang)</label>
-                        <input 
-                          type="number" 
-                          value={b4Hadir} 
-                          onChange={(e) => setB4Hadir(Number(e.target.value))}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Absen/Tidak Hadir</label>
-                        <input 
-                          type="number" 
-                          value={b4TidakHadir} 
-                          onChange={(e) => setB4TidakHadir(Number(e.target.value))}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Susunan Acara / Uraian Jalannya Rapat</label>
-                      <textarea 
-                        value={b4SusunanAcara} 
-                        onChange={(e) => setB4SusunanAcara(e.target.value)}
-                        placeholder="Contoh: 1. Pembukaan oleh Pimpinan Rapat, 2. Pembahasan..."
-                        rows={4}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50 font-mono text-xs"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Hasil Kesimpulan Rapat</label>
-                      <textarea 
-                        value={b4Kesimpulan} 
-                        onChange={(e) => setB4Kesimpulan(e.target.value)}
-                        placeholder="Tuliskan butir-butir kesepakatan atau kesimpulan rapat di sini..."
-                        rows={4}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50 font-mono text-xs"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Penutup Rapat</label>
-                      <textarea 
-                        value={b4Penutup} 
-                        onChange={(e) => setB4Penutup(e.target.value)}
-                        placeholder="Kalimat penutup rapat..."
-                        rows={2}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Dokumentasi (Opsional - URL atau Keterangan Gambar)</label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Jumlah Diundang</label>
                       <input 
-                        type="text" 
-                        value={b4Dokumentasi} 
-                        onChange={(e) => setB4Dokumentasi(e.target.value)}
-                        placeholder="Tulis URL gambar atau deskripsi dokumentasi foto..."
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white bg-slate-50"
+                        type="number" 
+                        value={b4Diundang} 
+                        onChange={(e) => setB4Diundang(Number(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Jumlah Hadir</label>
+                      <input 
+                        type="number" 
+                        value={b4Hadir} 
+                        onChange={(e) => setB4Hadir(Number(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Jumlah Tidak Hadir</label>
+                      <input 
+                        type="number" 
+                        value={b4TidakHadir} 
+                        onChange={(e) => setB4TidakHadir(Number(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800 focus:ring-2 focus:ring-rose-500"
                       />
                     </div>
                   </div>
-                )}
 
-                {/* Form Buttons */}
-                <div className="px-8 py-6 border-t border-slate-100 flex items-center justify-end gap-2 bg-slate-50/50 -mx-8 -mb-8 sticky bottom-0 z-10 bg-white">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowModal(false)}
-                    className="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
-                  >
-                    Batal
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-amber-700 shadow-sm transition-all shadow-amber-200"
-                  >
-                    <Save size={14} /> Simpan Data
-                  </button>
-                </div>
-             </form>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Susunan Acara Rapat</label>
+                    <textarea 
+                      placeholder="..."
+                      value={b4SusunanAcara} 
+                      onChange={(e) => setB4SusunanAcara(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-20 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Kesimpulan Rapat / Butir Keputusan</label>
+                    <textarea 
+                      placeholder="..."
+                      value={b4Kesimpulan} 
+                      onChange={(e) => setB4Kesimpulan(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 h-28 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Kalimat Penutup Rapat</label>
+                    <input 
+                      type="text" 
+                      placeholder="..."
+                      value={b4Penutup} 
+                      onChange={(e) => setB4Penutup(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Tautan File Dokumentasi</label>
+                    <input 
+                      type="text" 
+                      placeholder="..."
+                      value={b4Dokumentasi} 
+                      onChange={(e) => setB4Dokumentasi(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setShowModal(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-lg transition"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 transition shadow-sm"
+                >
+                  <Save className="w-4 h-4" /> Simpan Data
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
