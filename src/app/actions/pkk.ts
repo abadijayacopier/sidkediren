@@ -595,7 +595,7 @@ export async function deleteKegiatan(id: number) {
 // 1. BUKU PROGRAM KERJA POKJA IV
 export async function getBukuProgramKerjaList() {
   return withDriftRetry(
-    () => (prisma as any).bukuProgramKerjaPokjaIv.findMany({
+    () => (prisma as any).bukuProgramKerjaPokjaIV.findMany({
       orderBy: { id: 'asc' }
     }),
     async () => { await syncDatabaseStructure(); }
@@ -629,12 +629,12 @@ export async function saveBukuProgramKerja(formData: FormData) {
       };
 
       if (id) {
-        await (prisma as any).bukuProgramKerjaPokjaIv.update({
+        await (prisma as any).bukuProgramKerjaPokjaIV.update({
           where: { id },
           data
         });
       } else {
-        await (prisma as any).bukuProgramKerjaPokjaIv.create({
+        await (prisma as any).bukuProgramKerjaPokjaIV.create({
           data
         });
       }
@@ -649,7 +649,7 @@ export async function saveBukuProgramKerja(formData: FormData) {
 export async function deleteBukuProgramKerja(id: number) {
   return withDriftRetry(
     async () => {
-      await (prisma as any).bukuProgramKerjaPokjaIv.delete({ where: { id } });
+      await (prisma as any).bukuProgramKerjaPokjaIV.delete({ where: { id } });
       revalidatePath('/admin/pkk');
       return { success: true };
     },
@@ -660,7 +660,7 @@ export async function deleteBukuProgramKerja(id: number) {
 // 2. BUKU PELAKSANAAN PROGRAM KERJA
 export async function getBukuPelaksanaanList() {
   return withDriftRetry(
-    () => (prisma as any).bukuPelaksanaanPokjaIv.findMany({
+    () => (prisma as any).bukuPelaksanaanPokjaIV.findMany({
       orderBy: { waktu: 'desc' }
     }),
     async () => { await syncDatabaseStructure(); }
@@ -700,12 +700,12 @@ export async function saveBukuPelaksanaan(formData: FormData) {
       };
 
       if (id) {
-        await (prisma as any).bukuPelaksanaanPokjaIv.update({
+        await (prisma as any).bukuPelaksanaanPokjaIV.update({
           where: { id },
           data
         });
       } else {
-        await (prisma as any).bukuPelaksanaanPokjaIv.create({
+        await (prisma as any).bukuPelaksanaanPokjaIV.create({
           data
         });
       }
@@ -720,7 +720,7 @@ export async function saveBukuPelaksanaan(formData: FormData) {
 export async function deleteBukuPelaksanaan(id: number) {
   return withDriftRetry(
     async () => {
-      await (prisma as any).bukuPelaksanaanPokjaIv.delete({ where: { id } });
+      await (prisma as any).bukuPelaksanaanPokjaIV.delete({ where: { id } });
       revalidatePath('/admin/pkk');
       return { success: true };
     },
@@ -731,7 +731,7 @@ export async function deleteBukuPelaksanaan(id: number) {
 // 3. BUKU KEGIATAN POKJA IV
 export async function getBukuKegiatanList() {
   return withDriftRetry(
-    () => (prisma as any).bukuKegiatanPokjaIv.findMany({
+    () => (prisma as any).bukuKegiatanPokjaIV.findMany({
       orderBy: { tanggal: 'desc' }
     }),
     async () => { await syncDatabaseStructure(); }
@@ -759,12 +759,12 @@ export async function saveBukuKegiatan(formData: FormData) {
       };
 
       if (id) {
-        await (prisma as any).bukuKegiatanPokjaIv.update({
+        await (prisma as any).bukuKegiatanPokjaIV.update({
           where: { id },
           data
         });
       } else {
-        await (prisma as any).bukuKegiatanPokjaIv.create({
+        await (prisma as any).bukuKegiatanPokjaIV.create({
           data
         });
       }
@@ -779,7 +779,7 @@ export async function saveBukuKegiatan(formData: FormData) {
 export async function deleteBukuKegiatan(id: number) {
   return withDriftRetry(
     async () => {
-      await (prisma as any).bukuKegiatanPokjaIv.delete({ where: { id } });
+      await (prisma as any).bukuKegiatanPokjaIV.delete({ where: { id } });
       revalidatePath('/admin/pkk');
       return { success: true };
     },
@@ -790,7 +790,7 @@ export async function deleteBukuKegiatan(id: number) {
 // 4. BUKU NOTULEN POKJA IV
 export async function getBukuNotulenList() {
   return withDriftRetry(
-    () => (prisma as any).bukuNotulenPokjaIv.findMany({
+    () => (prisma as any).bukuNotulenPokjaIV.findMany({
       include: {
         pimpinanRapat: { select: { nama: true, jabatan: true } },
         pembuatNotulen: { select: { nama: true, jabatan: true } }
@@ -836,12 +836,12 @@ export async function saveBukuNotulen(formData: FormData) {
       };
 
       if (id) {
-        await (prisma as any).bukuNotulenPokjaIv.update({
+        await (prisma as any).bukuNotulenPokjaIV.update({
           where: { id },
           data
         });
       } else {
-        await (prisma as any).bukuNotulenPokjaIv.create({
+        await (prisma as any).bukuNotulenPokjaIV.create({
           data
         });
       }
@@ -856,7 +856,601 @@ export async function saveBukuNotulen(formData: FormData) {
 export async function deleteBukuNotulen(id: number) {
   return withDriftRetry(
     async () => {
-      await (prisma as any).bukuNotulenPokjaIv.delete({ where: { id } });
+      await (prisma as any).bukuNotulenPokjaIV.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// ==========================================
+// === BUKU BAKU POKJA I SERVER ACTIONS ===
+// ==========================================
+
+export async function getBukuProgramKerjaPokjaIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuProgramKerjaPokjaI.findMany({ orderBy: { id: 'asc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuProgramKerjaPokjaI(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja1 = formData.get('programPokja1') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const lokasi = formData.get('lokasi') as string;
+      const waktuPelaksanaan = formData.get('waktuPelaksanaan') as string;
+      const mitra = formData.get('mitra') as string;
+      const indikatorKeberhasilan = formData.get('indikatorKeberhasilan') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { programPokok, programPokja1, kegiatan, sasaran, lokasi, waktuPelaksanaan, mitra, indikatorKeberhasilan, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuProgramKerjaPokjaI.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuProgramKerjaPokjaI.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuProgramKerjaPokjaI(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuProgramKerjaPokjaI.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuPelaksanaanPokjaIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuPelaksanaanPokjaI.findMany({ orderBy: { waktu: 'desc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuPelaksanaanPokjaI(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja1 = formData.get('programPokja1') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const tujuanKegiatan = formData.get('tujuanKegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const pelaksana = formData.get('pelaksana') as string;
+      const waktu = new Date(formData.get('waktu') as string);
+      const lokasi = formData.get('lokasi') as string;
+      const output = formData.get('output') as string;
+      const outcome = formData.get('outcome') as string;
+      const monitoringEvaluasi = formData.get('monitoringEvaluasi') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { programPokok, programPokja1, kegiatan, tujuanKegiatan, sasaran, pelaksana, waktu, lokasi, output, outcome, monitoringEvaluasi, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuPelaksanaanPokjaI.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuPelaksanaanPokjaI.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuPelaksanaanPokjaI(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuPelaksanaanPokjaI.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuKegiatanPokjaIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuKegiatanPokjaI.findMany({ orderBy: { tanggal: 'desc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuKegiatanPokjaI(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const nama = formData.get('nama') as string;
+      const jabatan = formData.get('jabatan') as string;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const tempat = formData.get('tempat') as string;
+      const uraian = formData.get('uraian') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { nama, jabatan, tanggal, tempat, uraian, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuKegiatanPokjaI.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuKegiatanPokjaI.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuKegiatanPokjaI(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuKegiatanPokjaI.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuNotulenPokjaIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuNotulenPokjaI.findMany({
+      include: {
+        pimpinanRapat: { select: { nama: true, jabatan: true } },
+        pembuatNotulen: { select: { nama: true, jabatan: true } }
+      },
+      orderBy: { tanggal: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuNotulenPokjaI(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const waktu = formData.get('waktu') as string;
+      const tempat = formData.get('tempat') as string;
+      const jenisRapat = formData.get('jenisRapat') as string;
+      const pimpinanRapatId = formData.get('pimpinanRapatId') ? Number(formData.get('pimpinanRapatId')) : null;
+      const pembuatNotulenId = formData.get('pembuatNotulenId') ? Number(formData.get('pembuatNotulenId')) : null;
+      const jumlahDiundang = Number(formData.get('jumlahDiundang'));
+      const jumlahHadir = Number(formData.get('jumlahHadir'));
+      const jumlahTidakHadir = Number(formData.get('jumlahTidakHadir'));
+      const susunanAcara = formData.get('susunanAcara') as string;
+      const kesimpulan = formData.get('kesimpulan') as string;
+      const penutup = formData.get('penutup') as string;
+      const dokumentasi = formData.get('dokumentasi') as string || '';
+
+      const data = { tanggal, waktu, tempat, jenisRapat, pimpinanRapatId, pembuatNotulenId, jumlahDiundang, jumlahHadir, jumlahTidakHadir, susunanAcara, kesimpulan, penutup, dokumentasi };
+
+      if (id) {
+        await (prisma as any).bukuNotulenPokjaI.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuNotulenPokjaI.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuNotulenPokjaI(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuNotulenPokjaI.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// ==========================================
+// === BUKU BAKU POKJA II SERVER ACTIONS ===
+// ==========================================
+
+export async function getBukuProgramKerjaPokjaIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuProgramKerjaPokjaII.findMany({ orderBy: { id: 'asc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuProgramKerjaPokjaII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja2 = formData.get('programPokja2') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const lokasi = formData.get('lokasi') as string;
+      const waktuPelaksanaan = formData.get('waktuPelaksanaan') as string;
+      const mitra = formData.get('mitra') as string;
+      const indikatorKeberhasilan = formData.get('indikatorKeberhasilan') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { programPokok, programPokja2, kegiatan, sasaran, lokasi, waktuPelaksanaan, mitra, indikatorKeberhasilan, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuProgramKerjaPokjaII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuProgramKerjaPokjaII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuProgramKerjaPokjaII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuProgramKerjaPokjaII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuPelaksanaanPokjaIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuPelaksanaanPokjaII.findMany({ orderBy: { waktu: 'desc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuPelaksanaanPokjaII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja2 = formData.get('programPokja2') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const tujuanKegiatan = formData.get('tujuanKegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const pelaksana = formData.get('pelaksana') as string;
+      const waktu = new Date(formData.get('waktu') as string);
+      const lokasi = formData.get('lokasi') as string;
+      const output = formData.get('output') as string;
+      const outcome = formData.get('outcome') as string;
+      const monitoringEvaluasi = formData.get('monitoringEvaluasi') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { programPokok, programPokja2, kegiatan, tujuanKegiatan, sasaran, pelaksana, waktu, lokasi, output, outcome, monitoringEvaluasi, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuPelaksanaanPokjaII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuPelaksanaanPokjaII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuPelaksanaanPokjaII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuPelaksanaanPokjaII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuKegiatanPokjaIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuKegiatanPokjaII.findMany({ orderBy: { tanggal: 'desc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuKegiatanPokjaII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const nama = formData.get('nama') as string;
+      const jabatan = formData.get('jabatan') as string;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const tempat = formData.get('tempat') as string;
+      const uraian = formData.get('uraian') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { nama, jabatan, tanggal, tempat, uraian, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuKegiatanPokjaII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuKegiatanPokjaII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuKegiatanPokjaII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuKegiatanPokjaII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuNotulenPokjaIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuNotulenPokjaII.findMany({
+      include: {
+        pimpinanRapat: { select: { nama: true, jabatan: true } },
+        pembuatNotulen: { select: { nama: true, jabatan: true } }
+      },
+      orderBy: { tanggal: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuNotulenPokjaII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const waktu = formData.get('waktu') as string;
+      const tempat = formData.get('tempat') as string;
+      const jenisRapat = formData.get('jenisRapat') as string;
+      const pimpinanRapatId = formData.get('pimpinanRapatId') ? Number(formData.get('pimpinanRapatId')) : null;
+      const pembuatNotulenId = formData.get('pembuatNotulenId') ? Number(formData.get('pembuatNotulenId')) : null;
+      const jumlahDiundang = Number(formData.get('jumlahDiundang'));
+      const jumlahHadir = Number(formData.get('jumlahHadir'));
+      const jumlahTidakHadir = Number(formData.get('jumlahTidakHadir'));
+      const susunanAcara = formData.get('susunanAcara') as string;
+      const kesimpulan = formData.get('kesimpulan') as string;
+      const penutup = formData.get('penutup') as string;
+      const dokumentasi = formData.get('dokumentasi') as string || '';
+
+      const data = { tanggal, waktu, tempat, jenisRapat, pimpinanRapatId, pembuatNotulenId, jumlahDiundang, jumlahHadir, jumlahTidakHadir, susunanAcara, kesimpulan, penutup, dokumentasi };
+
+      if (id) {
+        await (prisma as any).bukuNotulenPokjaII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuNotulenPokjaII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuNotulenPokjaII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuNotulenPokjaII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+// ==========================================
+// === BUKU BAKU POKJA III SERVER ACTIONS ===
+// ==========================================
+
+export async function getBukuProgramKerjaPokjaIIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuProgramKerjaPokjaIII.findMany({ orderBy: { id: 'asc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuProgramKerjaPokjaIII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja3 = formData.get('programPokja3') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const lokasi = formData.get('lokasi') as string;
+      const waktuPelaksanaan = formData.get('waktuPelaksanaan') as string;
+      const mitra = formData.get('mitra') as string;
+      const indikatorKeberhasilan = formData.get('indikatorKeberhasilan') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { programPokok, programPokja3, kegiatan, sasaran, lokasi, waktuPelaksanaan, mitra, indikatorKeberhasilan, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuProgramKerjaPokjaIII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuProgramKerjaPokjaIII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuProgramKerjaPokjaIII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuProgramKerjaPokjaIII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuPelaksanaanPokjaIIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuPelaksanaanPokjaIII.findMany({ orderBy: { waktu: 'desc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuPelaksanaanPokjaIII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const programPokok = formData.get('programPokok') as string;
+      const programPokja3 = formData.get('programPokja3') as string;
+      const kegiatan = formData.get('kegiatan') as string;
+      const tujuanKegiatan = formData.get('tujuanKegiatan') as string;
+      const sasaran = formData.get('sasaran') as string;
+      const pelaksana = formData.get('pelaksana') as string;
+      const waktu = new Date(formData.get('waktu') as string);
+      const lokasi = formData.get('lokasi') as string;
+      const output = formData.get('output') as string;
+      const outcome = formData.get('outcome') as string;
+      const monitoringEvaluasi = formData.get('monitoringEvaluasi') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { programPokok, programPokja3, kegiatan, tujuanKegiatan, sasaran, pelaksana, waktu, lokasi, output, outcome, monitoringEvaluasi, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuPelaksanaanPokjaIII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuPelaksanaanPokjaIII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuPelaksanaanPokjaIII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuPelaksanaanPokjaIII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuKegiatanPokjaIIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuKegiatanPokjaIII.findMany({ orderBy: { tanggal: 'desc' } }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuKegiatanPokjaIII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const nama = formData.get('nama') as string;
+      const jabatan = formData.get('jabatan') as string;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const tempat = formData.get('tempat') as string;
+      const uraian = formData.get('uraian') as string;
+      const keterangan = formData.get('keterangan') as string || '';
+
+      const data = { nama, jabatan, tanggal, tempat, uraian, keterangan };
+
+      if (id) {
+        await (prisma as any).bukuKegiatanPokjaIII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuKegiatanPokjaIII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuKegiatanPokjaIII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuKegiatanPokjaIII.delete({ where: { id } });
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function getBukuNotulenPokjaIIIList() {
+  return withDriftRetry(
+    () => (prisma as any).bukuNotulenPokjaIII.findMany({
+      include: {
+        pimpinanRapat: { select: { nama: true, jabatan: true } },
+        pembuatNotulen: { select: { nama: true, jabatan: true } }
+      },
+      orderBy: { tanggal: 'desc' }
+    }),
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function saveBukuNotulenPokjaIII(formData: FormData) {
+  return withDriftRetry(
+    async () => {
+      const id = formData.get('id') ? Number(formData.get('id')) : undefined;
+      const tanggal = new Date(formData.get('tanggal') as string);
+      const waktu = formData.get('waktu') as string;
+      const tempat = formData.get('tempat') as string;
+      const jenisRapat = formData.get('jenisRapat') as string;
+      const pimpinanRapatId = formData.get('pimpinanRapatId') ? Number(formData.get('pimpinanRapatId')) : null;
+      const pembuatNotulenId = formData.get('pembuatNotulenId') ? Number(formData.get('pembuatNotulenId')) : null;
+      const jumlahDiundang = Number(formData.get('jumlahDiundang'));
+      const jumlahHadir = Number(formData.get('jumlahHadir'));
+      const jumlahTidakHadir = Number(formData.get('jumlahTidakHadir'));
+      const susunanAcara = formData.get('susunanAcara') as string;
+      const kesimpulan = formData.get('kesimpulan') as string;
+      const penutup = formData.get('penutup') as string;
+      const dokumentasi = formData.get('dokumentasi') as string || '';
+
+      const data = { tanggal, waktu, tempat, jenisRapat, pimpinanRapatId, pembuatNotulenId, jumlahDiundang, jumlahHadir, jumlahTidakHadir, susunanAcara, kesimpulan, penutup, dokumentasi };
+
+      if (id) {
+        await (prisma as any).bukuNotulenPokjaIII.update({ where: { id }, data });
+      } else {
+        await (prisma as any).bukuNotulenPokjaIII.create({ data });
+      }
+      revalidatePath('/admin/pkk');
+      return { success: true };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
+export async function deleteBukuNotulenPokjaIII(id: number) {
+  return withDriftRetry(
+    async () => {
+      await (prisma as any).bukuNotulenPokjaIII.delete({ where: { id } });
       revalidatePath('/admin/pkk');
       return { success: true };
     },
