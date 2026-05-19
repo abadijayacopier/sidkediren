@@ -4,7 +4,7 @@ import React from 'react';
 import { UserCircle, Menu } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
-export default function Header() {
+export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean; setIsMobileOpen: (v: boolean) => void }) {
   const { data: session } = useSession();
   
   // FIX BUG-07: Fallbacks if session is loading/not present
@@ -12,25 +12,11 @@ export default function Header() {
   const userRole = session?.user?.role || 'Operator Desa';
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
+    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
       <div className="flex items-center gap-4">
-        {/* Mobile menu handled mostly via CSS classes in a real implementation, 
-            but adding active state placeholder for functionality */}
         <button 
-          className="md:hidden text-slate-500 hover:text-emerald-600 transition-colors"
-          onClick={() => {
-            const sidebar = document.querySelector('aside');
-            if(sidebar) {
-              const isHidden = sidebar.style.display === 'none' || sidebar.classList.contains('hidden');
-              if(isHidden) {
-                sidebar.classList.remove('hidden');
-                sidebar.style.display = 'flex';
-                sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'z-50');
-              } else {
-                sidebar.style.display = 'none';
-              }
-            }
-          }}
+          className="lg:hidden text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
         >
           <Menu size={24} />
         </button>

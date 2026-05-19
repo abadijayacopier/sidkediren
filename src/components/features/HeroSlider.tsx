@@ -57,7 +57,7 @@ export default function HeroSlider({ images, title, subtitle }: HeroSliderProps)
   const currentVariant = variants[variantIndex];
 
   return (
-    <div className="relative w-full h-[600px] md:h-[700px] overflow-hidden bg-slate-900 rounded-[3rem] shadow-2xl">
+    <div className="relative w-full h-[480px] sm:h-[600px] md:h-[700px] overflow-hidden bg-slate-900 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl">
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
@@ -77,28 +77,28 @@ export default function HeroSlider({ images, title, subtitle }: HeroSliderProps)
       </AnimatePresence>
 
       {/* Content Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center">
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 sm:px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.8 }}
           className="max-w-[800px]"
         >
-          <span className="inline-block px-4 py-1.5 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-6">
+          <span className="inline-block px-4 py-1.5 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-400 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] mb-4 sm:mb-6">
             Portal Resmi Desa Kediren
           </span>
-          <h1 className="text-4xl md:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-7xl font-black text-white mb-4 sm:mb-6 leading-[1.15] sm:leading-[1.1] tracking-tight">
             {title || "Sistem Informasi Desa Kediren"}
           </h1>
-          <p className="text-lg md:text-xl text-slate-300 font-medium max-w-[600px] mx-auto leading-relaxed">
+          <p className="text-sm sm:text-lg md:text-xl text-slate-300 font-medium max-w-[600px] mx-auto leading-relaxed opacity-90">
             {subtitle || "Mewujudkan tata kelola desa yang transparan, akuntabel, dan berbasis digital untuk kesejahteraan warga."}
           </p>
           
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <button className="px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/20 hover:scale-105 active:scale-95">
+          <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <button className="px-6 sm:px-8 py-3 sm:py-4 bg-emerald-600 text-white rounded-2xl text-sm sm:text-base font-bold hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/20 hover:scale-105 active:scale-95">
               Layanan Mandiri
             </button>
-            <button className="px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-all hover:scale-105 active:scale-95">
+            <button className="px-6 sm:px-8 py-3 sm:py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl text-sm sm:text-base font-bold hover:bg-white/20 transition-all hover:scale-105 active:scale-95">
               Jelajahi Desa
             </button>
           </div>
@@ -107,7 +107,7 @@ export default function HeroSlider({ images, title, subtitle }: HeroSliderProps)
 
       {/* Navigation Dots */}
       {images.length > 1 && (
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
+        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
           {images.map((_, i) => (
             <button
               key={i}

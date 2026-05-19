@@ -17,7 +17,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <StatCard 
           title="Total Penduduk" 
           value={totalPenduduk.toLocaleString()} 
@@ -48,10 +48,10 @@ export default async function AdminDashboard() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-5 sm:gap-8">
         {/* Recent Activity */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center">
             <h3 className="font-bold text-slate-800">Aktivitas Pelayanan Terbaru</h3>
             <button className="text-sm text-emerald-600 font-semibold hover:underline">Lihat Semua</button>
           </div>
@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Quick Links / Info */}
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-8 text-white shadow-lg shadow-emerald-100 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-5 sm:p-8 text-white shadow-lg shadow-emerald-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-20">
             <TrendingUp size={120} />
           </div>
@@ -100,22 +100,22 @@ export default async function AdminDashboard() {
 
 function StatCard({ title, value, change, icon, color }: { title: string, value: string, change: string, icon: React.ReactNode, color: string }) {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-      <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center mb-4`}>
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${color} rounded-xl flex items-center justify-center mb-3 sm:mb-4`}>
         {icon}
       </div>
-      <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
-      <h3 className="text-2xl font-bold text-slate-800 mb-1">{value}</h3>
-      <p className="text-xs text-slate-400 font-medium">{change}</p>
+      <p className="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 sm:mb-1">{title}</p>
+      <h3 className="text-lg sm:text-2xl font-bold text-slate-800 mb-0.5 sm:mb-1">{value}</h3>
+      <p className="text-[10px] sm:text-xs text-slate-400 font-medium">{change}</p>
     </div>
   );
 }
 
 function ActivityItem({ name, type, time, status }: { name: string, type: string, time: string, status: string }) {
   return (
-    <div className="p-6 flex items-center justify-between">
+    <div className="p-4 sm:p-6 flex items-center justify-between gap-3">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xs">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-[10px] sm:text-xs shrink-0">
           {name.split(' ').map(n => n[0]).join('')}
         </div>
         <div>

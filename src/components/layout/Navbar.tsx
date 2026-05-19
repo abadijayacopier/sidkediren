@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Globe, Menu, X } from 'lucide-react';
+import { Globe, Menu, X, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar({ profil }: { profil: any }) {
   const pathname = usePathname();
@@ -78,28 +79,57 @@ export default function Navbar({ profil }: { profil: any }) {
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-emerald-900/10 p-6 absolute top-full left-0 w-full shadow-2xl animate-in slide-in-from-top duration-300">
-           <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`py-4 px-6 rounded-2xl text-sm font-bold uppercase tracking-widest ${pathname === link.href ? 'bg-[#154212] text-white' : 'text-[#42493e] bg-[#f8f9ff]'}`}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="md:hidden bg-white/95 backdrop-blur-xl border-b border-emerald-900/10 absolute top-full left-0 w-full shadow-2xl z-40 overflow-hidden"
+          >
+             <div className="flex flex-col gap-3 p-6 border-t border-slate-100">
+                {navLinks.map((link, idx) => {
+                  const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+                  return (
+                    <motion.div
+                      key={link.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                    >
+                      <Link 
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center justify-between py-3.5 px-5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+                          isActive 
+                            ? 'bg-[#154212] text-white shadow-lg shadow-emerald-900/20' 
+                            : 'text-[#42493e] bg-slate-50 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>{link.name}</span>
+                        <ChevronDown size={14} className="-rotate-90 opacity-40" />
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: navLinks.length * 0.04 }}
                 >
-                  {link.name}
-                </Link>
-              ))}
-              <Link 
-                href="/login" 
-                className="py-4 px-6 bg-emerald-100 text-[#154212] rounded-2xl text-sm font-black uppercase tracking-widest text-center mt-4"
-              >
-                Login Warga
-              </Link>
-           </div>
-        </div>
-      )}
+                  <Link 
+                    href="/login" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 py-4 px-6 bg-emerald-100 hover:bg-emerald-200 text-[#154212] rounded-2xl text-xs font-black uppercase tracking-widest text-center mt-3 shadow-inner transition-all hover:scale-[1.01]"
+                  >
+                    <span>Login Layanan Warga</span>
+                  </Link>
+                </motion.div>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

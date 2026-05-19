@@ -8,11 +8,11 @@ export default function Footer({ profil }: { profil: any }) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-900 text-white pt-24 pb-12 overflow-hidden relative">
+    <footer className="bg-slate-900 text-white pt-14 sm:pt-24 pb-8 sm:pb-12 overflow-hidden relative">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
 
-      <div className="max-w-[1280px] mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-16 mb-12 sm:mb-20">
           {/* Brand Section */}
           <div className="space-y-8">
             <Link href="/" className="flex items-center gap-3">
@@ -36,7 +36,7 @@ export default function Footer({ profil }: { profil: any }) {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-8 text-emerald-500">Navigasi Cepat</h4>
+            <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-5 sm:mb-8 text-emerald-500">Navigasi Cepat</h4>
             <ul className="space-y-4 text-slate-400 text-sm font-medium">
               <li><Link href="/profil" className="hover:text-white transition-colors">Tentang Desa</Link></li>
               <li><Link href="/layanan" className="hover:text-white transition-colors">Layanan Publik</Link></li>
@@ -48,7 +48,7 @@ export default function Footer({ profil }: { profil: any }) {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-8 text-emerald-500">Kontak Kami</h4>
+            <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-5 sm:mb-8 text-emerald-500">Kontak Kami</h4>
             <ul className="space-y-6 text-slate-400 text-sm font-medium">
               <li className="flex gap-4">
                 <Phone size={18} className="text-emerald-500 shrink-0" />
@@ -66,7 +66,7 @@ export default function Footer({ profil }: { profil: any }) {
           </div>
 
           {/* Newsletter / Badge */}
-          <div className="bg-emerald-600/10 rounded-[32px] p-8 border border-emerald-500/20 relative overflow-hidden group">
+          <div className="bg-emerald-600/10 rounded-[1.5rem] sm:rounded-[32px] p-6 sm:p-8 border border-emerald-500/20 relative overflow-hidden group">
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
             <h4 className="text-lg font-black mb-4 relative z-10">Desa Digital Terverifikasi</h4>
             <p className="text-xs text-slate-400 leading-relaxed mb-6 relative z-10">
@@ -78,8 +78,8 @@ export default function Footer({ profil }: { profil: any }) {
           </div>
         </div>
 
-        <div className="pt-12 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+        <div className="pt-8 sm:pt-12 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-8">
+          <div className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest text-center sm:text-left">
             © {currentYear} PEMERINTAH DESA {profil?.namaDesa || 'KEDIREN'}. SELURUH HAK CIPTA DILINDUNGI.
           </div>
           <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">

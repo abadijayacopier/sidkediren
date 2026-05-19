@@ -24,6 +24,7 @@ import { getProfilDesa, getMasterSurat } from '@/app/actions/surat';
 import { getBerita } from '@/app/actions/berita';
 import Marquee from '@/components/layout/Marquee';
 import HeroSlider from '@/components/features/HeroSlider';
+import prisma from '@/lib/prisma';
 
 export default async function HomePage() {
   const profilData = await getProfilDesa();
@@ -45,13 +46,13 @@ export default async function HomePage() {
       <Navbar profil={profil} />
       
       {/* Running Text / Marquee */}
-      <div className="mt-20">
+      <div className="mt-16 sm:mt-20">
         <Marquee text={profil?.runningText || "Selamat Datang di Portal Resmi Desa Kediren - Informasi Transparan, Warga Sejahtera."} />
       </div>
 
       <main>
         {/* Hero Section - Official & Modern Slider */}
-        <section className="max-w-[1280px] mx-auto px-6 pt-6 pb-2 bg-transparent">
+        <section className="max-w-[1280px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-2 bg-transparent">
           <HeroSlider 
             images={(() => {
               try {
@@ -68,32 +69,32 @@ export default async function HomePage() {
 
         {/* Welcome Section - Dynamic */}
         {profil?.welcomeMessage && (
-          <section className="py-24 bg-white relative overflow-hidden border-b border-slate-50">
-            <div className="max-w-[1280px] mx-auto px-6">
-              <div className="flex flex-col md:flex-row items-center gap-16">
+          <section className="py-14 sm:py-24 bg-white relative overflow-hidden border-b border-slate-50">
+            <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+              <div className="flex flex-col md:flex-row items-center gap-10 sm:gap-16">
                 <div className="w-full md:w-1/3">
                   <div className="relative">
-                    <div className="aspect-[3/4] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white rotate-[-2deg]">
+                    <div className="aspect-[3/4] rounded-[2rem] sm:rounded-[40px] overflow-hidden shadow-2xl border-4 border-white rotate-[-2deg]">
                       <img 
                         src={profil?.welcomeImage || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1500&auto=format&fit=crop"} 
                         alt="Kepala Desa" 
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="absolute -bottom-6 -right-6 bg-[#154212] text-white p-6 rounded-3xl shadow-xl rotate-[3deg]">
+                    <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-[#154212] text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl rotate-[3deg]">
                       <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Kepala Desa</p>
                       <p className="font-black text-lg">{profil?.namaKepalaDesa}</p>
                     </div>
                   </div>
                 </div>
-                <div className="w-full md:w-2/3 space-y-8">
-                  <div className="space-y-4">
+                <div className="w-full md:w-2/3 space-y-6 sm:space-y-8">
+                  <div className="space-y-3 sm:space-y-4">
                     <span className="text-[#154212] font-bold tracking-[0.2em] text-xs uppercase block">Pesan Utama</span>
-                    <h3 className="text-4xl font-bold text-[#0b1c30] tracking-tight">
+                    <h3 className="text-2xl sm:text-4xl font-bold text-[#0b1c30] tracking-tight">
                       {profil?.welcomeTitle || `Sambutan Kepala Desa ${profil?.namaDesa}`}
                     </h3>
                   </div>
-                  <div className="text-xl text-[#42493e] leading-relaxed font-light italic border-l-4 border-[#154212] pl-8 py-2">
+                  <div className="text-base sm:text-xl text-[#42493e] leading-relaxed font-light italic border-l-4 border-[#154212] pl-5 sm:pl-8 py-2">
                     "{profil.welcomeMessage}"
                   </div>
                   <div className="flex items-center gap-4 pt-4">
@@ -107,19 +108,19 @@ export default async function HomePage() {
         )}
 
         {/* Layanan Publik Grid - Quick Access */}
-        <section className="py-[100px] bg-[#f8f9ff]">
-          <div className="max-w-[1280px] mx-auto px-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+        <section className="py-16 sm:py-[100px] bg-[#f8f9ff]">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-4 sm:gap-6">
               <div>
-                <span className="text-[#154212] font-bold tracking-[0.2em] text-xs uppercase mb-3 block">Efisiensi & Transparansi</span>
-                <h3 className="text-4xl font-bold text-[#0b1c30] tracking-tight">Layanan Publik Digital</h3>
+                <span className="text-[#154212] font-bold tracking-[0.2em] text-xs uppercase mb-2 sm:mb-3 block">Efisiensi & Transparansi</span>
+                <h3 className="text-2xl sm:text-4xl font-bold text-[#0b1c30] tracking-tight">Layanan Publik Digital</h3>
               </div>
               <Link href="/layanan" className="flex items-center gap-2 text-[#154212] font-bold hover:gap-4 transition-all">
                 Lihat Semua Layanan <ArrowRight size={20} />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
               {masterSurat.slice(0, 4).map((surat, i) => (
                 <ServiceCard 
                   key={surat.id}
@@ -141,24 +142,24 @@ export default async function HomePage() {
         </section>
 
         {/* Berita Terkini */}
-        <section className="py-[100px] bg-white">
-          <div className="max-w-[1280px] mx-auto px-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-              <div className="space-y-4">
+        <section className="py-16 sm:py-[100px] bg-white">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-4 sm:gap-6">
+              <div className="space-y-3 sm:space-y-4">
                 <span className="text-[#154212] font-bold tracking-[0.2em] text-xs uppercase block">Informasi Terbaru</span>
-                <h3 className="text-4xl font-bold text-[#0b1c30] tracking-tight">Kabar Desa Kediren</h3>
+                <h3 className="text-2xl sm:text-4xl font-bold text-[#0b1c30] tracking-tight">Kabar Desa Kediren</h3>
               </div>
               <Link href="/berita" className="flex items-center gap-2 text-[#154212] font-bold hover:gap-4 transition-all">
                 Lihat Semua Berita <ArrowRight size={20} />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
               {berita.map((item: any) => (
                 <Link 
                   key={item.id}
                   href={`/berita/${item.slug}`} 
-                  className="group block bg-white rounded-[40px] overflow-hidden border border-[#eff4ff] hover:shadow-2xl hover:shadow-emerald-900/10 transition-all hover:-translate-y-2"
+                  className="group block bg-white rounded-[2rem] sm:rounded-[40px] overflow-hidden border border-[#eff4ff] hover:shadow-2xl hover:shadow-emerald-900/10 transition-all hover:-translate-y-2"
                 >
                   <div className="aspect-[16/10] overflow-hidden relative">
                     {item.gambar ? (
@@ -178,11 +179,11 @@ export default async function HomePage() {
                       </span>
                     </div>
                   </div>
-                  <div className="p-8 space-y-4">
+                  <div className="p-5 sm:p-8 space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-4 text-[10px] font-bold text-[#42493e]/60 uppercase tracking-widest">
                        <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#154212]" /> {new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                     </div>
-                    <h4 className="text-xl font-bold text-[#0b1c30] group-hover:text-[#154212] transition-colors leading-snug">
+                    <h4 className="text-lg sm:text-xl font-bold text-[#0b1c30] group-hover:text-[#154212] transition-colors leading-snug">
                       {item.judul}
                     </h4>
                     <p className="text-sm text-[#42493e] leading-relaxed line-clamp-2 opacity-60">
@@ -196,7 +197,7 @@ export default async function HomePage() {
               ))}
               
               {berita.length === 0 && (
-                <div className="col-span-full py-20 bg-[#f8f9ff] rounded-[40px] border-2 border-dashed border-[#eff4ff] flex flex-col items-center text-center">
+                <div className="col-span-full py-14 sm:py-20 bg-[#f8f9ff] rounded-[2rem] sm:rounded-[40px] border-2 border-dashed border-[#eff4ff] flex flex-col items-center text-center">
                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-[#154212]/10 mb-6 shadow-sm">
                       <Newspaper size={40} />
                    </div>
@@ -209,43 +210,43 @@ export default async function HomePage() {
         </section>
 
         {/* Statistik & Transparansi */}
-        <section className="py-[120px] bg-white relative overflow-hidden">
+        <section className="py-16 sm:py-[120px] bg-white relative overflow-hidden">
           <div className="absolute inset-0 batik-pattern opacity-[0.02] pointer-events-none" style={{ backgroundImage: batikPattern }}></div>
-          <div className="max-w-[1280px] mx-auto px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-16 items-center">
               <div className="lg:col-span-5">
-                <h3 className="text-4xl font-bold text-[#0b1c30] mb-8 tracking-tight">Transparansi Data Desa {profil?.namaDesa || 'Kediren'}</h3>
-                <p className="text-[#42493e] text-lg leading-loose mb-10 font-light">
+                <h3 className="text-2xl sm:text-4xl font-bold text-[#0b1c30] mb-6 sm:mb-8 tracking-tight">Transparansi Data Desa {profil?.namaDesa || 'Kediren'}</h3>
+                <p className="text-[#42493e] text-base sm:text-lg leading-loose mb-8 sm:mb-10 font-light">
                   Kami menyajikan data secara terbuka agar warga dapat ikut serta mengawasi and membangun desa menjadi lebih baik.
                 </p>
                 <div className="space-y-6">
-                  <div className="flex items-center gap-4 p-6 bg-[#f8f9ff] rounded-3xl border border-[#eff4ff] hover:border-[#154212]/20 transition-all group cursor-pointer">
+                  <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6 bg-[#f8f9ff] rounded-2xl sm:rounded-3xl border border-[#eff4ff] hover:border-[#154212]/20 transition-all group cursor-pointer">
                     <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-[#154212] group-hover:bg-[#154212] group-hover:text-white transition-all">
                       <TrendingUp size={24} />
                     </div>
                     <div>
                       <div className="text-xs font-bold text-[#42493e]/60 uppercase tracking-widest mb-1">Total Penduduk</div>
-                      <div className="text-2xl font-black text-[#0b1c30]">{totalPenduduk} Jiwa</div>
+                      <div className="text-xl sm:text-2xl font-black text-[#0b1c30]">{totalPenduduk} Jiwa</div>
                     </div>
                     <ArrowUpRight className="ml-auto text-[#154212]/20 group-hover:text-[#154212] transition-all" size={24} />
                   </div>
                 </div>
               </div>
               <div className="lg:col-span-7">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="aspect-square bg-[#154212] rounded-[40px] p-10 text-white flex flex-col justify-between shadow-2xl shadow-emerald-900/40 relative overflow-hidden group">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                  <div className="aspect-square bg-[#154212] rounded-[2rem] sm:rounded-[40px] p-6 sm:p-10 text-white flex flex-col justify-between shadow-2xl shadow-emerald-900/40 relative overflow-hidden group">
                      <div className="absolute top-[-20px] right-[-20px] w-40 h-40 batik-pattern opacity-10" style={{ backgroundImage: batikPattern }}></div>
-                     <Award size={40} className="mb-4" />
+                     <Award size={32} className="mb-3 sm:mb-4 sm:w-10 sm:h-10" />
                      <div>
-                        <div className="text-4xl font-black mb-2">A+</div>
-                        <div className="text-sm font-bold uppercase tracking-widest opacity-60">Status IDM</div>
+                        <div className="text-2xl sm:text-4xl font-black mb-1 sm:mb-2">A+</div>
+                        <div className="text-[10px] sm:text-sm font-bold uppercase tracking-widest opacity-60">Status IDM</div>
                      </div>
                   </div>
-                  <div className="aspect-square bg-[#eff4ff] rounded-[40px] p-10 text-[#0b1c30] flex flex-col justify-between border border-[#d3e4fe]">
-                     <Users size={40} className="text-[#154212] mb-4" />
+                  <div className="aspect-square bg-[#eff4ff] rounded-[2rem] sm:rounded-[40px] p-6 sm:p-10 text-[#0b1c30] flex flex-col justify-between border border-[#d3e4fe]">
+                     <Users size={32} className="text-[#154212] mb-3 sm:mb-4 sm:w-10 sm:h-10" />
                      <div>
-                        <div className="text-4xl font-black mb-2">{totalKeluarga}</div>
-                        <div className="text-sm font-bold uppercase tracking-widest text-[#42493e]/60">Kepala Keluarga</div>
+                        <div className="text-2xl sm:text-4xl font-black mb-1 sm:mb-2">{totalKeluarga}</div>
+                        <div className="text-[10px] sm:text-sm font-bold uppercase tracking-widest text-[#42493e]/60">Kepala Keluarga</div>
                      </div>
                   </div>
                 </div>
@@ -255,17 +256,17 @@ export default async function HomePage() {
         </section>
 
         {/* CTA - Hubungi Kami */}
-        <section className="py-[100px] bg-[#f8f9ff]">
-           <div className="max-w-[1280px] mx-auto px-6">
-              <div className="bg-[#0b1c30] rounded-[48px] p-12 md:p-20 text-center relative overflow-hidden text-white">
+        <section className="py-16 sm:py-[100px] bg-[#f8f9ff]">
+           <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+              <div className="bg-[#0b1c30] rounded-[2rem] sm:rounded-[48px] p-8 sm:p-12 md:p-20 text-center relative overflow-hidden text-white">
                  <div className="absolute inset-0 batik-pattern opacity-10" style={{ backgroundImage: batikPattern }}></div>
-                 <h3 className="text-4xl md:text-5xl font-black mb-8 italic tracking-tighter">Ada Pertanyaan?</h3>
-                 <p className="text-white/60 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+                 <h3 className="text-2xl sm:text-4xl md:text-5xl font-black mb-5 sm:mb-8 italic tracking-tighter">Ada Pertanyaan?</h3>
+                 <p className="text-white/60 text-sm sm:text-lg mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
                     Kami siap melayani kebutuhan informasi and administrasi Anda. Hubungi kami melalui kanal resmi di bawah ini.
                  </p>
-                 <div className="flex flex-wrap justify-center gap-6 relative z-10">
-                    <button className="px-10 py-4 bg-[#a1d494] text-[#154212] rounded-2xl font-bold flex items-center gap-3 hover:brightness-110 transition-all shadow-xl shadow-[#a1d494]/20">
-                       <Phone size={20} /> {profil?.telepon || '0351-XXXXXX'}
+                 <div className="flex flex-wrap justify-center gap-4 sm:gap-6 relative z-10">
+                    <button className="px-6 sm:px-10 py-3 sm:py-4 bg-[#a1d494] text-[#154212] rounded-2xl text-sm sm:text-base font-bold flex items-center gap-2 sm:gap-3 hover:brightness-110 transition-all shadow-xl shadow-[#a1d494]/20">
+                       <Phone size={18} /> {profil?.telepon || '0351-XXXXXX'}
                     </button>
                     <div className="flex gap-4">
                        {profil?.instagram && (
@@ -292,7 +293,7 @@ export default async function HomePage() {
 
 function ServiceCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
   return (
-    <div className="bg-white p-8 rounded-[32px] border border-[#eff4ff] shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group cursor-pointer">
+    <div className="bg-white p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[32px] border border-[#eff4ff] shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group cursor-pointer">
       <div className="w-14 h-14 bg-[#f8f9ff] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all shadow-inner">
         {React.cloneElement(icon as React.ReactElement, { size: 28 })}
       </div>
