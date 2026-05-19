@@ -176,8 +176,8 @@ export default function PkkDashboard() {
             "Kebun gizi mini organik Dasawisma Mawar",
             "Arisan sehat & iuran gotong royong warga"
           ]}
-          actionLink="/admin/pkk/kegiatan?filter=Dasawisma"
-          actionText="Log Kegiatan Dasawisma"
+          actionLink="/admin/pkk/dasawisma"
+          actionText="Kelola Kelompok Dasawisma"
         />
 
         {/* POSYANDU LINK */}
