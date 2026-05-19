@@ -569,22 +569,95 @@ export default function PosyanduDashboard() {
                 
                 {/* Bagian 1: Biodata Warga */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-1">1. Informasi Balita & Ibu</h4>
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">1. Informasi Balita & Ibu</h4>
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => { setIsAutoWarga(true); handleSelectWarga(''); }}
+                        className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${isAutoWarga ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        <LinkIcon size={12} /> Ambil Data Warga
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAutoWarga(false); handleSelectWarga(''); }}
+                        className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${!isAutoWarga ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        <Edit size={12} /> Input Manual
+                      </button>
+                    </div>
+                  </div>
+
+                  {isAutoWarga && (
+                    <div className="animate-fade-in">
+                      <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-2">Pilih Anak Balita dari Kependudukan</label>
+                      <select 
+                        value={selectedWargaNik} 
+                        onChange={(e) => handleSelectWarga(e.target.value)} 
+                        className="w-full px-5 py-3 bg-emerald-50/50 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm"
+                        required={isAutoWarga}
+                      >
+                        <option value="">-- Cari Nama Balita / NIK --</option>
+                        {wargaBalitaList.map(w => (
+                          <option key={w.nik} value={w.nik}>
+                            {w.namaLengkap} (NIK: {w.nik}) - Dusun {w.keluarga?.dusun || '-'}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[9px] text-slate-400 font-semibold mt-1">Data warga di bawah usia 5 tahun otomatis disinkronkan ke sini.</p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nama Balita</label>
-                      <input type="text" value={formNama} onChange={(e) => setFormNama(e.target.value)} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm" placeholder="Contoh: Arfan Ramadhan" required />
+                      <input 
+                        type="text" 
+                        value={formNama} 
+                        onChange={(e) => setFormNama(e.target.value)} 
+                        disabled={isAutoWarga && !!selectedWargaNik}
+                        className={`w-full px-5 py-3 border rounded-xl outline-none font-bold text-sm transition-all ${
+                          isAutoWarga && !!selectedWargaNik 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-emerald-500'
+                        }`} 
+                        placeholder="Contoh: Arfan Ramadhan" 
+                        required 
+                      />
                     </div>
                     <div>
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nama Ibu</label>
-                      <input type="text" value={formIbu} onChange={(e) => setFormIbu(e.target.value)} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm" placeholder="Nama Ibu Kandung" required />
+                      <input 
+                        type="text" 
+                        value={formIbu} 
+                        onChange={(e) => setFormIbu(e.target.value)} 
+                        disabled={isAutoWarga && !!selectedWargaNik}
+                        className={`w-full px-5 py-3 border rounded-xl outline-none font-bold text-sm transition-all ${
+                          isAutoWarga && !!selectedWargaNik 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-emerald-500'
+                        }`} 
+                        placeholder="Nama Ibu Kandung" 
+                        required 
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Pilih Posyandu & Dusun</label>
-                      <select value={formPosyandu} onChange={(e) => setFormPosyandu(e.target.value)} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm" required>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Posyandu Cakupan</label>
+                      <select 
+                        value={formPosyandu} 
+                        onChange={(e) => setFormPosyandu(e.target.value)} 
+                        disabled={isAutoWarga && !!selectedWargaNik}
+                        className={`w-full px-5 py-3 border rounded-xl outline-none font-bold text-sm transition-all ${
+                          isAutoWarga && !!selectedWargaNik 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-emerald-500'
+                        }`} 
+                        required
+                      >
                         <option value="">Pilih Lokasi</option>
                         {posyanduList.map(pos => (
                           <option key={pos.id} value={pos.id}>{pos.nama} - {pos.dusun}</option>
@@ -593,7 +666,19 @@ export default function PosyanduDashboard() {
                     </div>
                     <div>
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Usia (Bulan)</label>
-                      <input type="number" value={formUsia} onChange={(e) => setFormUsia(e.target.value)} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-sm" placeholder="Contoh: 12" required />
+                      <input 
+                        type="number" 
+                        value={formUsia} 
+                        onChange={(e) => setFormUsia(e.target.value)} 
+                        disabled={isAutoWarga && !!selectedWargaNik}
+                        className={`w-full px-5 py-3 border rounded-xl outline-none font-bold text-sm transition-all ${
+                          isAutoWarga && !!selectedWargaNik 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-2 focus:ring-emerald-500'
+                        }`} 
+                        placeholder="Contoh: 12" 
+                        required 
+                      />
                     </div>
                   </div>
                 </div>
