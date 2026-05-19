@@ -30,6 +30,10 @@ export default async function HomePage() {
   const masterSurat = await getMasterSurat();
   const berita = await getBerita(3); // Ambil 3 berita terbaru
   
+  // Real DB Stats
+  const totalPenduduk = await prisma.penduduk.count({ where: { isHidup: true } });
+  const totalKeluarga = await prisma.keluarga.count();
+  
   // Cast to any to handle dynamic fields from database
   const profil = profilData as any;
   
@@ -221,7 +225,7 @@ export default async function HomePage() {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-[#42493e]/60 uppercase tracking-widest mb-1">Total Penduduk</div>
-                      <div className="text-2xl font-black text-[#0b1c30]">2,842 Jiwa</div>
+                      <div className="text-2xl font-black text-[#0b1c30]">{totalPenduduk} Jiwa</div>
                     </div>
                     <ArrowUpRight className="ml-auto text-[#154212]/20 group-hover:text-[#154212] transition-all" size={24} />
                   </div>
@@ -240,7 +244,7 @@ export default async function HomePage() {
                   <div className="aspect-square bg-[#eff4ff] rounded-[40px] p-10 text-[#0b1c30] flex flex-col justify-between border border-[#d3e4fe]">
                      <Users size={40} className="text-[#154212] mb-4" />
                      <div>
-                        <div className="text-4xl font-black mb-2">840</div>
+                        <div className="text-4xl font-black mb-2">{totalKeluarga}</div>
                         <div className="text-sm font-bold uppercase tracking-widest text-[#42493e]/60">Kepala Keluarga</div>
                      </div>
                   </div>
@@ -264,12 +268,16 @@ export default async function HomePage() {
                        <Phone size={20} /> {profil?.telepon || '0351-XXXXXX'}
                     </button>
                     <div className="flex gap-4">
-                       <a href="#" className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all border border-white/20">
-                          <Instagram size={24} />
-                       </a>
-                       <a href="#" className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all border border-white/20">
-                          <Facebook size={24} />
-                       </a>
+                       {profil?.instagram && (
+                         <a href={profil.instagram} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all border border-white/20">
+                            <Instagram size={24} />
+                         </a>
+                       )}
+                       {profil?.facebook && (
+                         <a href={profil.facebook} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all border border-white/20">
+                            <Facebook size={24} />
+                         </a>
+                       )}
                     </div>
                  </div>
               </div>

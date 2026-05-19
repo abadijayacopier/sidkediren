@@ -171,7 +171,7 @@ export default async function DataPendudukPage({
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 border overflow-hidden shrink-0">
-                      {warga.foto ? <img src={warga.foto} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
+                      {warga.foto ? <img src={warga.foto} alt={`Foto Profil ${warga.namaLengkap}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>}
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-800 leading-tight">{warga.namaLengkap}</p>

@@ -1,75 +1,37 @@
 'use server';
 
-import prisma from '@/lib/prisma';
+import prisma, { withDriftRetry } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-
 import { syncDatabaseStructure } from './system';
 
 export async function getApbdesSummary(tahun: number, status: string = 'MURNI') {
-  let items: any[] = [];
-  try {
-    items = await prisma.apbdesItem.findMany({
-      where: { tahun, status } as any,
+  const items = await withDriftRetry(
+    () => prisma.apbdesItem.findMany({
+      where: { tahun, status },
       include: { kategori: true }
-    });
-  } catch (error: any) {
-    const isDrift = error.message?.includes('does not exist') || 
-                    error.message?.includes('Unknown column') || 
-                    error.message?.includes('status');
-    if (isDrift) {
-      await syncDatabaseStructure();
-      items = await prisma.apbdesItem.findMany({
-        where: { tahun, status } as any,
-        include: { kategori: true }
-      }) as any;
-    } else {
-      throw error;
-    }
-  }
+    }),
+    syncDatabaseStructure
+  );
 
-  // Kalkulasi Pendapatan, Belanja, Pembiayaan
-  // Note: Usually categories are grouped by specific names or IDs
-  // We'll assume the 5 Bidang are "Belanja"
-  // We might need to add "Pendapatan" and "Pembiayaan" as categories too if they aren't there
-  
-  const summary = {
-    totalPendapatan: items.filter(i => (i as any).kategori?.jenis === 'PENDAPATAN').reduce((acc, curr) => acc + Number(curr.anggaran), 0),
-    totalBelanja: items.filter(i => (i as any).kategori?.jenis === 'BELANJA').reduce((acc, curr) => acc + Number(curr.anggaran), 0),
-    totalPembiayaan: items.filter(i => (i as any).kategori?.jenis === 'PEMBIAYAAN').reduce((acc, curr) => acc + Number(curr.anggaran), 0),
+  return {
+    totalPendapatan: items.filter((i: any) => i.kategori?.jenis === 'PENDAPATAN').reduce((acc: number, curr: any) => acc + Number(curr.anggaran), 0),
+    totalBelanja: items.filter((i: any) => i.kategori?.jenis === 'BELANJA').reduce((acc: number, curr: any) => acc + Number(curr.anggaran), 0),
+    totalPembiayaan: items.filter((i: any) => i.kategori?.jenis === 'PEMBIAYAAN').reduce((acc: number, curr: any) => acc + Number(curr.anggaran), 0),
   };
-
-  return summary;
 }
 
 export async function getApbdesItems(tahun: number, status: string = 'MURNI') {
-  let items: any[] = [];
-  try {
-    items = await prisma.apbdesItem.findMany({
-      where: { tahun, status } as any,
+  const items = await withDriftRetry(
+    () => prisma.apbdesItem.findMany({
+      where: { tahun, status },
       include: { kategori: true },
       orderBy: [
         { kategoriId: 'asc' },
         { kodeRekening: 'asc' }
-      ] as any
-    }) as any;
-  } catch (error: any) {
-    const isDrift = error.message?.includes('does not exist') || 
-                    error.message?.includes('Unknown column') || 
-                    error.message?.includes('status');
-    if (isDrift) {
-      await syncDatabaseStructure();
-      items = await prisma.apbdesItem.findMany({
-        where: { tahun, status } as any,
-        include: { kategori: true },
-        orderBy: [
-          { kategoriId: 'asc' },
-          { kodeRekening: 'asc' }
-        ] as any
-      }) as any;
-    } else {
-      throw error;
-    }
-  }
+      ]
+    }),
+    syncDatabaseStructure
+  );
 
   return JSON.parse(JSON.stringify(items));
 }
@@ -82,27 +44,13 @@ export async function getApbdesKategori() {
 }
 
 export async function getProgramKerja(tahun: number) {
-  let programs: any[] = [];
-  try {
-    programs = await prisma.programKerja.findMany({
+  const programs = await withDriftRetry(
+    () => prisma.programKerja.findMany({
       where: { tahun },
-      orderBy: { updatedAt: 'desc' } as any
-    }) as any;
-  } catch (error: any) {
-    const isDrift = error.message?.includes('does not exist') || 
-                    error.message?.includes('Unknown column') || 
-                    error.message?.includes('updated_at') || 
-                    error.message?.includes('updatedAt');
-    if (isDrift) {
-      await syncDatabaseStructure();
-      programs = await prisma.programKerja.findMany({
-        where: { tahun },
-        orderBy: { updatedAt: 'desc' } as any
-      }) as any;
-    } else {
-      throw error;
-    }
-  }
+      orderBy: { updatedAt: 'desc' }
+    }),
+    syncDatabaseStructure
+  );
 
   return JSON.parse(JSON.stringify(programs));
 }
@@ -121,17 +69,7 @@ export async function upsertApbdesItem(formData: FormData) {
   const sumberDana = formData.get('sumberDana') as string;
   const keterangan = formData.get('keterangan') as string;
 
-  const data = {
-    tahun,
-    status,
-    kategoriId,
-    kodeRekening,
-    namaItem,
-    anggaran,
-    realisasi,
-    sumberDana,
-    keterangan
-  };
+  const data = { tahun, status, kategoriId, kodeRekening, namaItem, anggaran, realisasi, sumberDana, keterangan };
 
   if (id) {
     await prisma.apbdesItem.update({ where: { id }, data });
@@ -157,18 +95,7 @@ export async function upsertProgramKerja(formData: FormData) {
   const latitude = formData.get('latitude') ? parseFloat(formData.get('latitude') as string) : undefined;
   const longitude = formData.get('longitude') ? parseFloat(formData.get('longitude') as string) : undefined;
 
-  const data = {
-    tahun,
-    namaProgram,
-    deskripsi,
-    lokasi,
-    anggaran,
-    sumberDana,
-    status,
-    fotoProgres,
-    latitude,
-    longitude
-  };
+  const data = { tahun, namaProgram, deskripsi, lokasi, anggaran, sumberDana, status, fotoProgres, latitude, longitude };
 
   if (id) {
     await prisma.programKerja.update({ where: { id }, data });

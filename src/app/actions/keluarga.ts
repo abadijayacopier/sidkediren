@@ -24,42 +24,38 @@ export async function createKeluargaBaru(formData: FormData) {
   const agama = formData.get('agama') as string;
   const pekerjaan = formData.get('pekerjaan') as string;
 
-  // Transaksi: Buat Penduduk dulu, lalu hubungkan ke Keluarga sebagai Kepala
-  await prisma.$transaction(async (tx: any) => {
-    // 1. Buat data Keluarga tanpa kepala dulu (bypass via raw if needed or connect later)
-    // Tapi di schema kita kepalaKeluargaNik mandatory. 
-    // Cara terbaik: Buat Penduduk dulu dengan noKk ini, lalu buat Keluarga.
-    
-    // Kita buat Penduduk-nya dulu
-    const pendudukHead = await tx.penduduk.create({
-        data: {
-            nik,
-            noKk,
-            namaLengkap,
-            tempatLahir,
-            tanggalLahir,
-            jenisKelamin,
-            agama,
-            pekerjaan,
-            statusDalamKeluarga: 'KEPALA KELUARGA',
-            kewarganegaraan: 'WNI',
-        }
+  // FIX BUG-03: Buat Keluarga DULU, baru Penduduk (FK constraint)
+  await prisma.$transaction(async (tx) => {
+    // 1. Buat Keluarga terlebih dahulu (karena Penduduk punya FK ke Keluarga)
+    await tx.keluarga.create({
+      data: {
+        noKk,
+        alamat,
+        dusun,
+        rt,
+        rw,
+        kodePos,
+        kecamatan,
+        kabupaten,
+        provinsi,
+        kepalaKeluargaNik: nik,
+      }
     });
 
-    // 2. Buat Keluarga dan hubungkan ke Penduduk tadi
-    await tx.keluarga.create({
-        data: {
-            noKk,
-            alamat,
-            dusun,
-            rt,
-            rw,
-            kodePos,
-            kecamatan,
-            kabupaten,
-            provinsi,
-            kepalaKeluargaNik: nik,
-        }
+    // 2. Baru buat Penduduk (yang mereferensikan Keluarga via noKk)
+    await tx.penduduk.create({
+      data: {
+        nik,
+        noKk,
+        namaLengkap,
+        tempatLahir,
+        tanggalLahir,
+        jenisKelamin,
+        agama,
+        pekerjaan,
+        statusDalamKeluarga: 'KEPALA KELUARGA',
+        kewarganegaraan: 'WNI',
+      }
     });
   });
 

@@ -11,11 +11,14 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Store,
+  HeartPulse
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signOut } from 'next-auth/react'; // FIX BUG-06
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsCollapsed: (v: boolean) => void }) {
   const pathname = usePathname();
@@ -95,24 +98,31 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: 
           />
         </div>
 
-        <SidebarLink href="/admin/apbdes" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/apbdes')} isCollapsed={isCollapsed} />
-        <SidebarLink href="/admin/gis" icon={<Map size={20} />} label="Pemetaan GIS" active={pathname.startsWith('/admin/gis')} isCollapsed={isCollapsed} />
+        <SidebarLink href="/admin/settings/transparansi" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/settings/transparansi')} isCollapsed={isCollapsed} />
+        
+        {/* FIX BUG-11: Add visually disabled links for missing features */}
+        <SidebarLink href="#" icon={<Map size={20} />} label="Pemetaan GIS" isCollapsed={isCollapsed} disabled />
 
         {!isCollapsed ? (
           <div className="pt-6 mb-1">
-            <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Social & Ekonomi</p>
+            <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Sosial & Ekonomi</p>
           </div>
         ) : (
           <div className="h-px bg-slate-100 my-4 mx-2" />
         )}
-        <SidebarLink href="/admin/umkm" icon={<Settings size={20} />} label="UMKM & Wisata" active={pathname.startsWith('/admin/umkm')} isCollapsed={isCollapsed} />
-        <SidebarLink href="/admin/pkk" icon={<Users size={20} />} label="PKK & Posyandu" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} />
+        <SidebarLink href="/admin/settings/potensi" icon={<Store size={20} />} label="UMKM & Wisata" active={pathname.startsWith('/admin/settings/potensi')} isCollapsed={isCollapsed} />
+        <SidebarLink href="#" icon={<HeartPulse size={20} />} label="PKK & Posyandu" isCollapsed={isCollapsed} disabled />
       </nav>
 
       <div className="p-4 border-t border-slate-100 space-y-1 bg-white">
         <SidebarLink href="/admin/settings" icon={<Settings size={20} />} label="Pengaturan" active={pathname.startsWith('/admin/settings')} isCollapsed={isCollapsed} />
-        <button className="flex items-center gap-3 px-3 py-2.5 w-full text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all text-sm font-semibold">
-          <LogOut size={20} className="shrink-0" />
+        
+        {/* FIX BUG-06: Attached onClick handler with signOut */}
+        <button 
+          onClick={() => signOut({ callbackUrl: '/auth/login' })}
+          className="flex items-center gap-3 px-3 py-2.5 w-full text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all text-sm font-semibold group"
+        >
+          <LogOut size={20} className="shrink-0 group-hover:-translate-x-1 transition-transform" />
           {!isCollapsed && <span>Keluar</span>}
         </button>
       </div>
@@ -181,15 +191,9 @@ function SidebarCollapse({ icon, label, active = false, isCollapsed = false, sub
   );
 }
 
-function SidebarLink({ href, icon, label, active = false, isCollapsed = false }: { href: string, icon: React.ReactNode, label: string, active?: boolean, isCollapsed?: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm relative group ${active
-        ? 'bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50'
-        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-        } ${isCollapsed ? 'justify-center' : ''}`}
-    >
+function SidebarLink({ href, icon, label, active = false, isCollapsed = false, disabled = false }: { href: string, icon: React.ReactNode, label: string, active?: boolean, isCollapsed?: boolean, disabled?: boolean }) {
+  const content = (
+    <>
       <span className="shrink-0">{icon}</span>
       {!isCollapsed && (
         <motion.span
@@ -197,17 +201,39 @@ function SidebarLink({ href, icon, label, active = false, isCollapsed = false }:
           animate={{ opacity: 1, x: 0 }}
           className="whitespace-nowrap"
         >
-          {label}
+          {label} {disabled && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-sm uppercase font-black">Soon</span>}
         </motion.span>
       )}
 
       {/* Tooltip for Collapsed State */}
       {isCollapsed && (
         <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-[11px] font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:ml-3 transition-all z-[100] whitespace-nowrap shadow-xl">
-          {label}
+          {label} {disabled && "(Soon)"}
           <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-slate-800" />
         </div>
       )}
+    </>
+  );
+
+  const baseClasses = `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-semibold text-sm relative group ${isCollapsed ? 'justify-center' : ''}`;
+  
+  if (disabled) {
+    return (
+      <div className={`${baseClasses} text-slate-300 cursor-not-allowed`}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className={`${baseClasses} ${active
+        ? 'bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/50'
+        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+        }`}
+    >
+      {content}
     </Link>
   );
 }

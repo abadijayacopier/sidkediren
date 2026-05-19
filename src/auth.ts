@@ -15,19 +15,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
-        console.log("Mencoba login untuk user:", credentials.username);
-
         const user = await prisma.pengguna.findUnique({
           where: { username: credentials.username as string },
         });
 
         if (!user) {
-          console.log("User tidak ditemukan di database!");
           return null;
         }
 
         if (!user.isActive) {
-          console.log("User ditemukan tapi statusnya TIDAK AKTIF!");
           return null;
         }
 
@@ -37,11 +33,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         if (!isPasswordCorrect) {
-          console.log("Password salah!");
           return null;
         }
-
-        console.log("Login berhasil untuk:", user.namaPetugas);
 
         return {
           id: user.id.toString(),

@@ -33,6 +33,10 @@ model Keluarga {
   rt                 String?    @db.VarChar(3)
   rw                 String?    @db.VarChar(3)
   kodePos            String?    @map("kode_pos") @db.VarChar(10)
+  kecamatan          String?    @db.VarChar(100)
+  kabupaten          String?    @db.VarChar(100)
+  provinsi           String?    @db.VarChar(100)
+  fotoKk             String?    @map("foto_kk") @db.Text
   tanggalDiterbitkan String?    @map("tanggal_diterbitkan") @db.VarChar(20)
   createdAt          DateTime   @default(now()) @map("created_at")
   updatedAt          DateTime   @updatedAt @map("updated_at")
@@ -60,13 +64,51 @@ model Penduduk {
   kewarganegaraan     String?        @default("WNI") @db.VarChar(50)
   foto                String?        @db.Text
   isHidup             Boolean        @default(true) @map("is_hidup")
+  statusDasar         String?        @default("Hidup") @map("status_dasar") @db.VarChar(30)
+  statusRekam         String?        @default("BELUM REKAM") @map("status_rekam") @db.VarChar(50)
+  noPaspor            String?        @default("") @map("no_paspor") @db.VarChar(30)
+  noKitas             String?        @default("") @map("no_kitas") @db.VarChar(30)
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
   keluarga            Keluarga       @relation(fields: [noKk], references: [noKk])
   riwayatSurat        RiwayatSurat[]
+  mutasi              Mutasi[]
 
   @@map("penduduk")
+}
+
+// --- MODUL MUTASI ---
+model Mutasi {
+  id              Int       @id @default(autoincrement())
+  nik             String    @db.VarChar(16)
+  jenisMutasi     String    @map("jenis_mutasi") @db.VarChar(50)
+  tanggalMutasi   DateTime  @map("tanggal_mutasi")
+  keterangan      String?   @db.Text
+  petugasInput    String?   @map("petugas_input") @db.VarChar(100)
+  nikKepalaLama   String?   @map("nik_kepala_lama") @db.VarChar(16)
+
+  // Alamat Asal (Pindah Masuk)
+  alamatAsal      String?   @map("alamat_asal") @db.Text
+  desaAsal        String?   @map("desa_asal") @db.VarChar(100)
+  kecamatanAsal   String?   @map("kecamatan_asal") @db.VarChar(100)
+  kabupatenAsal   String?   @map("kabupaten_asal") @db.VarChar(100)
+  provinsiAsal    String?   @map("provinsi_asal") @db.VarChar(100)
+  kodePosAsal     String?   @map("kode_pos_asal") @db.VarChar(10)
+
+  // Alamat Tujuan (Pindah Keluar)
+  alamatTujuan    String?   @map("alamat_tujuan") @db.Text
+  desaTujuan      String?   @map("desa_tujuan") @db.VarChar(100)
+  kecamatanTujuan String?   @map("kecamatan_tujuan") @db.VarChar(100)
+  kabupatenTujuan String?   @map("kabupaten_tujuan") @db.VarChar(100)
+  provinsiTujuan  String?   @map("provinsi_tujuan") @db.VarChar(100)
+  kodePosTujuan   String?   @map("kode_pos_tujuan") @db.VarChar(10)
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  penduduk        Penduduk  @relation(fields: [nik], references: [nik])
+
+  @@map("mutasi")
 }
 
 // --- MODUL PERSURATAN ---
@@ -136,7 +178,7 @@ model ProfilDesa {
   nipKepalaDesa  String? @map("nip_kepala_desa") @db.VarChar(30)
   logoDesa       String? @map("logo_desa") @db.Text
   
-  // New Layout Settings
+  // Layout Settings
   heroTitle      String? @map("hero_title") @db.VarChar(200)
   heroSubtitle   String? @map("hero_subtitle") @db.Text
   welcomeTitle   String? @map("welcome_title") @db.VarChar(200)
@@ -256,10 +298,10 @@ model Potensi {
   judul       String   @db.VarChar(200)
   deskripsi   String?  @db.Text
   gambar      String?  @db.Text
-  lokasi      String?  @db.VarChar(200) // Untuk Wisata (misal Dusun Barat)
-  harga       String?  @db.VarChar(100) // Untuk UMKM (misal Rp 25.000)
+  lokasi      String?  @db.VarChar(200)
+  harga       String?  @db.VarChar(100)
   isBestSeller Boolean @default(false) @map("is_best_seller")
-  mapsUrl     String?  @map("maps_url") @db.Text // Link Google Maps untuk Wisata
+  mapsUrl     String?  @map("maps_url") @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

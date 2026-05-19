@@ -141,21 +141,3 @@ export default async function SuratDashboard() {
     </div>
   );
 }
-
-function MenuLink({ href, icon, label, desc }: { href: string, icon: React.ReactNode, label: string, desc: string }) {
-  return (
-    <Link 
-      href={href}
-      className="flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-emerald-100 hover:bg-emerald-50/50 transition-all group"
-    >
-      <div className="p-3 bg-slate-50 rounded-xl text-slate-500 group-hover:bg-white group-hover:text-emerald-600 group-hover:shadow-sm transition-all">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm font-bold text-slate-800">{label}</p>
-        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{desc}</p>
-      </div>
-      <ArrowRight size={14} className="ml-auto text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
-    </Link>
-  );
-}
