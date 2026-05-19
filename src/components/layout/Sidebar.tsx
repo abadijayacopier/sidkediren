@@ -111,7 +111,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: 
           <div className="h-px bg-slate-100 my-4 mx-2" />
         )}
         <SidebarLink href="/admin/settings/potensi" icon={<Store size={20} />} label="UMKM & Wisata" active={pathname.startsWith('/admin/settings/potensi')} isCollapsed={isCollapsed} />
-        <SidebarLink href="/admin/pkk" icon={<HeartPulse size={20} />} label="PKK & Posyandu" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} />
+        <SidebarLink href="/admin/pkk" icon={<Users size={20} />} label="Kegiatan PKK" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} />
+        <SidebarLink href="/admin/posyandu" icon={<HeartPulse size={20} />} label="e-KMS & Posyandu" active={pathname.startsWith('/admin/posyandu')} isCollapsed={isCollapsed} />
       </nav>
 
       <div className="p-4 border-t border-slate-100 space-y-1 bg-white">
