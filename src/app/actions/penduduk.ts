@@ -63,7 +63,7 @@ export async function createPenduduk(formData: FormData) {
     const buffer = Buffer.from(bytes);
     const fileName = `${nik}-${Date.now()}.${file.name.split('.').pop()}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'penduduk');
-    
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -82,7 +82,7 @@ export async function createPenduduk(formData: FormData) {
     const buffer = Buffer.from(bytes);
     const fileName = `KK-${noKk}-${Date.now()}.${fileKk.name.split('.').pop()}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'kk');
-    
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -129,33 +129,33 @@ export async function createPenduduk(formData: FormData) {
 
       // Jika ini adalah Mutasi (Pindah Datang / Kelahiran)
       const isMutasi = formData.get('isMutasi') === 'true';
-        if (isMutasi) {
-          const jenisMutasi = formData.get('jenisMutasi') as string;
-          const tanggalMutasi = new Date(formData.get('tanggalMutasi') as string);
-          
-          const alamatAsal = formData.get('alamatAsal') as string;
-          const desaAsal = formData.get('desaAsal') as string;
-          const kecamatanAsal = formData.get('kecamatanAsal') as string;
-          const kabupatenAsal = formData.get('kabupatenAsal') as string;
-          const provinsiAsal = formData.get('provinsiAsal') as string;
-          const kodePosAsal = formData.get('kodePosAsal') as string;
+      if (isMutasi) {
+        const jenisMutasi = formData.get('jenisMutasi') as string;
+        const tanggalMutasi = new Date(formData.get('tanggalMutasi') as string);
 
-          await tx.mutasi.create({
-            data: {
-              nik,
-              jenisMutasi: jenisMutasi || 'PINDAH MASUK',
-              tanggalMutasi,
-              keterangan: `Warga Baru (${jenisMutasi}). Asal: ${alamatAsal || desaAsal || 'Kediren'}`,
-              alamatAsal,
-              desaAsal,
-              kecamatanAsal,
-              kabupatenAsal,
-              provinsiAsal,
-              kodePosAsal,
-              petugasInput: 'Admin Desa'
-            }
-          });
-        }
+        const alamatAsal = formData.get('alamatAsal') as string;
+        const desaAsal = formData.get('desaAsal') as string;
+        const kecamatanAsal = formData.get('kecamatanAsal') as string;
+        const kabupatenAsal = formData.get('kabupatenAsal') as string;
+        const provinsiAsal = formData.get('provinsiAsal') as string;
+        const kodePosAsal = formData.get('kodePosAsal') as string;
+
+        await tx.mutasi.create({
+          data: {
+            nik,
+            jenisMutasi: jenisMutasi || 'PINDAH MASUK',
+            tanggalMutasi,
+            keterangan: `Warga Baru (${jenisMutasi}). Asal: ${alamatAsal || desaAsal || 'Kediren'}`,
+            alamatAsal,
+            desaAsal,
+            kecamatanAsal,
+            kabupatenAsal,
+            provinsiAsal,
+            kodePosAsal,
+            petugasInput: 'Admin Desa'
+          }
+        });
+      }
     });
 
     revalidatePath('/admin/penduduk');
@@ -239,7 +239,7 @@ export async function updatePenduduk(formData: FormData) {
   });
 
   revalidatePath('/admin/penduduk');
-  redirect(`/admin/penduduk/view/${nik}`);
+  return { success: true, nik };
 }
 
 export async function deletePenduduk(nik: string) {

@@ -12,6 +12,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
+import PrintKk from '@/components/PrintKk';
+import EditKkModal from '@/components/EditKkModal';
 
 export default async function DetailKeluargaPage({
   params,
@@ -23,16 +25,37 @@ export default async function DetailKeluargaPage({
   const keluarga = await prisma.keluarga.findUnique({
     where: { noKk },
     include: {
-      penduduk: {
-        orderBy: {
-          statusDalamKeluarga: 'asc' // Bisa disesuaikan urutannya
-        }
-      },
-      kepalaKeluarga: true,
+      penduduk: true,
     },
   });
 
   if (!keluarga) return notFound();
+
+  // Robust fallback untuk mencari Kepala Keluarga
+  let kepalaKeluarga = keluarga.penduduk.find((p: any) => p.nik === keluarga.kepalaKeluargaNik);
+  if (!kepalaKeluarga) {
+    kepalaKeluarga = keluarga.penduduk.find((p: any) => p.statusDalamKeluarga?.toUpperCase() === 'KEPALA KELUARGA');
+  }
+
+  // Pengurutan penduduk sesuai urutan resmi KK (Kepala Keluarga, Istri, Anak (dari tertua ke termuda), dll.)
+  const getStatusPriority = (status: string) => {
+    const s = status ? status.toUpperCase() : '';
+    if (s === 'KEPALA KELUARGA') return 1;
+    if (s === 'ISTRI') return 2;
+    if (s === 'ANAK') return 3;
+    return 4;
+  };
+
+  const sortedPenduduk = [...keluarga.penduduk].sort((a, b) => {
+    const pA = getStatusPriority(a.statusDalamKeluarga || '');
+    const pB = getStatusPriority(b.statusDalamKeluarga || '');
+    if (pA !== pB) return pA - pB;
+    
+    // Jika sama-sama anak atau status sama, urutkan berdasarkan umur tertua (tanggal lahir paling awal)
+    const timeA = a.tanggalLahir ? new Date(a.tanggalLahir).getTime() : 0;
+    const timeB = b.tanggalLahir ? new Date(b.tanggalLahir).getTime() : 0;
+    return timeA - timeB;
+  });
 
   return (
     <div className="space-y-8">
@@ -48,12 +71,8 @@ export default async function DetailKeluargaPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-medium text-sm">
-            <Printer size={18} /> Cetak Kartu Keluarga
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold text-sm shadow-lg shadow-emerald-100">
-            <Edit3 size={18} /> Edit Data
-          </button>
+          <PrintKk keluarga={keluarga} kepalaKeluarga={kepalaKeluarga} />
+          <EditKkModal keluarga={keluarga} />
         </div>
       </div>
 
@@ -61,8 +80,8 @@ export default async function DetailKeluargaPage({
       <div className="grid md:grid-cols-3 gap-8 bg-white p-8 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden">
         <div className="md:col-span-2 grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <InfoItem label="Nama Kepala Keluarga" value={keluarga.kepalaKeluarga?.namaLengkap || '-'} />
-              <InfoItem label="Alamat" value={keluarga.alamat} />
+              <InfoItem label="Nama Kepala Keluarga" value={kepalaKeluarga?.namaLengkap || '-'} />
+              <InfoItem label="Alamat" value={keluarga.alamat || '-'} />
               <div className="grid grid-cols-2 gap-4">
                 <InfoItem label="RT / RW" value={`${keluarga.rt} / ${keluarga.rw}`} />
                 <InfoItem label="Kode Pos" value={keluarga.kodePos || '-'} />
@@ -81,8 +100,8 @@ export default async function DetailKeluargaPage({
         {/* Foto 3x4 Kepala Keluarga */}
         <div className="flex flex-col items-center justify-center border-l border-slate-100 pl-8">
             <div className="relative w-32 h-[170px] bg-slate-50 border-4 border-white shadow-xl rounded-lg overflow-hidden flex items-center justify-center group transition-all">
-                {keluarga.kepalaKeluarga?.foto ? (
-                    <img src={keluarga.kepalaKeluarga.foto} className="w-full h-full object-cover" alt="Foto Kepala Keluarga" />
+                {kepalaKeluarga?.foto ? (
+                    <img src={kepalaKeluarga.foto} className="w-full h-full object-cover" alt="Foto Kepala Keluarga" />
                 ) : (
                     <div className="flex flex-col items-center gap-2 text-slate-300">
                         <User size={40} />
@@ -90,7 +109,7 @@ export default async function DetailKeluargaPage({
                     </div>
                 )}
                 {/* Overlay Aksi */}
-                <Link href={`/admin/penduduk/edit/${keluarga.kepalaKeluarga?.nik}`} className="absolute inset-0 bg-emerald-600/0 group-hover:bg-emerald-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white font-bold text-[10px]">
+                <Link href={`/admin/penduduk/edit/${kepalaKeluarga?.nik}`} className="absolute inset-0 bg-emerald-600/0 group-hover:bg-emerald-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white font-bold text-[10px]">
                     GANTI FOTO
                 </Link>
             </div>
@@ -120,7 +139,7 @@ export default async function DetailKeluargaPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {keluarga.penduduk.map((member: any, idx: number) => (
+              {sortedPenduduk.map((member: any, idx: number) => (
                 <tr key={member.nik} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 text-slate-400">{idx + 1}</td>
                   <td className="px-6 py-4 font-bold text-slate-800">{member.namaLengkap}</td>
@@ -159,7 +178,7 @@ export default async function DetailKeluargaPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {keluarga.penduduk.map((member: any, idx: number) => (
+              {sortedPenduduk.map((member: any, idx: number) => (
                 <tr key={`${member.nik}-extra`} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 text-slate-400">{idx + 1}</td>
                   <td className="px-6 py-4 text-slate-800 uppercase font-medium">{member.statusPerkawinan || '-'}</td>

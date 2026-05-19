@@ -5,6 +5,7 @@ import { ArrowLeft, Save, User, Home, Search, Loader2, BookOpen, Heart, Globe, U
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createPenduduk } from '@/app/actions/penduduk';
+import Swal from 'sweetalert2';
 
 export default function TambahPendudukUnifiedPage() {
   const router = useRouter();
@@ -14,6 +15,10 @@ export default function TambahPendudukUnifiedPage() {
   const [isNewKk, setIsNewKk] = useState(false);
   const [loadingKk, setLoadingKk] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [nikExists, setNikExists] = useState(false);
+  const [loadingNik, setLoadingNik] = useState(false);
+  const [existingWargaName, setExistingWargaName] = useState('');
 
   useEffect(() => {
     const checkKk = async () => {
@@ -43,6 +48,40 @@ export default function TambahPendudukUnifiedPage() {
     return () => clearTimeout(timer);
   }, [noKk]);
 
+  useEffect(() => {
+    const checkNik = async () => {
+      if (nik.length === 16) {
+        setLoadingNik(true);
+        try {
+          const res = await fetch(`/api/penduduk/${nik}`);
+          if (res.status === 200) {
+            const data = await res.json();
+            setNikExists(true);
+            setExistingWargaName(data.namaLengkap);
+            Swal.fire({
+              icon: 'warning',
+              title: 'NIK Sudah Terdaftar!',
+              html: `NIK <b class="font-mono text-rose-600">${nik}</b> sudah terdaftar di sistem atas nama <b>${data.namaLengkap}</b>.<br/><br/>Mohon gunakan NIK lain agar tidak terjadi duplikasi data.`,
+              confirmButtonColor: '#10b981'
+            });
+          } else {
+            setNikExists(false);
+            setExistingWargaName('');
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoadingNik(false);
+        }
+      } else {
+        setNikExists(false);
+        setExistingWargaName('');
+      }
+    };
+    const timer = setTimeout(checkNik, 500);
+    return () => clearTimeout(timer);
+  }, [nik]);
+
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const val = e.target.value.replace(/[^0-9]/g, '');
     setter(val);
@@ -50,16 +89,45 @@ export default function TambahPendudukUnifiedPage() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (nikExists) {
+      Swal.fire({
+        icon: 'error',
+        title: 'NIK Sudah Terdaftar!',
+        text: `Data dengan NIK ${nik} sudah terdaftar atas nama ${existingWargaName}. Silakan gunakan NIK yang valid.`
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    Swal.fire({
+      title: 'Menyimpan Data Warga...',
+      text: 'Mohon tunggu sebentar',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     const formData = new FormData(e.currentTarget);
     try {
       const result = await createPenduduk(formData);
       if (result.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Warga Berhasil Terdaftar!',
+          text: 'Data kependudukan telah disimpan dengan aman.',
+          showConfirmButton: false,
+          timer: 1500
+        });
         router.push('/admin/penduduk');
         router.refresh();
       }
     } catch (err: any) {
-      alert(err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Mendaftar',
+        text: err.message || 'Terjadi kesalahan internal. Pastikan NIK/No KK valid.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -147,9 +215,15 @@ export default function TambahPendudukUnifiedPage() {
                 <input 
                     type="text" name="nik" value={nik} onChange={(e) => handleNumericInput(e, setNik)} required maxLength={16}
                     className={`w-full px-4 py-2.5 border-2 rounded-xl font-mono font-bold outline-none transition-all ${
-                        nik.length === 16 ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 bg-slate-50'
+                        nikExists ? 'border-rose-500 bg-rose-50/20 text-rose-700' : (nik.length === 16 ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 bg-slate-50')
                     }`}
                 />
+                {nikExists && (
+                  <p className="text-[10px] text-rose-600 font-bold mt-2 flex items-center gap-1 animate-pulse">
+                    ⚠️ NIK sudah terdaftar atas nama: {existingWargaName}
+                  </p>
+                )}
+                {loadingNik && <p className="text-[9px] text-slate-400 font-bold mt-1">Memeriksa NIK...</p>}
                 {nik.length > 0 && nik.length < 16 && <p className="text-[9px] text-rose-600 font-bold mt-1">Kurang {16-nik.length} digit</p>}
             </div>
             <FormInput label="Nama Lengkap" name="namaLengkap" required />

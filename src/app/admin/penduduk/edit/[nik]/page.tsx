@@ -4,16 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, User, Home, BookOpen, Heart, Globe, Users, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { updatePenduduk } from '@/app/actions/penduduk';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 export default function EditPendudukPage() {
   const params = useParams();
+  const router = useRouter();
   const nikParam = params.nik as string;
 
   const [warga, setWarga] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [nik, setNik] = useState('');
   const [noKk, setNoKk] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +40,43 @@ export default function EditPendudukPage() {
     setter(val);
   };
 
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    Swal.fire({
+      title: 'Menyimpan Perubahan...',
+      text: 'Mohon tunggu sebentar',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    const formData = new FormData(e.currentTarget);
+    try {
+      const result = await updatePenduduk(formData);
+      if (result.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Perubahan Berhasil Disimpan!',
+          text: 'Biodata warga telah diperbarui.',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        router.push(`/admin/penduduk/view/${result.nik}`);
+        router.refresh();
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Menyimpan',
+        text: err.message || 'Terjadi kesalahan saat menyimpan perubahan.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="animate-spin text-emerald-600" size={40} />
@@ -57,7 +97,7 @@ export default function EditPendudukPage() {
         </div>
       </div>
 
-      <form action={updatePenduduk} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6">
         <input type="hidden" name="oldNik" value={warga.nik} />
 
         {/* 1. IDENTITAS UTAMA */}
@@ -176,17 +216,82 @@ export default function EditPendudukPage() {
           </div>
         </div>
 
+        {/* 5. DOKUMEN & FOTO WARGA */}
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
+          <div className="flex items-center gap-2 text-rose-600 font-bold border-b border-slate-100 pb-4 mb-6 uppercase tracking-wider text-sm">
+            <Globe size={18} /> 5. Dokumen & Foto Warga
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            
+            {/* Foto Warga */}
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Foto Profil Warga</label>
+              
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-white border rounded-xl overflow-hidden shadow-sm flex items-center justify-center shrink-0">
+                  {warga.foto ? (
+                    <img src={warga.foto} alt="Foto Profil" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-slate-300">
+                      <User size={32} />
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1 flex-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unggah Foto Baru</p>
+                  <input 
+                    type="file" 
+                    name="foto" 
+                    accept="image/*" 
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer" 
+                  />
+                  <p className="text-[9px] text-slate-400 italic">Format: JPG, JPEG, PNG (Maks 2MB)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Foto KK */}
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Scan / Foto Kartu Keluarga (KK)</label>
+              
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-white border rounded-xl overflow-hidden shadow-sm flex items-center justify-center shrink-0">
+                  {warga.keluarga?.fotoKk ? (
+                    <img src={warga.keluarga.fotoKk} alt="Scan KK" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-slate-350 text-[10px] font-black uppercase tracking-tight text-center p-2 leading-none flex items-center justify-center h-full w-full">
+                      Belum Ada Scan
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1 flex-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unggah Scan KK Baru</p>
+                  <input 
+                    type="file" 
+                    name="fotoKk" 
+                    accept="image/*,application/pdf" 
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer" 
+                  />
+                  <p className="text-[9px] text-slate-400 italic">Format: JPG, PNG, PDF (Maks 5MB)</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         {/* Submit */}
         <div className="flex justify-end gap-4">
           <Link href="/admin/penduduk" className="px-10 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 transition-all">Batal</Link>
           <button 
             type="submit" 
-            disabled={nik.length !== 16 || noKk.length !== 16}
+            disabled={nik.length !== 16 || noKk.length !== 16 || isSubmitting}
             className={`px-10 py-4 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg ${
-                (nik.length === 16 && noKk.length === 16) ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                (nik.length === 16 && noKk.length === 16 && !isSubmitting) ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
-            <Save size={20} /> Simpan Perubahan
+            {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} 
+            {isSubmitting ? 'Memproses...' : 'Simpan Perubahan'}
           </button>
         </div>
       </form>
