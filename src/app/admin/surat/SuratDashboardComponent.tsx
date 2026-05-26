@@ -52,6 +52,61 @@ export default async function SuratDashboardComponent() {
         ))}
       </div>
 
+      {/* Sub-Modul Utama */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link 
+          href="/admin/surat/antrean"
+          className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-amber-200 transition-all flex flex-col justify-between group min-h-[160px]"
+        >
+          <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-inner">
+            <Clock size={22} />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-800 group-hover:text-amber-600 transition-colors leading-tight">Antrean Pengajuan</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider leading-none">Verifikasi Online Warga</p>
+          </div>
+        </Link>
+
+        <Link 
+          href="/admin/surat/masuk"
+          className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all flex flex-col justify-between group min-h-[160px]"
+        >
+          <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-inner">
+            <TrendingUp size={22} />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">Surat Masuk</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider leading-none">Arsip & Disposisi</p>
+          </div>
+        </Link>
+
+        <Link 
+          href="/admin/surat/riwayat"
+          className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all flex flex-col justify-between group min-h-[160px]"
+        >
+          <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
+            <FileText size={22} />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-800 group-hover:text-emerald-600 transition-colors leading-tight">Arsip Surat Keluar</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider leading-none">Riwayat Cetak Dokumen</p>
+          </div>
+        </Link>
+
+        <Link 
+          href="/admin/surat/master"
+          className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all flex flex-col justify-between group min-h-[160px]"
+        >
+          <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-700 group-hover:text-white transition-all shadow-inner">
+            <FileCheck size={22} />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-800 group-hover:text-slate-700 transition-colors leading-tight">Master Template</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider leading-none">Kelola Format Surat</p>
+          </div>
+        </Link>
+      </div>
+
       {/* Main Grid */}
       <div className="grid grid-cols-1 gap-8">
         {/* Recent Activity */}

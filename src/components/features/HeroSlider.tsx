@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Shield } from 'lucide-react';
+import Link from 'next/link';
 
 interface HeroSliderProps {
   images: string[];
@@ -10,139 +11,95 @@ interface HeroSliderProps {
   subtitle?: string;
 }
 
-const variants = [
-  // Fade
-  {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-  },
-  // Slide from right
-  {
-    initial: { opacity: 0, x: 100 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -100 },
-  },
-  // Scale Up
-  {
-    initial: { opacity: 0, scale: 1.1 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.9 },
-  },
-  // Slide from bottom
-  {
-    initial: { opacity: 0, y: 50 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -50 },
-  }
-];
-
 export default function HeroSlider({ images, title, subtitle }: HeroSliderProps) {
   const [index, setIndex] = useState(0);
-  const [variantIndex, setVariantIndex] = useState(0);
 
   useEffect(() => {
     if (images.length <= 1) return;
-    
     const interval = setInterval(() => {
-      setVariantIndex(Math.floor(Math.random() * variants.length));
       setIndex((prev) => (prev + 1) % images.length);
-    }, 5000);
-
+    }, 6000);
     return () => clearInterval(interval);
   }, [images]);
 
   if (!images || images.length === 0) return null;
 
-  const currentVariant = variants[variantIndex];
-
   return (
-    <div className="relative w-full h-[480px] sm:h-[600px] md:h-[700px] overflow-hidden bg-slate-900 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl">
+    <div className="relative w-full h-[520px] sm:h-[620px] md:h-[720px] overflow-hidden bg-slate-900 rounded-[2rem] sm:rounded-[3rem] shadow-2xl group">
+      {/* Image Layer */}
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          initial={currentVariant.initial}
-          animate={currentVariant.animate}
-          exit={currentVariant.exit}
-          transition={{ duration: 1, ease: "easeInOut" }}
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
           className="absolute inset-0"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent z-10" />
-          <img
-            src={images[index]}
-            alt="Hero Slide"
-            className="w-full h-full object-cover"
-          />
+          <img src={images[index]} alt="Hero Slide" className="w-full h-full object-cover" />
         </motion.div>
       </AnimatePresence>
 
-      {/* Content Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 sm:px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="max-w-[800px]"
-        >
-          <span className="inline-block px-4 py-1.5 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-400 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] mb-4 sm:mb-6">
-            Portal Resmi Desa Kediren
-          </span>
-          <h1 className="text-3xl sm:text-4xl md:text-7xl font-black text-white mb-4 sm:mb-6 leading-[1.15] sm:leading-[1.1] tracking-tight">
+      {/* Gradient Overlay - cinematic */}
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/10" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-r from-slate-950/60 to-transparent" />
+
+      {/* Decorative Grid Lines */}
+      <div className="absolute inset-0 z-10 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
+
+      {/* Content */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-end px-6 sm:px-10 md:px-16 pb-12 sm:pb-16 md:pb-20">
+        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.9 }} className="max-w-[720px]">
+          {/* Badge */}
+          <div className="flex items-center gap-3 mb-5">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl border border-white/15 text-white rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em]">
+              <Shield size={12} className="text-emerald-400" />
+              Portal Resmi Desa Kediren
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-4 sm:mb-5 leading-[1.08] tracking-tight">
             {title || "Sistem Informasi Desa Kediren"}
           </h1>
-          <p className="text-sm sm:text-lg md:text-xl text-slate-300 font-medium max-w-[600px] mx-auto leading-relaxed opacity-90">
+          <p className="text-sm sm:text-base md:text-lg text-slate-300 font-medium max-w-[560px] leading-relaxed mb-8">
             {subtitle || "Mewujudkan tata kelola desa yang transparan, akuntabel, dan berbasis digital untuk kesejahteraan warga."}
           </p>
-          
-          <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <button className="px-6 sm:px-8 py-3 sm:py-4 bg-emerald-600 text-white rounded-2xl text-sm sm:text-base font-bold hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/20 hover:scale-105 active:scale-95">
+
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <Link href="/layanan/pengajuan" className="px-7 sm:px-9 py-3.5 sm:py-4 bg-emerald-600 text-white rounded-2xl text-xs sm:text-sm font-bold hover:bg-emerald-500 transition-all shadow-2xl shadow-emerald-900/40 hover:scale-[1.03] active:scale-95 flex items-center gap-2.5">
               Layanan Mandiri
-            </button>
-            <button className="px-6 sm:px-8 py-3 sm:py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl text-sm sm:text-base font-bold hover:bg-white/20 transition-all hover:scale-105 active:scale-95">
+              <ChevronRight size={16} />
+            </Link>
+            <Link href="/profil" className="px-7 sm:px-9 py-3.5 sm:py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl text-xs sm:text-sm font-bold hover:bg-white/20 transition-all hover:scale-[1.03] active:scale-95">
               Jelajahi Desa
-            </button>
+            </Link>
           </div>
         </motion.div>
+
+        {/* Location Badge - bottom right */}
+        <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-10 hidden md:flex items-center gap-2.5 px-5 py-3 bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl text-white text-xs font-bold">
+          <MapPin size={14} className="text-emerald-400" />
+          Kec. Kawedanan, Kab. Magetan
+        </div>
       </div>
 
       {/* Navigation Dots */}
       {images.length > 1 && (
-        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
+        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-2.5 md:left-10 md:translate-x-0 md:bottom-10">
           {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setVariantIndex(Math.floor(Math.random() * variants.length));
-                setIndex(i);
-              }}
-              className={`h-1.5 transition-all rounded-full ${
-                index === i ? 'w-8 bg-emerald-500' : 'w-2 bg-white/30 hover:bg-white/50'
-              }`}
-            />
+            <button key={i} onClick={() => setIndex(i)} className={`h-1 transition-all rounded-full ${index === i ? 'w-10 bg-emerald-500' : 'w-3 bg-white/25 hover:bg-white/40'}`} />
           ))}
         </div>
       )}
 
-      {/* Controls */}
+      {/* Arrow Controls */}
       {images.length > 1 && (
         <>
-          <button 
-            onClick={() => {
-              setVariantIndex(Math.floor(Math.random() * variants.length));
-              setIndex((prev) => (prev - 1 + images.length) % images.length);
-            }}
-            className="absolute left-6 top-1/2 -translate-y-1/2 z-30 p-4 bg-white/10 backdrop-blur-md text-white rounded-2xl hover:bg-white/20 transition-all hidden md:flex"
-          >
-            <ChevronLeft size={24} />
+          <button onClick={() => setIndex((prev) => (prev - 1 + images.length) % images.length)} className="absolute left-5 top-1/2 -translate-y-1/2 z-30 w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-2xl hover:bg-white/20 transition-all hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <ChevronLeft size={22} />
           </button>
-          <button 
-            onClick={() => {
-              setVariantIndex(Math.floor(Math.random() * variants.length));
-              setIndex((prev) => (prev + 1) % images.length);
-            }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 z-30 p-4 bg-white/10 backdrop-blur-md text-white rounded-2xl hover:bg-white/20 transition-all hidden md:flex"
-          >
-            <ChevronRight size={24} />
+          <button onClick={() => setIndex((prev) => (prev + 1) % images.length)} className="absolute right-5 top-1/2 -translate-y-1/2 z-30 w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-2xl hover:bg-white/20 transition-all hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <ChevronRight size={22} />
           </button>
         </>
       )}

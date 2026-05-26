@@ -44,9 +44,24 @@ export default async function LayananPage() {
                 <h2 className="text-4xl md:text-5xl font-bold text-[#0b1c30] mb-6 leading-tight tracking-tight">
                   Layanan Administrasi <br /> Desa {profil?.namaDesa || 'Kediren'}
                 </h2>
-                <p className="text-lg text-[#42493e] mb-10 leading-relaxed font-light max-w-xl">
+                <p className="text-lg text-[#42493e] mb-8 leading-relaxed font-light max-w-xl">
                   Akses informasi persyaratan dan prosedur pelayanan publik dengan mudah. Kami hadir untuk melayani warga dengan transparan dan cepat.
                 </p>
+                <div className="flex gap-4 mb-8 flex-wrap">
+                  <Link 
+                    href="/layanan/pengajuan"
+                    className="px-8 py-4 bg-[#154212] hover:bg-[#2d5a27] text-white font-bold rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-emerald-950/10 flex items-center gap-3 text-xs uppercase tracking-widest"
+                  >
+                    <span>Ajukan Surat Mandiri</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                  <a 
+                    href="#direktori"
+                    className="px-8 py-4 bg-white border border-[#eff4ff] text-[#0b1c35] font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center gap-3 text-xs uppercase tracking-widest"
+                  >
+                    Persyaratan Layanan
+                  </a>
+                </div>
                 <div className="relative max-w-md group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#42493e]/40 group-focus-within:text-[#154212] transition-colors" size={20} />
                   <input 

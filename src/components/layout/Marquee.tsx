@@ -8,25 +8,21 @@ export default function Marquee({ text }: { text: string }) {
   if (!text) return null;
 
   return (
-    <div className="bg-emerald-600 text-white py-2 sm:py-2.5 overflow-hidden border-b border-emerald-700/50 shadow-sm relative z-[60]">
-      <div className="max-w-[1280px] mx-auto px-3 sm:px-6 flex items-center relative">
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-emerald-700 px-2 sm:px-3 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest z-10 shadow-sm mr-3 sm:mr-4 shrink-0">
-          <Megaphone size={12} className="text-amber-300" />
-          <span>Info Desa</span>
+    <div className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white py-2 overflow-hidden shadow-sm relative z-[60]">
+      <div className="max-w-[1360px] mx-auto px-3 sm:px-6 flex items-center relative">
+        <div className="flex items-center gap-1.5 bg-emerald-800/60 backdrop-blur-sm px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] z-10 mr-4 shrink-0 border border-emerald-500/20">
+          <Megaphone size={11} className="text-amber-300" />
+          <span>Info</span>
         </div>
         
         <div className="relative flex-1 overflow-hidden">
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: '-100%' }}
-            transition={{
-              repeat: Infinity,
-              duration: 20,
-              ease: 'linear',
-            }}
-            className="whitespace-nowrap font-bold text-sm tracking-wide"
+            transition={{ repeat: Infinity, duration: 25, ease: 'linear' }}
+            className="whitespace-nowrap font-semibold text-[13px] tracking-wide text-white/90"
           >
-            {text} • {text} • {text} • {text}
+            {text} &nbsp;•&nbsp; {text} &nbsp;•&nbsp; {text} &nbsp;•&nbsp; {text}
           </motion.div>
         </div>
       </div>

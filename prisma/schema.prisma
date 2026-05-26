@@ -74,6 +74,7 @@ model Penduduk {
   keluarga            Keluarga       @relation(fields: [noKk], references: [noKk])
   riwayatSurat        RiwayatSurat[]
   mutasi              Mutasi[]
+  permohonanSurat     PermohonanSurat[]
 
   @@map("penduduk")
 }
@@ -117,6 +118,7 @@ model KlasifikasiSurat {
   kode        String        @unique @db.VarChar(20)
   nama        String        @db.VarChar(200)
   masterSurat MasterSurat[]
+  suratMasuk  SuratMasuk[]
 
   @@map("klasifikasi_surat")
 }
@@ -134,6 +136,7 @@ model MasterSurat {
 
   klasifikasi     KlasifikasiSurat @relation(fields: [klasifikasiId], references: [id])
   riwayatSurat    RiwayatSurat[]
+  permohonanSurat PermohonanSurat[]
 
   @@map("master_surat")
 }
@@ -719,4 +722,42 @@ model BukuNotulenPokjaIII {
   pembuatNotulen      KaderPkk? @relation("pembuat_notulen_3", fields: [pembuatNotulenId], references: [id], onDelete: SetNull)
 
   @@map("buku_notulen_pokja_3")
+}
+
+// --- MODUL PERSURATAN BARU ---
+
+model SuratMasuk {
+  id              Int            @id @default(autoincrement())
+  nomorSurat      String         @map("nomor_surat") @db.VarChar(100)
+  tanggalSurat    DateTime       @map("tanggal_surat")
+  tanggalDiterima DateTime       @default(now()) @map("tanggal_diterima")
+  pengirim        String         @db.VarChar(200)
+  perihal         String         @db.Text
+  klasifikasiId   Int?           @map("klasifikasi_id")
+  fileScan        String?        @map("file_scan") @db.Text // URL/Base64 berkas surat
+  disposisiKepada String?        @map("disposisi_kepada") @db.VarChar(150) // Perangkat desa yang ditugaskan
+  catatanDisposisi String?       @map("catatan_disposisi") @db.Text
+  statusDisposisi String         @default("Belum Diproses") @map("status_disposisi") @db.VarChar(50)
+  
+  klasifikasi     KlasifikasiSurat? @relation(fields: [klasifikasiId], references: [id])
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  @@map("surat_masuk")
+}
+
+model PermohonanSurat {
+  id              String       @id @default(cuid())
+  nikPemohon      String       @map("nik_pemohon") @db.VarChar(16)
+  masterSuratId   Int          @map("master_surat_id")
+  tanggalAjuan    DateTime     @default(now()) @map("tanggal_ajuan")
+  status          String       @default("Pending") @map("status_surat") @db.VarChar(30) // Pending, Disetujui, Ditolak
+  keteranganBatal String?      @map("keterangan_batal") @db.Text
+  keperluan       String       @db.Text
+  metaData        String       @map("meta_data") @db.LongText // Data dinamis formulir (JSON)
+  
+  penduduk        Penduduk     @relation(fields: [nikPemohon], references: [nik])
+  masterSurat     MasterSurat  @relation(fields: [masterSuratId], references: [id])
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  @@map("permohonan_surat")
 }
