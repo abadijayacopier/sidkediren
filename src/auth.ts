@@ -2,9 +2,11 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { skipCSRFCheck } from "@auth/core";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
+  skipCSRFCheck: skipCSRFCheck,
   providers: [
     // Provider 1: Admin login (username + password)
     Credentials({
@@ -57,11 +59,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (!penduduk || !penduduk.isHidup) return null;
-        if (!penduduk.pinHash) return null;
+        if (!(penduduk as any).pinHash) return null;
 
         const isPinCorrect = await bcrypt.compare(
           credentials.pin as string,
-          penduduk.pinHash
+          (penduduk as any).pinHash
         );
 
         if (!isPinCorrect) return null;

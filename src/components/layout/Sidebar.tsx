@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signOut } from 'next-auth/react'; // FIX BUG-06
+import { logoutAction } from '@/app/actions/auth';
 
 export default function Sidebar({ 
   isCollapsed, 
@@ -132,7 +132,7 @@ export default function Sidebar({
         <SidebarLink href="/admin/settings" icon={<Settings size={20} />} label="Pengaturan" active={pathname.startsWith('/admin/settings')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
         
         <button 
-          onClick={() => signOut({ callbackUrl: '/login' })}
+          onClick={() => { React.startTransition(() => { logoutAction('/login'); }); }}
           className="flex items-center gap-3 px-3 py-2.5 w-full text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all text-sm font-semibold group"
         >
           <LogOut size={20} className="shrink-0 group-hover:-translate-x-1 transition-transform" />

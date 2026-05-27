@@ -73,9 +73,14 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* Marquee / Running Text */}
-      <Marquee text={profil?.runningText || "Selamat Datang di Portal Resmi Desa Kediren — Informasi Transparan, Warga Sejahtera."} />
-
+      {/* Marquee / Running Text (Dynamically loaded from latest news titles) */}
+      <Marquee 
+        text={
+          berita && berita.length > 0 
+            ? "UPDATE TERKINI: " + berita.map((b: any) => b.judul).join('  —  ') 
+            : profil?.runningText || "Selamat Datang di Portal Resmi Desa Kediren — Informasi Transparan, Warga Sejahtera."
+        } 
+      />
       <main>
         {/* ════════════════════════════════════════════ */}
         {/* STATISTIK DESA                              */}

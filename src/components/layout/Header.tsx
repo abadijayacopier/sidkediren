@@ -2,8 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserCircle, Menu, LogOut, Settings } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { logoutAction } from '@/app/actions/auth';
 
 export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean; setIsMobileOpen: (v: boolean) => void }) {
   const { data: session } = useSession();
@@ -11,7 +12,7 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   const userName = session?.user?.name || 'Admin';
-  const userRole = session?.user?.role || 'Operator Desa';
+  const userRole = (session?.user as any)?.role || 'Operator Desa';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
                 Pengaturan Akun
               </Link>
               <button 
-                onClick={() => signOut({ callbackUrl: '/login' })}
+                onClick={() => { React.startTransition(() => { logoutAction('/login'); }); }}
                 className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-sm font-semibold text-slate-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
               >
                 <LogOut size={18} />
