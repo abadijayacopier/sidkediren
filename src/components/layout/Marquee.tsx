@@ -1,31 +1,52 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Megaphone } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bell } from 'lucide-react';
 
 export default function Marquee({ text }: { text: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const [animDuration, setAnimDuration] = useState(20);
+
+  useEffect(() => {
+    if (textRef.current) {
+      const w = textRef.current.scrollWidth;
+      setAnimDuration(Math.max(15, w / 50));
+    }
+  }, [text]);
+
   if (!text) return null;
 
   return (
-    <div className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white py-2 overflow-hidden shadow-sm relative z-[60]">
-      <div className="max-w-[1360px] mx-auto px-3 sm:px-6 flex items-center relative">
-        <div className="flex items-center gap-1.5 bg-emerald-800/60 backdrop-blur-sm px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] z-10 mr-4 shrink-0 border border-emerald-500/20">
-          <Megaphone size={11} className="text-amber-300" />
+    <div className="bg-[#1a6b3c] text-white py-2 overflow-hidden relative z-[60] border-b border-[#145a30]">
+      <div className="flex items-center px-4 sm:px-6">
+        {/* Label */}
+        <div className="flex items-center gap-1.5 bg-[#ffc107] text-[#333] px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 mr-4 shadow-sm">
+          <Bell size={11} />
           <span>Info</span>
         </div>
-        
-        <div className="relative flex-1 overflow-hidden">
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: '-100%' }}
-            transition={{ repeat: Infinity, duration: 25, ease: 'linear' }}
-            className="whitespace-nowrap font-semibold text-[13px] tracking-wide text-white/90"
+
+        {/* Scrolling text */}
+        <div ref={containerRef} className="flex-1 overflow-hidden relative">
+          <div
+            ref={textRef}
+            className="whitespace-nowrap font-medium text-[13px] animate-marquee inline-block"
+            style={{ animationDuration: `${animDuration}s` }}
           >
-            {text} &nbsp;•&nbsp; {text} &nbsp;•&nbsp; {text} &nbsp;•&nbsp; {text}
-          </motion.div>
+            {text} &nbsp;&nbsp;●&nbsp;&nbsp; {text} &nbsp;&nbsp;●&nbsp;&nbsp; {text}
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+          animation: marquee linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
