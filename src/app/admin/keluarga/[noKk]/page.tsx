@@ -18,7 +18,7 @@ import EditKkModal from '@/components/EditKkModal';
 export default async function DetailKeluargaPage({
   params,
 }: {
-  params: { noKk: string };
+  params: Promise<{ noKk: string }>;
 }) {
   const { noKk } = await params;
 

@@ -24,7 +24,8 @@ import HeroSlider from '@/components/features/HeroSlider';
 import prisma from '@/lib/prisma';
 
 export default async function HomePage() {
-  // Wrap all queries in try/catch for robustness
+  // Jalankan seluruh query database secara PARALEL dengan Promise.all untuk performa render maksimal.
+  // Dilengkapi inline `.catch` untuk menjaga ketangguhan halaman jika salah satu query gagal.
   let profil: any = null;
   let masterSurat: any[] = [];
   let berita: any[] = [];
@@ -32,25 +33,22 @@ export default async function HomePage() {
   let totalKeluarga = 0;
 
   try {
-    const profilData = await getProfilDesa();
-    profil = profilData as any;
-  } catch (e) { console.error('Error fetching profil:', e); }
+    const [profilRes, masterSuratRes, beritaRes, totalPendudukRes, totalKeluargaRes] = await Promise.all([
+      getProfilDesa().catch(e => { console.error('Error fetching profil:', e); return null; }),
+      getMasterSurat().catch(e => { console.error('Error fetching master surat:', e); return []; }),
+      getBerita(3).catch(e => { console.error('Error fetching berita:', e); return []; }),
+      prisma.penduduk.count({ where: { isHidup: true } }).catch(e => { console.error('Error counting penduduk:', e); return 0; }),
+      prisma.keluarga.count().catch(e => { console.error('Error counting keluarga:', e); return 0; })
+    ]);
 
-  try {
-    masterSurat = await getMasterSurat() || [];
-  } catch (e) { console.error('Error fetching master surat:', e); }
-
-  try {
-    berita = await getBerita(3) || [];
-  } catch (e) { console.error('Error fetching berita:', e); }
-
-  try {
-    totalPenduduk = await prisma.penduduk.count({ where: { isHidup: true } });
-  } catch (e) { console.error('Error counting penduduk:', e); }
-
-  try {
-    totalKeluarga = await prisma.keluarga.count();
-  } catch (e) { console.error('Error counting keluarga:', e); }
+    profil = profilRes;
+    masterSurat = masterSuratRes || [];
+    berita = beritaRes || [];
+    totalPenduduk = totalPendudukRes || 0;
+    totalKeluarga = totalKeluargaRes || 0;
+  } catch (e) {
+    console.error('Fatal error loading homepage database data:', e);
+  }
 
   const sliderImages = (() => {
     try {
@@ -254,7 +252,7 @@ export default async function HomePage() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {masterSurat.slice(0, 4).map((surat: any, i: number) => (
+              {masterSurat.slice(0, 4).map((surat: any) => (
                 <div key={surat.id} className="bg-white p-5 sm:p-6 rounded-lg border border-gray-100 hover:shadow-lg transition-all hover:-translate-y-0.5 group">
                   <div className="w-12 h-12 bg-[#e8f5e9] rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#1a6b3c] transition-colors">
                     <FileText size={22} className="text-[#1a6b3c] group-hover:text-white transition-colors" />

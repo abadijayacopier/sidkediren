@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -125,8 +125,8 @@ async function main() {
     });
   }
 
-  // Helper untuk ambil ID Klasifikasi
-  const getKId = async (kode: string) => (await prisma.klasifikasiSurat.findUnique({ where: { kode } }))?.id;
+  // Helper untuk ambil ID Klasifikasi (data pasti ada karena di-seed di atas)
+  const getKId = async (kode: string) => (await prisma.klasifikasiSurat.findUnique({ where: { kode } }))!.id;
 
   // 3. Master Surat dengan Form Schema
   const masterSurat = [

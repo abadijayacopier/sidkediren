@@ -2,22 +2,51 @@ import { auth } from "@/auth";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname === "/login";
-  const isAdminPage = req.nextUrl.pathname.startsWith("/admin") || 
-                      req.nextUrl.pathname.startsWith("/dashboard");
+  const role = (req.auth?.user as any)?.role;
+  const loginType = (req.auth?.user as any)?.loginType;
+  const pathname = req.nextUrl.pathname;
 
-  // Jika belum login dan mencoba akses admin, arahkan ke login
+  const isAdminLoginPage = pathname === "/login";
+  const isWargaLoginPage = pathname === "/portal/login";
+  const isAdminPage = pathname.startsWith("/admin");
+  const isPortalPage = pathname.startsWith("/portal") && !isWargaLoginPage;
+
+  // Admin routes: require admin login
   if (isAdminPage && !isLoggedIn) {
     return Response.redirect(new URL("/login", req.nextUrl));
   }
 
-  // Jika sudah login dan mencoba akses halaman login, arahkan ke dashboard
-  if (isAuthPage && isLoggedIn) {
+  if (isAdminPage && isLoggedIn && loginType === "warga") {
+    return Response.redirect(new URL("/portal", req.nextUrl));
+  }
+
+  // Portal routes: require warga login
+  if (isPortalPage && !isLoggedIn) {
+    return Response.redirect(new URL("/portal/login", req.nextUrl));
+  }
+
+  if (isPortalPage && isLoggedIn && loginType === "admin") {
     return Response.redirect(new URL("/admin", req.nextUrl));
+  }
+
+  // If admin is logged in and tries to access admin login page, redirect to dashboard
+  if (isAdminLoginPage && isLoggedIn && loginType === "admin") {
+    return Response.redirect(new URL("/admin", req.nextUrl));
+  }
+
+  // If warga is logged in and tries to access warga login page, redirect to portal
+  if (isWargaLoginPage && isLoggedIn && loginType === "warga") {
+    return Response.redirect(new URL("/portal", req.nextUrl));
+  }
+
+  // Settings: only Admin & Kepala Desa
+  if (pathname.startsWith("/admin/settings")) {
+    if (role !== "Admin" && role !== "Kepala Desa") {
+      return Response.redirect(new URL("/admin", req.nextUrl));
+    }
   }
 });
 
-// Jalankan middleware ini pada path yang relevan
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/login"],
+  matcher: ["/admin/:path*", "/portal/:path*", "/login"],
 };

@@ -4,30 +4,30 @@ import { Users, UserCheck, FileText, PieChart, TrendingUp, ArrowUpRight } from '
 import Link from 'next/link';
 
 export default async function AdminDashboard() {
-  // Ambil statistik real dari database
-  const totalPenduduk = await prisma.penduduk.count({ where: { isHidup: true } });
-  const totalKeluarga = await prisma.keluarga.count();
-  const totalSurat = await prisma.riwayatSurat.count();
+  // Ambil statistik kependudukan & keuangan secara PARALEL dengan agregasi database berkecepatan tinggi
+  const [totalPenduduk, totalKeluarga, totalSurat, apbdesAgg, recentSurat] = await Promise.all([
+    prisma.penduduk.count({ where: { isHidup: true } }),
+    prisma.keluarga.count(),
+    prisma.riwayatSurat.count(),
+    prisma.apbdesItem.aggregate({
+      _sum: {
+        anggaran: true,
+        realisasi: true,
+      }
+    }),
+    prisma.riwayatSurat.findMany({
+      take: 5,
+      orderBy: { tanggalSurat: 'desc' },
+      include: {
+        penduduk: true,
+        masterSurat: true
+      }
+    })
+  ]);
 
-  // Hitung realisasi APBDes dinamis dari tabel apbdes_item
-  const apbdesItems = await prisma.apbdesItem.findMany();
-  let totalAnggaran = 0;
-  let totalRealisasi = 0;
-  apbdesItems.forEach((item) => {
-    totalAnggaran += Number(item.anggaran || 0);
-    totalRealisasi += Number(item.realisasi || 0);
-  });
-  const realisasiPercentage = totalAnggaran > 0 ? Math.round((totalRealisasi / totalAnggaran) * 100) : 64;
-
-  // Ambil aktivitas pelayanan terbaru real dari database
-  const recentSurat = await prisma.riwayatSurat.findMany({
-    take: 5,
-    orderBy: { tanggalSurat: 'desc' },
-    include: {
-      penduduk: true,
-      masterSurat: true
-    }
-  });
+  const totalAnggaran = Number(apbdesAgg._sum.anggaran || 0);
+  const totalRealisasi = Number(apbdesAgg._sum.realisasi || 0);
+  const realisasiPercentage = totalAnggaran > 0 ? Math.round((totalRealisasi / totalAnggaran) * 100) : 0;
 
   // Helper untuk formatting waktu relatif
   const getRelativeTime = (date: Date) => {
@@ -93,11 +93,11 @@ export default async function AdminDashboard() {
             {recentSurat.length > 0 ? (
               recentSurat.map((surat) => (
                 <ActivityItem 
-                  key={surat.id}
-                  name={surat.penduduk.namaLengkap} 
-                  type={surat.masterSurat.namaSurat} 
-                  time={getRelativeTime(surat.tanggalSurat)} 
-                  status={surat.statusSurat === 'Approved' ? 'Selesai' : surat.statusSurat === 'Pending' ? 'Diproses' : 'Ditolak'}
+                   key={surat.id}
+                   name={surat.penduduk.namaLengkap} 
+                   type={surat.masterSurat.namaSurat} 
+                   time={getRelativeTime(surat.tanggalSurat)} 
+                   status={surat.statusSurat === 'Approved' ? 'Selesai' : surat.statusSurat === 'Pending' ? 'Diproses' : 'Ditolak'}
                 />
               ))
             ) : (

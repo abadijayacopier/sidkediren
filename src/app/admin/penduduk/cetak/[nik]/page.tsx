@@ -2,7 +2,7 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 
-export default async function CetakBiodataPage({ params }: { params: { nik: string } }) {
+export default async function CetakBiodataPage({ params }: { params: Promise<{ nik: string }> }) {
   const { nik } = await params;
   const warga = await prisma.penduduk.findUnique({
     where: { nik },
@@ -43,17 +43,17 @@ export default async function CetakBiodataPage({ params }: { params: { nik: stri
         <div className="space-y-4">
           <DetailRow label="Nama Lengkap" value={warga.namaLengkap} />
           <DetailRow label="Nomor KK" value={warga.noKk} />
-          <DetailRow label="Tempat, Tgl Lahir" value={`${warga.tempatLahir}, ${warga.tanggalLahir.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`} />
-          <DetailRow label="Jenis Kelamin" value={warga.jenisKelamin === 'L' ? 'LAKI-LAKI' : 'PEREMPUAN'} />
+          <DetailRow label="Tempat, Tgl Lahir" value={`${warga.tempatLahir || '-'}, ${warga.tanggalLahir ? warga.tanggalLahir.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}`} />
+          <DetailRow label="Jenis Kelamin" value={warga.jenisKelamin === 'L' ? 'LAKI-LAKI' : warga.jenisKelamin === 'P' ? 'PEREMPUAN' : '-'} />
           <DetailRow label="Alamat" value={`${warga.keluarga?.alamat || '-'}, RT ${warga.keluarga?.rt}/RW ${warga.keluarga?.rw}`} />
           <DetailRow label="Dusun" value={warga.keluarga?.dusun || '-'} />
-          <DetailRow label="Agama" value={warga.agama} />
-          <DetailRow label="Status Perkawinan" value={warga.statusPerkawinan} />
+          <DetailRow label="Agama" value={warga.agama || '-'} />
+          <DetailRow label="Status Perkawinan" value={warga.statusPerkawinan || '-'} />
           <DetailRow label="Pendidikan" value={warga.pendidikanTerakhir || '-'} />
           <DetailRow label="Pekerjaan" value={warga.pekerjaan || '-'} />
-          <DetailRow label="Kewarganegaraan" value={warga.kewarganegaraan} />
+          <DetailRow label="Kewarganegaraan" value={warga.kewarganegaraan || '-'} />
           <DetailRow label="Golongan Darah" value={warga.golonganDarah || '-'} />
-          <DetailRow label="Hubungan Keluarga" value={warga.statusDalamKeluarga} />
+          <DetailRow label="Hubungan Keluarga" value={warga.statusDalamKeluarga || '-'} />
           <DetailRow label="Nama Ayah" value={warga.namaAyah || '-'} />
           <DetailRow label="Nama Ibu" value={warga.namaIbu || '-'} />
         </div>
