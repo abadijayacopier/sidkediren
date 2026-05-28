@@ -3,10 +3,13 @@ import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { skipCSRFCheck } from "@auth/core";
+import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   trustHost: true,
   skipCSRFCheck: skipCSRFCheck,
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     // Provider 1: Admin login (username + password)
     Credentials({
@@ -81,30 +84,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.role = user.role;
-        token.loginType = user.loginType;
-        token.nik = user.nik || null;
-        token.noKk = user.noKk || null;
-        token.aksesModul = user.aksesModul || null;
-      }
-      return token;
-    },
-    async session({ session, token }: any) {
-      if (session.user) {
-        session.user.role = token.role;
-        session.user.loginType = token.loginType;
-        session.user.nik = token.nik;
-        session.user.noKk = token.noKk;
-        session.user.aksesModul = token.aksesModul;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
 } as any);
