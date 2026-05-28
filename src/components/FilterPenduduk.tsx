@@ -8,12 +8,14 @@ export default function FilterPenduduk({
   initialQuery, 
   initialKk, 
   initialDusun, 
-  initialRt 
+  initialRt,
+  availableDusun = []
 }: { 
   initialQuery: string; 
   initialKk: string; 
   initialDusun: string; 
   initialRt: string; 
+  availableDusun?: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -111,9 +113,17 @@ export default function FilterPenduduk({
               className="col-span-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 outline-none cursor-pointer hover:bg-slate-100 transition-all"
             >
                 <option value="">SEMUA DUSUN</option>
-                <option value="Selungguh">SELUNGGUH</option>
-                <option value="Sekadalan">SEKADALAN</option>
-                <option value="Ledok">LEDOK</option>
+                {availableDusun.length > 0 ? (
+                  availableDusun.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Selungguh">SELUNGGUH</option>
+                    <option value="Sekadalan">SEKADALAN</option>
+                    <option value="Ledok">LEDOK</option>
+                  </>
+                )}
             </select>
             <select 
               value={rt} 

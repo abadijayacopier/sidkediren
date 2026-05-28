@@ -15,7 +15,8 @@ export default function ExportButton() {
       // Proses download file dari base64
       const link = document.createElement('a');
       link.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`;
-      link.download = `Data_Penduduk_Kediren_${new Date().toLocaleDateString('id-ID')}.xlsx`;
+      const safeDate = new Date().toISOString().split('T')[0];
+      link.download = `Data_Penduduk_Kediren_${safeDate}.xlsx`;
       link.click();
     } catch (err) {
       alert('Gagal mengekspor data.');

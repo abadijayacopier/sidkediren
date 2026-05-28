@@ -11,17 +11,30 @@ export default function BackupPage() {
 
   const handleExport = async () => {
     setIsExporting(true);
-    // Simulate export
-    setTimeout(() => {
-      const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), data: 'backup_placeholder' })], { type: 'application/json' });
+    try {
+      const response = await fetch('/api/backup');
+      if (!response.ok) {
+        throw new Error('Backup failed');
+      }
+      
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `backup-sid-kediren-${new Date().toISOString().split('T')[0]}.json`;
+      
+      const safeDate = new Date().toISOString().split('T')[0];
+      a.download = `Backup_Desa_Kediren_${safeDate}.sql`;
+      
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert('Gagal mengekspor database. Silakan coba lagi.');
+    } finally {
       setIsExporting(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -79,7 +92,7 @@ export default function BackupPage() {
             <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600"><Download size={24} /></div>
             <div>
               <h3 className="font-bold text-slate-800">Ekspor Backup</h3>
-              <p className="text-xs text-slate-500">Unduh seluruh data dalam format JSON</p>
+              <p className="text-xs text-slate-500">Unduh seluruh data dalam format SQL</p>
             </div>
           </div>
           <button

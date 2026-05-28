@@ -4,6 +4,7 @@ import { Search, UserPlus, Filter, Printer, Edit, Eye, ExternalLink, Home, FileS
 import Link from 'next/link';
 import DeletePenduduk from '@/components/DeletePenduduk';
 import ExportButton from '@/components/ExportButton';
+import ImportButton from '@/components/ImportButton';
 import MutasiButton from '@/components/MutasiButton';
 import PrintBiodata from '@/components/PrintBiodata';
 import FilterPenduduk from '@/components/FilterPenduduk';
@@ -32,15 +33,22 @@ export default async function PendudukDashboard({
     AND: [
       { OR: [{ namaLengkap: { contains: query } }, { nik: { contains: query } }] },
       kkQuery ? { noKk: { contains: kkQuery } } : {},
-      dusunFilter ? { keluarga: { dusun: dusunFilter } } : {},
-      rtFilter ? { keluarga: { rt: rtFilter } } : {},
-      rwFilter ? { keluarga: { rw: rwFilter } } : {},
+      dusunFilter ? { keluarga: { dusun: { contains: dusunFilter } } } : {},
+      rtFilter ? { keluarga: { rt: { contains: rtFilter } } } : {},
+      rwFilter ? { keluarga: { rw: { contains: rwFilter } } } : {},
       statusFilter ? { statusRekam: statusFilter } : {},
       onlyKK ? { statusDalamKeluarga: 'KEPALA KELUARGA' } : {},
       // Secara default hanya tampilkan yang HIDUP
       !showAll ? { isHidup: true } : {},
     ]
   };
+
+  // Ambil daftar Dusun dinamis dari tabel Keluarga
+  const rawDusun = await prisma.keluarga.findMany({
+    select: { dusun: true },
+    distinct: ['dusun'],
+  });
+  const availableDusun = rawDusun.map(d => d.dusun).filter(Boolean);
 
   // Hitung total data & Ambil Data
   let penduduk: any[] = [];
@@ -121,7 +129,8 @@ export default async function PendudukDashboard({
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Kependudukan Kediren</h1>
           <p className="text-slate-500 text-sm">Total: <span className="font-bold text-emerald-600">{totalItems}</span> Jiwa terdaftar.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <ImportButton />
           <ExportButton />
           <Link href="/admin/penduduk/tambah" className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold text-sm shadow-lg shadow-emerald-100">
             <UserPlus size={18} /> Tambah Warga
@@ -137,6 +146,7 @@ export default async function PendudukDashboard({
               initialKk={kkQuery}
               initialDusun={dusunFilter}
               initialRt={rtFilter}
+              availableDusun={availableDusun as string[]}
             />
 
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50 mt-2">
