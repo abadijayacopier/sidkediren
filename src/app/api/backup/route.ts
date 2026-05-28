@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import mysqldump from 'mysqldump';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const tempFilePath = path.join(process.cwd(), `temp_backup_${Date.now()}.sql`);
+    const tempFilePath = path.join(os.tmpdir(), `temp_backup_${Date.now()}.sql`);
 
     // Extract connection info from env
     // Assuming format: mysql://root:admin@localhost:3306/desa_kediren
