@@ -12,12 +12,23 @@ export default function ExportButton() {
     try {
       const base64 = await exportPendudukToExcel();
       
-      // Proses download file dari base64
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
-      link.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`;
+      link.href = url;
       const safeDate = new Date().toISOString().split('T')[0];
       link.download = `Data_Penduduk_Kediren_${safeDate}.xlsx`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
       alert('Gagal mengekspor data.');
     } finally {

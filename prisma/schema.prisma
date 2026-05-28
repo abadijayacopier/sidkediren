@@ -22,6 +22,13 @@ model Pengguna {
   lastLogin     DateTime? @map("last_login")
   createdAt     DateTime  @default(now()) @map("created_at")
 
+  // Referensi akses untuk modul wilayah (Kasun / Ketua RT)
+  dusunAksesId  Int?      @map("dusun_akses_id")
+  rtAksesId     Int?      @map("rt_akses_id")
+
+  wilayahDusun  WilayahDusun? @relation(fields: [dusunAksesId], references: [id])
+  wilayahRt     WilayahRt?    @relation(fields: [rtAksesId], references: [id])
+
   @@map("pengguna")
 }
 
@@ -42,9 +49,57 @@ model Keluarga {
   createdAt          DateTime   @default(now()) @map("created_at")
   updatedAt          DateTime   @updatedAt @map("updated_at")
 
+  // Relasi opsional ke WilayahRt (dropdown ketat)
+  wilayahRtId        Int?       @map("wilayah_rt_id")
+  wilayahRtRef       WilayahRt? @relation(fields: [wilayahRtId], references: [id])
+
   penduduk           Penduduk[]
 
   @@map("keluarga")
+}
+
+// --- MODUL MANAJEMEN WILAYAH ---
+model WilayahDusun {
+  id              Int         @id @default(autoincrement())
+  nama            String      @unique @db.VarChar(100)
+  
+  kepalaDusunNik  String?     @map("kepala_dusun_nik") @db.VarChar(16)
+  kepalaDusunNama String?     @map("kepala_dusun_nama") @db.VarChar(150)
+  
+  wakilDusunNik   String?     @map("wakil_dusun_nik") @db.VarChar(16)
+  wakilDusunNama  String?     @map("wakil_dusun_nama") @db.VarChar(150)
+  
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  rtRwList        WilayahRt[]
+  penggunaAkses   Pengguna[]
+
+  @@map("wilayah_dusun")
+}
+
+model WilayahRt {
+  id              Int          @id @default(autoincrement())
+  rt              String       @db.VarChar(5)
+  rw              String       @db.VarChar(5)
+  
+  dusunId         Int          @map("dusun_id")
+  dusun           WilayahDusun @relation(fields: [dusunId], references: [id], onDelete: Cascade)
+
+  ketuaRtNik      String?      @map("ketua_rt_nik") @db.VarChar(16)
+  ketuaRtNama     String?      @map("ketua_rt_nama") @db.VarChar(150)
+  
+  wakilRtNik      String?      @map("wakil_rt_nik") @db.VarChar(16)
+  wakilRtNama     String?      @map("wakil_rt_nama") @db.VarChar(150)
+
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  keluargaList    Keluarga[]
+  penggunaAkses   Pengguna[]
+
+  @@unique([dusunId, rt, rw])
+  @@map("wilayah_rt")
 }
 
 model Penduduk {

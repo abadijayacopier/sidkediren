@@ -21,7 +21,8 @@ import {
   Newspaper,
   Palmtree,
   HeartPulse,
-  Users
+  Users,
+  MapPin
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -34,6 +35,14 @@ const settingMenus = [
     href: '/admin/settings/profil',
     status: 'Lengkap',
     color: 'bg-emerald-50'
+  },
+  {
+    title: 'Manajemen Wilayah',
+    description: 'Atur data pembagian area Dusun, RT, RW, dan aparatur kewilayahan desa.',
+    icon: <MapPin className="text-teal-600" />,
+    href: '/admin/wilayah',
+    status: 'Aktif',
+    color: 'bg-teal-50'
   },
   {
     title: 'Manajemen Posyandu',

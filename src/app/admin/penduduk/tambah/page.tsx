@@ -5,6 +5,7 @@ import { ArrowLeft, Save, User, Home, Search, Loader2, BookOpen, Heart, Globe, U
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createPenduduk } from '@/app/actions/penduduk';
+import { getWilayahList } from '@/app/actions/wilayah';
 import Swal from 'sweetalert2';
 
 export default function TambahPendudukUnifiedPage() {
@@ -19,6 +20,13 @@ export default function TambahPendudukUnifiedPage() {
   const [nikExists, setNikExists] = useState(false);
   const [loadingNik, setLoadingNik] = useState(false);
   const [existingWargaName, setExistingWargaName] = useState('');
+
+  const [wilayahList, setWilayahList] = useState<any[]>([]);
+  const [selectedDusunId, setSelectedDusunId] = useState<number | null>(null);
+
+  useEffect(() => {
+    getWilayahList().then(data => setWilayahList(data));
+  }, []);
 
   useEffect(() => {
     const checkKk = async () => {
@@ -185,16 +193,57 @@ export default function TambahPendudukUnifiedPage() {
                <div className="md:col-span-2">
                   <FormInput label="Alamat Lengkap" name="alamat" defaultValue={keluargaData?.alamat || ''} required={isNewKk} readOnly={!isNewKk} />
                </div>
-               <div className="grid grid-cols-3 gap-4 md:col-span-2">
+               <div className="grid grid-cols-1 md:col-span-2 space-y-4">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Dusun <span className="text-rose-500">*</span></label>
-                    <input list="list-dusun" name="dusun" defaultValue={keluargaData?.dusun || ''} required={isNewKk} readOnly={!isNewKk} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
-                    <datalist id="list-dusun">
-                        <option value="Selungguh" /><option value="Sekadalan" /><option value="Ledok" />
-                    </datalist>
+                    <select 
+                      name="dusun" 
+                      required={isNewKk} 
+                      disabled={!isNewKk} 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                      onChange={(e) => {
+                        const dusunId = parseInt(e.target.selectedOptions[0].dataset.id || '0');
+                        setSelectedDusunId(dusunId);
+                      }}
+                    >
+                      <option value="">-- Pilih Dusun --</option>
+                      {wilayahList.map(dusun => (
+                        <option key={dusun.id} value={dusun.nama} data-id={dusun.id} selected={keluargaData?.dusun === dusun.nama}>
+                          {dusun.nama}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <FormInput label="RT" name="rt" defaultValue={keluargaData?.rt || ''} required={isNewKk} readOnly={!isNewKk} />
-                  <FormInput label="RW" name="rw" defaultValue={keluargaData?.rw || ''} required={isNewKk} readOnly={!isNewKk} />
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">RT / RW <span className="text-rose-500">*</span></label>
+                    <select 
+                      name="wilayahRtId" 
+                      required={isNewKk} 
+                      disabled={!isNewKk} 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                      onChange={(e) => {
+                        // Untuk backward compatibility text, kita isi hidden input
+                        const rtStr = e.target.selectedOptions[0].dataset.rt || '';
+                        const rwStr = e.target.selectedOptions[0].dataset.rw || '';
+                        const form = e.target.closest('form');
+                        if (form) {
+                           const rtInput = form.querySelector('input[name="rt"]') as HTMLInputElement;
+                           const rwInput = form.querySelector('input[name="rw"]') as HTMLInputElement;
+                           if (rtInput) rtInput.value = rtStr;
+                           if (rwInput) rwInput.value = rwStr;
+                        }
+                      }}
+                    >
+                      <option value="">-- Pilih RT/RW --</option>
+                      {wilayahList.find(d => d.id === selectedDusunId || d.nama === keluargaData?.dusun)?.rtRwList.map((rt: any) => (
+                        <option key={rt.id} value={rt.id} data-rt={rt.rt} data-rw={rt.rw} selected={keluargaData?.wilayahRtId === rt.id || (keluargaData?.rt === rt.rt && keluargaData?.rw === rt.rw)}>
+                          RT {rt.rt} / RW {rt.rw}
+                        </option>
+                      ))}
+                    </select>
+                    <input type="hidden" name="rt" value={keluargaData?.rt || ''} />
+                    <input type="hidden" name="rw" value={keluargaData?.rw || ''} />
+                  </div>
                </div>
                <div className="grid grid-cols-2 gap-4 md:col-span-2">
                   <FormInput label="Kecamatan" name="kecamatan" defaultValue={keluargaData?.kecamatan || 'LEMBEYAN'} required={isNewKk} readOnly={!isNewKk} />

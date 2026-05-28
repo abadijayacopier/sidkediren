@@ -50,6 +50,7 @@ const pendudukInputSchema = z.object({
   kabupaten: z.string().max(100).optional().nullable(),
   provinsi: z.string().max(100).optional().nullable(),
   kodePos: z.string().max(10).optional().nullable(),
+  wilayahRtId: z.coerce.number().optional().nullable(),
 });
 
 // -------------------------------------------------------------
@@ -143,7 +144,8 @@ export async function createPenduduk(formData: FormData) {
       kecamatan: data.kecamatan || 'LEMBEYAN',
       kabupaten: data.kabupaten || 'MAGETAN',
       provinsi: data.provinsi || 'JAWA TIMUR',
-      kodePos: data.kodePos || '63372'
+      kodePos: data.kodePos || '63372',
+      wilayahRtId: data.wilayahRtId || null
     }
   });
 
@@ -307,7 +309,8 @@ export async function updatePenduduk(formData: FormData) {
       rt: data.rt || '-',
       rw: data.rw || '-',
       kecamatan: data.kecamatan || 'LEMBEYAN',
-      kabupaten: data.kabupaten || 'MAGETAN'
+      kabupaten: data.kabupaten || 'MAGETAN',
+      wilayahRtId: data.wilayahRtId || null
     }
   });
 

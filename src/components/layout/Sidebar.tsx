@@ -7,6 +7,7 @@ import {
   RefreshCcw,
   FileText,
   Map,
+  MapPin,
   PieChart,
   Settings,
   LogOut,

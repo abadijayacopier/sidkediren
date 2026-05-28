@@ -43,12 +43,12 @@ export default async function PendudukDashboard({
     ]
   };
 
-  // Ambil daftar Dusun dinamis dari tabel Keluarga
-  const rawDusun = await prisma.keluarga.findMany({
-    select: { dusun: true },
-    distinct: ['dusun'],
+  // Ambil daftar Dusun dinamis dari tabel WilayahDusun
+  const rawDusun = await prisma.wilayahDusun.findMany({
+    select: { nama: true },
+    orderBy: { nama: 'asc' }
   });
-  const availableDusun = rawDusun.map(d => d.dusun).filter(Boolean);
+  const availableDusun = rawDusun.map((d: any) => d.nama).filter(Boolean);
 
   // Hitung total data & Ambil Data
   let penduduk: any[] = [];
