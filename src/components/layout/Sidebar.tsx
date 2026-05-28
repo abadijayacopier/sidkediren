@@ -43,7 +43,7 @@ export default function Sidebar({
   } catch(e) {}
 
   const hasAccess = (modulId: string) => {
-    if (userRole === 'Admin') return true;
+    if (userRole?.toLowerCase() === 'admin') return true;
     return aksesModul.includes(modulId);
   };
 
