@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserCircle, Menu, LogOut, Settings, Bell } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { logoutAction } from '@/app/actions/auth';
 import { getPendingPermohonanSuratCount } from '@/app/actions/permohonan-surat';
