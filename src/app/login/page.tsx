@@ -13,8 +13,10 @@ export default function AdminLoginPage() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleAction = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setError("");
+    const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       const result = await loginAdmin(null, formData);
       if (result?.error) {
@@ -123,7 +125,7 @@ export default function AdminLoginPage() {
           </div>
 
           {/* Login Form */}
-          <form action={handleAction} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="flex items-center gap-3 bg-red-50 text-red-700 p-4 rounded-2xl text-sm font-semibold border border-red-100">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">

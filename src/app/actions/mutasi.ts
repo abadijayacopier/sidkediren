@@ -157,3 +157,34 @@ export async function getRiwayatMutasi() {
     },
   });
 }
+
+export async function searchWargaAktif(query: string) {
+  if (!query || query.trim().length < 2) return [];
+  try {
+    return await prisma.penduduk.findMany({
+      where: {
+        isHidup: true,
+        statusDasar: 'Hidup',
+        OR: [
+          { namaLengkap: { contains: query } },
+          { nik: { contains: query } },
+        ],
+      },
+      include: {
+        keluarga: {
+          select: {
+            kepalaKeluargaNik: true,
+            alamat: true,
+            dusun: true,
+            rt: true,
+            rw: true,
+          },
+        },
+      },
+      take: 10,
+    });
+  } catch (error) {
+    console.error('Gagal mencari warga aktif:', error);
+    return [];
+  }
+}

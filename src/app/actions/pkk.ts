@@ -660,7 +660,7 @@ export async function seedPkkData() {
         ringkasan: 'Desa Kediren berhasil menorehkan prestasi gemilang dengan meraih Juara II dalam Lomba Gerakan PKK Tingkat Kabupaten Magetan tahun 2026.',
         konten: `### Desa Kediren Raih Prestasi Gemilang! 🏆✨
 TP PKK Desa Kediren berhasil meraih Juara II Lomba PKK Tingkat Kabupaten Magetan tahun 2026 berkat digitalisasi Posyandu e-KMS.`,
-        gambar: '/juara_pkk_magetan.png',
+        gambar: '',
         penulis: 'Admin Desa Kediren',
         isPublished: true,
         kategori: 'Prestasi'
@@ -1102,7 +1102,7 @@ export async function getPusWusData() {
           };
           wus.push(wusItem);
 
-          const isMarried = res.statusPerkawinan && ['KAWIN', 'Kawin', 'kawin'].some(s => res.statusPerkawinan.includes(s));
+          const isMarried = res.statusPerkawinan && ['KAWIN', 'Kawin', 'kawin'].some(s => res.statusPerkawinan?.includes(s));
           if (isMarried) {
             marriedFemales.push(res);
           }
@@ -1302,7 +1302,7 @@ export async function getPokja2ReportData() {
             nik: res.nik,
             nama: res.namaLengkap,
             usia: age,
-            pendidikan: res.pendidikan || 'SD',
+            pendidikan: res.pendidikanTerakhir || 'SD',
             dusun: res.keluarga?.dusun || 'Krajan',
             rt: res.keluarga?.rt || '01',
             rw: res.keluarga?.rw || '01'

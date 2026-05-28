@@ -8,10 +8,12 @@ import {
   Calendar, 
   Search, 
   ArrowLeft,
-  Plus
+  Plus,
+  Home
 } from 'lucide-react';
 import Link from 'next/link';
 import { getRiwayatMutasi } from '@/app/actions/mutasi';
+import LaporMutasiButton from '@/components/LaporMutasiButton';
 
 export default async function MutasiWargaPage() {
   const riwayat = await getRiwayatMutasi();
@@ -21,10 +23,11 @@ export default async function MutasiWargaPage() {
     lahir: riwayat.filter((r: any) => r.jenisMutasi === 'KELAHIRAN').length,
     mati: riwayat.filter((r: any) => r.jenisMutasi === 'KEMATIAN').length,
     pindah: riwayat.filter((r: any) => r.jenisMutasi.includes('PINDAH')).length,
+    pecahKk: riwayat.filter((r: any) => r.jenisMutasi === 'PECAH KK').length,
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -33,16 +36,14 @@ export default async function MutasiWargaPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Mutasi Warga</h1>
-            <p className="text-slate-500 text-sm">Riwayat perubahan data kependudukan Desa Kediren.</p>
+            <p className="text-slate-500 text-sm">Riwayat perubahan data kependudukan Desa Kediren secara terpusat.</p>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-2xl hover:bg-slate-900 transition-all font-bold text-sm shadow-xl shadow-slate-200">
-            <Plus size={20} /> Lapor Kejadian Mutasi
-        </button>
+        <LaporMutasiButton />
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard 
             icon={<Baby className="text-blue-600" />} 
             label="Kelahiran" 
@@ -61,20 +62,26 @@ export default async function MutasiWargaPage() {
             value={stats.pindah} 
             color="bg-amber-50 border-amber-100" 
         />
+        <StatCard 
+            icon={<Home className="text-emerald-600" />} 
+            label="Pecah KK" 
+            value={stats.pecahKk} 
+            color="bg-emerald-50 border-emerald-100" 
+        />
       </div>
 
       {/* Tabel Riwayat */}
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <Calendar size={20} className="text-emerald-600" /> Log Perubahan Kronologis
+            <Calendar size={20} className="text-emerald-600" /> Log Perubahan Kependudukan Kronologis
           </h3>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
               placeholder="Cari NIK atau Nama..." 
-              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-xs w-full md:w-64"
+              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-xs w-full md:w-64 font-bold text-slate-700"
             />
           </div>
         </div>
@@ -114,25 +121,31 @@ export default async function MutasiWargaPage() {
                     <td className="px-6 py-4 text-slate-600 text-[11px] leading-relaxed max-w-xs">
                       {log.keterangan}
                       {log.jenisMutasi === 'PINDAH KELUAR' && log.alamatTujuan && (
-                        <div className="mt-1 p-2 bg-slate-100 rounded-lg border border-slate-200 text-slate-700">
+                        <div className="mt-1.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-700">
                           <span className="font-bold text-[9px] uppercase text-slate-400 block mb-1">Tujuan:</span>
                           {log.alamatTujuan}, {log.desaTujuan}, {log.kecamatanTujuan}, {log.kabupatenTujuan}, {log.provinsiTujuan} {log.kodePosTujuan && `(${log.kodePosTujuan})`}
                         </div>
                       )}
                       {log.jenisMutasi === 'PINDAH MASUK' && log.alamatAsal && (
-                        <div className="mt-1 p-2 bg-slate-100 rounded-lg border border-slate-200 text-slate-700">
-                          <span className="font-bold text-[9px] uppercase text-emerald-600 block mb-1">Asal:</span>
+                        <div className="mt-1.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-700">
+                          <span className="font-bold text-[9px] uppercase text-emerald-650 block mb-1">Asal:</span>
                           {log.alamatAsal}, {log.desaAsal}, {log.kecamatanAsal}, {log.kabupatenAsal}, {log.provinsiAsal} {log.kodePosAsal && `(${log.kodePosAsal})`}
+                        </div>
+                      )}
+                      {log.jenisMutasi === 'PECAH KK' && (
+                        <div className="mt-1.5 p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800">
+                          <span className="font-bold text-[9px] uppercase text-emerald-600 block mb-1 font-black">Status Baru:</span>
+                          Warga telah melepaskan diri dari keluarga lama dan didaftarkan sebagai Kepala Keluarga baru.
                         </div>
                       )}
                       {!log.keterangan && !log.alamatTujuan && !log.alamatAsal && '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200/50">
                             {log.petugasInput?.substring(0, 2).toUpperCase() || 'AD'}
                         </div>
-                        <span className="text-xs font-medium text-slate-600">{log.petugasInput || 'Admin'}</span>
+                        <span className="text-xs font-semibold text-slate-600">{log.petugasInput || 'Admin'}</span>
                       </div>
                     </td>
                   </tr>
@@ -148,12 +161,12 @@ export default async function MutasiWargaPage() {
 
 function StatCard({ icon, label, value, color }: any) {
   return (
-    <div className={`${color} p-6 rounded-3xl border flex items-center gap-5 transition-all hover:scale-[1.02]`}>
-      <div className="p-4 bg-white rounded-2xl shadow-sm">
+    <div className={`${color} p-6 rounded-3xl border flex items-center gap-5 transition-all hover:scale-[1.02] hover:shadow-md hover:shadow-slate-100/50`}>
+      <div className="p-4 bg-white rounded-2xl shadow-sm shrink-0">
         {icon}
       </div>
       <div>
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
         <p className="text-2xl font-black text-slate-800">{value}</p>
       </div>
     </div>
@@ -166,6 +179,7 @@ function Badge({ jenis }: { jenis: string }) {
     'KEMATIAN': { color: 'bg-rose-100 text-rose-700 border-rose-200', icon: <Skull size={12} /> },
     'PINDAH MASUK': { color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: <LogIn size={12} /> },
     'PINDAH KELUAR': { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: <LogOut size={12} /> },
+    'PECAH KK': { color: 'bg-teal-100 text-teal-700 border-teal-200', icon: <Home size={12} /> },
   };
 
   const config = configs[jenis] || { color: 'bg-slate-100 text-slate-700 border-slate-200', icon: <RefreshCcw size={12} /> };

@@ -51,4 +51,3 @@ Kasus: Warga meninggal dunia atau pindah ke luar desa Kediren.
 - **Arsip Digital:** Fitur upload scan/foto KK fisik sebagai bukti otentik di sistem.
 - **Referensi Historis:** Mencatat hubungan NIK Kepala Keluarga lama saat terjadi Pecah KK.
 
-*Disusun oleh Antigravity untuk Pemerintah Desa Kediren.*
