@@ -97,7 +97,7 @@ export default async function AdminDashboard() {
                    name={surat.penduduk.namaLengkap} 
                    type={surat.masterSurat.namaSurat} 
                    time={getRelativeTime(surat.tanggalSurat)} 
-                   status={surat.statusSurat === 'Approved' ? 'Selesai' : surat.statusSurat === 'Pending' ? 'Diproses' : 'Ditolak'}
+                   status={surat.statusSurat === 'Selesai' ? 'Selesai' : surat.statusSurat === 'Pending' ? 'Diproses' : 'Ditolak'}
                 />
               ))
             ) : (
@@ -158,7 +158,9 @@ function ActivityItem({ name, type, time, status }: { name: string, type: string
       <div className="text-right">
         <p className="text-xs text-slate-400 mb-1">{time}</p>
         <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
-          status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+          status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 
+          status === 'Ditolak' ? 'bg-rose-100 text-rose-700' :
+          'bg-amber-100 text-amber-700'
         }`}>
           {status}
         </span>

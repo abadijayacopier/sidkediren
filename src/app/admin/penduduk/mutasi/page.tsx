@@ -43,30 +43,30 @@ export default async function MutasiWargaPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <StatCard 
-            icon={<Baby className="text-blue-600" />} 
+            icon={<Baby size={24} className="text-blue-600" />} 
             label="Kelahiran" 
             value={stats.lahir} 
-            color="bg-blue-50 border-blue-100" 
+            color="bg-blue-50" 
         />
         <StatCard 
-            icon={<Skull className="text-rose-600" />} 
+            icon={<Skull size={24} className="text-rose-600" />} 
             label="Kematian" 
             value={stats.mati} 
-            color="bg-rose-50 border-rose-100" 
+            color="bg-rose-50" 
         />
         <StatCard 
-            icon={<RefreshCcw className="text-amber-600" />} 
+            icon={<RefreshCcw size={24} className="text-amber-600" />} 
             label="Perpindahan" 
             value={stats.pindah} 
-            color="bg-amber-50 border-amber-100" 
+            color="bg-amber-50" 
         />
         <StatCard 
-            icon={<Home className="text-emerald-600" />} 
+            icon={<Home size={24} className="text-emerald-600" />} 
             label="Pecah KK" 
             value={stats.pecahKk} 
-            color="bg-emerald-50 border-emerald-100" 
+            color="bg-emerald-50" 
         />
       </div>
 
@@ -161,14 +161,12 @@ export default async function MutasiWargaPage() {
 
 function StatCard({ icon, label, value, color }: any) {
   return (
-    <div className={`${color} p-6 rounded-3xl border flex items-center gap-5 transition-all hover:scale-[1.02] hover:shadow-md hover:shadow-slate-100/50`}>
-      <div className="p-4 bg-white rounded-2xl shadow-sm shrink-0">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${color} rounded-xl flex items-center justify-center mb-3 sm:mb-4`}>
         {icon}
       </div>
-      <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
-        <p className="text-2xl font-black text-slate-800">{value}</p>
-      </div>
+      <p className="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 sm:mb-1">{label}</p>
+      <h3 className="text-lg sm:text-2xl font-bold text-slate-800">{value}</h3>
     </div>
   );
 }

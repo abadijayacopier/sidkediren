@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAntreanPermohonan, prosesPersetujuanPermohonan } from '@/app/actions/permohonan-surat';
+import { useRouter } from 'next/navigation';
 
 export default function AntreanPermohonanPage() {
+  const router = useRouter();
   const [antrean, setAntrean] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('Semua');
@@ -26,7 +28,9 @@ export default function AntreanPermohonanPage() {
   
   // Modal State
   const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [alasanBatal, setAlasanBatal] = useState('');
+  const [catatanSetuju, setCatatanSetuju] = useState('Silahkan ambil surat resmi Anda di kantor desa pada jam kerja.');
   
   // Detail State
   const [viewingData, setViewingData] = useState<any | null>(null);
@@ -44,14 +48,19 @@ export default function AntreanPermohonanPage() {
     fetchAntrean();
   }, []);
 
-  const handleApprove = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menyetujui permohonan ini dan menerbitkan nomor surat resmi?')) return;
-    setLoadingId(id);
+  const handleApproveSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!approvingId) return;
+    setLoadingId(approvingId);
     try {
-      const res = await prosesPersetujuanPermohonan(id, 'Disetujui');
+      const res = await prosesPersetujuanPermohonan(approvingId, 'Disetujui', catatanSetuju);
       if (res.success) {
-        alert(res.message);
+        setApprovingId(null);
         fetchAntrean();
+        alert('Permohonan disetujui. Mengarahkan ke halaman cetak...');
+        if (res.riwayatId) {
+          router.push(`/admin/surat/preview/${res.riwayatId}`);
+        }
       } else {
         alert(res.message);
       }
@@ -244,7 +253,7 @@ export default function AntreanPermohonanPage() {
                         {a.status === 'Pending' && (
                           <>
                             <button
-                              onClick={() => handleApprove(a.id)}
+                              onClick={() => setApprovingId(a.id)}
                               disabled={loadingId !== null}
                               className="w-10 h-10 bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white rounded-xl transition-all border border-emerald-100 flex items-center justify-center shadow-sm"
                               title="Setujui & Cetak"
@@ -327,6 +336,58 @@ export default function AntreanPermohonanPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MODAL APPROVE / SETUJUI */}
+      {approvingId && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fadeIn">
+          <form 
+            onSubmit={handleApproveSubmit}
+            className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden animate-slideUp"
+          >
+            <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-800">Setujui & Cetak Surat</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Berikan catatan ke warga pemohon</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setApprovingId(null)}
+                className="w-10 h-10 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-full flex items-center justify-center transition-all border"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="p-8 space-y-4">
+              <label className="text-[10px] font-black text-slate-450 uppercase tracking-widest px-1">Catatan Pengambilan (Opsional)</label>
+              <textarea
+                rows={3}
+                placeholder="Contoh: Silahkan ambil di balai desa besok jam 09.00 pagi dengan membawa KK asli."
+                value={catatanSetuju}
+                onChange={(e) => setCatatanSetuju(e.target.value)}
+                className="w-full px-6 py-5 bg-slate-50 border-none rounded-2xl text-xs font-bold text-slate-700 placeholder:text-slate-350 focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none shadow-inner"
+              />
+            </div>
+
+            <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+              <button
+                type="button"
+                onClick={() => setApprovingId(null)}
+                className="flex-1 py-4 bg-white text-slate-500 rounded-2xl text-xs font-black uppercase tracking-widest border"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={loadingId !== null}
+                className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-200"
+              >
+                {loadingId ? 'Memproses...' : 'Setujui Pengajuan'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

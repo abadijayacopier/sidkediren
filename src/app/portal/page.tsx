@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { FileText, Users, History, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import { getWargaProfile, getWargaSuratHistory } from '@/app/actions/warga';
+import StatusPermohonanList from '@/components/portal/StatusPermohonanList';
+import WargaLogoutButton from '@/components/portal/WargaLogoutButton';
 
 export default async function WargaPortalDashboard() {
   const session = await auth();
@@ -27,14 +29,7 @@ export default async function WargaPortalDashboard() {
             </div>
             <span className="font-bold text-slate-800 tracking-tight">Portal Warga Kediren</span>
           </div>
-          <form action={async () => {
-            'use server';
-            await signOut();
-          }}>
-            <button type="submit" className="text-sm font-semibold text-slate-500 hover:text-red-600 transition-colors">
-              Keluar
-            </button>
-          </form>
+          <WargaLogoutButton />
         </div>
       </header>
 
@@ -79,27 +74,7 @@ export default async function WargaPortalDashboard() {
                 <History size={18} className="text-slate-500" />
                 <h3 className="font-bold text-slate-800">Status Permohonan Surat</h3>
               </div>
-              <div className="divide-y divide-slate-100">
-                {permohonan.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 text-sm">Belum ada permohonan surat aktif.</div>
-                ) : (
-                  permohonan.map((p) => (
-                    <div key={p.id} className="p-4 px-6 flex items-center justify-between hover:bg-slate-50">
-                      <div>
-                        <p className="font-bold text-slate-800">{p.masterSurat.namaSurat}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{new Date(p.tanggalAjuan).toLocaleDateString('id-ID')}</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        p.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' :
-                        p.status === 'Ditolak' ? 'bg-red-100 text-red-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
-                        {p.status}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
+<StatusPermohonanList permohonan={permohonan} />
             </div>
           </div>
 
@@ -117,6 +92,25 @@ export default async function WargaPortalDashboard() {
             </div>
           </div>
         </div>
+        
+        {/* Footer */}
+        <footer className="mt-12 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-semibold">
+          <p>© {new Date().getFullYear()} <span className="font-bold text-slate-500">Pemerintah Desa Kediren</span>. Seluruh Hak Cipta Dilindungi.</p>
+          <div className="flex items-center gap-3 font-black uppercase tracking-widest text-[9px]">
+            <a
+              href="https://wa.me/6285655620979"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-500 hover:text-blue-600 bg-white hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition-all flex items-center gap-1.5 normal-case font-bold text-[10px]"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+              Dev. Supriyanto (085655620979)
+            </a>
+            <span className="text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 shadow-inner">
+              SID Desa Kediren V 2.1
+            </span>
+          </div>
+        </footer>
       </main>
     </div>
   );

@@ -168,7 +168,50 @@ export async function submitPermohonanSurat(formData: FormData) {
   revalidatePath('/portal');
   return { success: true };
 }
+// Warga action: Update surat request
+export async function updatePermohonanSurat(id: string, formData: FormData) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).loginType !== 'warga') {
+    throw new Error('Unauthorized');
+  }
 
+  const nik = (session.user as any).nik;
+  const keperluan = formData.get('keperluan') as string || '';
+  const dataJson = formData.get('dataJson') as string || '{}';
+
+  const permohonan = await prisma.permohonanSurat.findUnique({ where: { id } });
+  if (!permohonan || permohonan.nikPemohon !== nik) throw new Error('Akses ditolak');
+  if (permohonan.status !== 'Pending') throw new Error('Hanya permohonan Pending yang dapat diubah');
+
+  await prisma.permohonanSurat.update({
+    where: { id },
+    data: { keperluan, metaData: dataJson }
+  });
+
+  revalidatePath('/portal');
+  return { success: true };
+}
+
+// Warga action: Cancel surat request
+export async function cancelPermohonanSurat(id: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).loginType !== 'warga') {
+    throw new Error('Unauthorized');
+  }
+
+  const nik = (session.user as any).nik;
+  
+  const permohonan = await prisma.permohonanSurat.findUnique({ where: { id } });
+  if (!permohonan || permohonan.nikPemohon !== nik) throw new Error('Akses ditolak');
+  if (permohonan.status !== 'Pending') throw new Error('Hanya permohonan Pending yang dapat dibatalkan');
+
+  await prisma.permohonanSurat.delete({
+    where: { id }
+  });
+
+  revalidatePath('/portal');
+  return { success: true };
+}
 // Public: Get available surat types for permohonan
 export async function getAvailableSuratTypes() {
   return prisma.masterSurat.findMany({

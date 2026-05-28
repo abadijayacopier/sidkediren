@@ -64,10 +64,28 @@ export async function getAntreanPermohonan() {
   );
 }
 
+export async function getPendingPermohonanSuratCount() {
+  return withDriftRetry(
+    async () => {
+      const count = await prisma.permohonanSurat.count({
+        where: { status: 'Pending' }
+      });
+      const data = await prisma.permohonanSurat.findMany({
+        where: { status: 'Pending' },
+        include: { penduduk: { select: { namaLengkap: true } }, masterSurat: { select: { namaSurat: true } } },
+        orderBy: { tanggalAjuan: 'desc' },
+        take: 5
+      });
+      return { count, data };
+    },
+    async () => { await syncDatabaseStructure(); }
+  );
+}
+
 export async function prosesPersetujuanPermohonan(
   id: string,
   status: 'Disetujui' | 'Ditolak',
-  alasanBatal?: string
+  catatanAdmin?: string
 ) {
   return withDriftRetry(
     async () => {
@@ -85,7 +103,7 @@ export async function prosesPersetujuanPermohonan(
           where: { id },
           data: {
             status: 'Ditolak',
-            keteranganBatal: alasanBatal || 'Persyaratan berkas kurang lengkap'
+            keteranganBatal: catatanAdmin || 'Persyaratan berkas kurang lengkap'
           }
         });
         revalidatePath('/admin/surat/antrean');
@@ -108,12 +126,15 @@ export async function prosesPersetujuanPermohonan(
       // 3. Update status permohonan
       await prisma.permohonanSurat.update({
         where: { id },
-        data: { status: 'Disetujui' }
+        data: { 
+          status: 'Disetujui',
+          keteranganBatal: catatanAdmin || 'Silahkan ambil surat resmi Anda di kantor desa pada jam kerja.'
+        }
       });
 
       revalidatePath('/admin/surat/antrean');
       revalidatePath('/admin/surat');
-      return { success: true, riwayatId: riwayat.id, message: 'Permohonan berhasil disetujui and surat resmi diterbitkan' };
+      return { success: true, riwayatId: riwayat.id, message: 'Permohonan berhasil disetujui dan surat resmi diterbitkan' };
     },
     async () => { await syncDatabaseStructure(); }
   );
