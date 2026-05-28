@@ -38,6 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.username,
           role: user.peran,
           loginType: "admin",
+          aksesModul: (user as any).aksesModul || '[]',
         } as any;
       },
     }),
@@ -87,6 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.loginType = user.loginType;
         token.nik = user.nik || null;
         token.noKk = user.noKk || null;
+        token.aksesModul = user.aksesModul || null;
       }
       return token;
     },
@@ -96,6 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.loginType = token.loginType;
         session.user.nik = token.nik;
         session.user.noKk = token.noKk;
+        session.user.aksesModul = token.aksesModul;
       }
       return session;
     },

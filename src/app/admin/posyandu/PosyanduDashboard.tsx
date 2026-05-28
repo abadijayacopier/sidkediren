@@ -20,6 +20,7 @@ export default function PosyanduDashboard() {
 
   // Modal State Tambah Balita & Sinkronisasi
   const [showModal, setShowModal] = useState(false);
+  const [editBalitaId, setEditBalitaId] = useState<number | null>(null);
   const [isAutoWarga, setIsAutoWarga] = useState(true); // Default true untuk menyinkronkan data kependudukan
   const [selectedWargaNik, setSelectedWargaNik] = useState('');
   const [formNama, setFormNama] = useState('');
@@ -32,6 +33,7 @@ export default function PosyanduDashboard() {
 
   // Modal State Tambah Jadwal (NEW)
   const [showJadwalModal, setShowJadwalModal] = useState(false);
+  const [editJadwalId, setEditJadwalId] = useState<number | null>(null);
   const [formPosyanduJadwal, setFormPosyanduJadwal] = useState('');
   const [formKaderJadwal, setFormKaderJadwal] = useState('');
   const [formTanggalJadwal, setFormTanggalJadwal] = useState('');
@@ -247,12 +249,19 @@ export default function PosyanduDashboard() {
 
       formData.append('statusGizi', finalStatusGizi);
 
+      if (editBalitaId) {
+        formData.append('id', String(editBalitaId));
+        // Needs update function, but I'll add editBalita support logic next or skip it since we only have saveBalita that creates.
+        // Wait, saveBalita does not support update yet. I will need to update saveBalita in pkk.ts.
+      }
+
       await saveBalita(formData);
       
       Swal.fire({ icon: 'success', title: 'Data Balita Tersimpan!', showConfirmButton: false, timer: 1500 });
       setShowModal(false);
       
       // Reset Form
+      setEditBalitaId(null);
       setFormNama(''); setFormIbu(''); setFormUsia(''); setFormBb(''); setFormTb(''); setFormGender('L');
       setSelectedVaksin([]); setHasVitaminA(false); setHasObatCacing(false); setHasPmt(false);
       
@@ -260,6 +269,28 @@ export default function PosyanduDashboard() {
     } catch (err: any) {
       Swal.fire('Gagal', err.message, 'error');
     }
+  };
+
+  const handleEditBalita = (balita: any) => {
+    setEditBalitaId(balita.id);
+    setFormNama(balita.nama || '');
+    setFormIbu(balita.namaIbu || '');
+    setFormGender(balita.jenisKelamin as 'L'|'P');
+    setFormUsia(String(balita.usiaBulan || ''));
+    setFormBb(String(balita.beratBadan || ''));
+    setFormTb(String(balita.tinggiBadan || ''));
+    setFormPosyandu(String(balita.posyanduId || ''));
+    setShowModal(true);
+  };
+
+  const handleEditJadwal = (jadwal: any) => {
+    setEditJadwalId(jadwal.id);
+    setFormPosyanduJadwal(String(jadwal.posyanduId));
+    setFormKaderJadwal(String(jadwal.kaderId));
+    if (jadwal.tanggal) setFormTanggalJadwal(new Date(jadwal.tanggal).toISOString().split('T')[0]);
+    setFormWaktuJadwal(jadwal.waktu || '');
+    setFormSasaranJadwal(jadwal.sasaran || '');
+    setShowJadwalModal(true);
   };
 
   const handleSubmitJadwal = async (e: React.FormEvent) => {
@@ -272,6 +303,7 @@ export default function PosyanduDashboard() {
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
       const formData = new FormData();
+      if (editJadwalId) formData.append('id', String(editJadwalId));
       formData.append('posyanduId', formPosyanduJadwal);
       formData.append('kaderId', formKaderJadwal);
       formData.append('tanggal', formTanggalJadwal);
@@ -280,10 +312,11 @@ export default function PosyanduDashboard() {
 
       await saveJadwal(formData);
       
-      Swal.fire({ icon: 'success', title: 'Jadwal Posyandu Ditambahkan!', showConfirmButton: false, timer: 1500 });
+      Swal.fire({ icon: 'success', title: editJadwalId ? 'Jadwal Diperbarui!' : 'Jadwal Ditambahkan!', showConfirmButton: false, timer: 1500 });
       setShowJadwalModal(false);
       
       // Reset Form
+      setEditJadwalId(null);
       setFormPosyanduJadwal(''); setFormKaderJadwal(''); setFormTanggalJadwal(''); setFormWaktuJadwal(''); setFormSasaranJadwal('');
       
       loadData();
@@ -669,9 +702,14 @@ export default function PosyanduDashboard() {
                         {item.kader?.nama || 'Belum Diatur'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => handleDeleteJadwal(item.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleEditJadwal(item)} className="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            <Edit size={16} />
+                          </button>
+                          <button onClick={() => handleDeleteJadwal(item.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -733,6 +771,9 @@ export default function PosyanduDashboard() {
                               className="text-[10px] font-black text-emerald-600 hover:text-white hover:bg-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors uppercase tracking-widest flex items-center gap-1.5"
                             >
                               <ShieldCheck size={12} /> KMS Chart
+                            </button>
+                            <button onClick={() => handleEditBalita(item)} className="p-1.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                              <Edit size={16} />
                             </button>
                             <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                               <Trash2 size={16} />

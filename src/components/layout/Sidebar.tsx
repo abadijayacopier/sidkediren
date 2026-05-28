@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { logoutAction } from '@/app/actions/auth';
+import { useSession } from 'next-auth/react';
 
 export default function Sidebar({ 
   isCollapsed, 
@@ -32,6 +33,19 @@ export default function Sidebar({
   setIsMobileOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  
+  const userRole = (session?.user as any)?.role;
+  let aksesModul: string[] = [];
+  try {
+    const rawAkses = (session?.user as any)?.aksesModul;
+    aksesModul = rawAkses ? JSON.parse(rawAkses) : [];
+  } catch(e) {}
+
+  const hasAccess = (modulId: string) => {
+    if (userRole === 'Admin') return true;
+    return aksesModul.includes(modulId);
+  };
 
   return (
     <motion.aside
@@ -75,61 +89,73 @@ export default function Sidebar({
         <SidebarLink href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === '/admin'} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
 
         {/* Menu Kependudukan */}
-        <div className="space-y-1">
-          {!isCollapsed ? (
-            <div className="flex items-center gap-3 px-3 py-2 text-slate-400 text-[11px] font-black uppercase tracking-[0.1em] mt-6 mb-1 whitespace-nowrap">
-              Kependudukan
+        {hasAccess('penduduk') && (
+          <div className="space-y-1">
+            {!isCollapsed ? (
+              <div className="flex items-center gap-3 px-3 py-2 text-slate-400 text-[11px] font-black uppercase tracking-[0.1em] mt-6 mb-1 whitespace-nowrap">
+                Kependudukan
+              </div>
+            ) : (
+              <div className="h-px bg-slate-100 my-4 mx-2" />
+            )}
+            <SidebarLink href="/admin/penduduk" icon={<Users size={20} />} label="Daftar Warga" active={pathname === '/admin/penduduk'} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
+            <SidebarLink href="/admin/penduduk/mutasi" icon={<RefreshCcw size={20} />} label="Riwayat Mutasi" active={pathname === '/admin/penduduk/mutasi'} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
+          </div>
+        )}
+
+        {(hasAccess('surat') || hasAccess('transparansi') || hasAccess('gis')) && (
+          !isCollapsed ? (
+            <div className="pt-6 mb-1">
+              <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Layanan Desa</p>
             </div>
           ) : (
             <div className="h-px bg-slate-100 my-4 mx-2" />
-          )}
-          <SidebarLink href="/admin/penduduk" icon={<Users size={20} />} label="Daftar Warga" active={pathname === '/admin/penduduk'} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
-          <SidebarLink href="/admin/penduduk/mutasi" icon={<RefreshCcw size={20} />} label="Riwayat Mutasi" active={pathname === '/admin/penduduk/mutasi'} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
-        </div>
-
-        {!isCollapsed ? (
-          <div className="pt-6 mb-1">
-            <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Layanan Desa</p>
-          </div>
-        ) : (
-          <div className="h-px bg-slate-100 my-4 mx-2" />
+          )
         )}
 
         {/* Persuratan */}
-        <div className="space-y-1">
-          <SidebarCollapse
-            icon={<FileText size={20} />}
-            label="Manajemen Surat"
-            active={pathname.startsWith('/admin/surat')}
-            isCollapsed={isCollapsed}
-            onSubItemClick={() => setIsMobileOpen(false)}
-            subItems={[
-              { href: '/admin/surat/buat', label: 'Buat Surat' },
-              { href: '/admin/surat/riwayat', label: 'Arsip Surat' },
-              { href: '/admin/surat/master', label: 'Master Surat' },
-            ]}
-          />
-        </div>
+        {hasAccess('surat') && (
+          <div className="space-y-1">
+            <SidebarCollapse
+              icon={<FileText size={20} />}
+              label="Manajemen Surat"
+              active={pathname.startsWith('/admin/surat')}
+              isCollapsed={isCollapsed}
+              onSubItemClick={() => setIsMobileOpen(false)}
+              subItems={[
+                { href: '/admin/surat/buat', label: 'Buat Surat' },
+                { href: '/admin/surat/riwayat', label: 'Arsip Surat' },
+                { href: '/admin/surat/master', label: 'Master Surat' },
+              ]}
+            />
+          </div>
+        )}
 
-        <SidebarLink href="/admin/settings/transparansi" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/settings/transparansi')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
+        {hasAccess('transparansi') && (
+          <SidebarLink href="/admin/settings/transparansi" icon={<PieChart size={20} />} label="Transparansi" active={pathname.startsWith('/admin/settings/transparansi')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
+        )}
         
         {/* FIX BUG-11: Activated missing features */}
-        <SidebarLink href="/admin/gis" icon={<Map size={20} />} label="Pemetaan GIS" active={pathname.startsWith('/admin/gis')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
-
-        {!isCollapsed ? (
-          <div className="pt-6 mb-1">
-            <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Sosial & Ekonomi</p>
-          </div>
-        ) : (
-          <div className="h-px bg-slate-100 my-4 mx-2" />
+        {hasAccess('gis') && (
+          <SidebarLink href="/admin/gis" icon={<Map size={20} />} label="Pemetaan GIS" active={pathname.startsWith('/admin/gis')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
         )}
-        <SidebarLink href="/admin/settings/potensi" icon={<Store size={20} />} label="UMKM & Wisata" active={pathname.startsWith('/admin/settings/potensi')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
-        <SidebarLink href="/admin/pkk" icon={<Users size={20} />} label="Kegiatan PKK" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
-        <SidebarLink href="/admin/posyandu" icon={<HeartPulse size={20} />} label="e-KMS & Posyandu" active={pathname.startsWith('/admin/posyandu')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
+
+        {(hasAccess('potensi') || hasAccess('pkk') || hasAccess('posyandu')) && (
+          !isCollapsed ? (
+            <div className="pt-6 mb-1">
+              <p className="px-3 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] whitespace-nowrap">Sosial & Ekonomi</p>
+            </div>
+          ) : (
+            <div className="h-px bg-slate-100 my-4 mx-2" />
+          )
+        )}
+        {hasAccess('potensi') && <SidebarLink href="/admin/settings/potensi" icon={<Store size={20} />} label="UMKM & Wisata" active={pathname.startsWith('/admin/settings/potensi')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />}
+        {hasAccess('pkk') && <SidebarLink href="/admin/pkk" icon={<Users size={20} />} label="Kegiatan PKK" active={pathname.startsWith('/admin/pkk')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />}
+        {hasAccess('posyandu') && <SidebarLink href="/admin/posyandu" icon={<HeartPulse size={20} />} label="e-KMS & Posyandu" active={pathname.startsWith('/admin/posyandu')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />}
       </nav>
 
       <div className="p-4 border-t border-slate-100 space-y-1 bg-white">
-        <SidebarLink href="/admin/settings" icon={<Settings size={20} />} label="Pengaturan" active={pathname.startsWith('/admin/settings')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
+        {hasAccess('pengaturan') && <SidebarLink href="/admin/settings" icon={<Settings size={20} />} label="Pengaturan" active={pathname.startsWith('/admin/settings')} isCollapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />}
         
         <button 
           onClick={() => { React.startTransition(() => { logoutAction('/login'); }); }}

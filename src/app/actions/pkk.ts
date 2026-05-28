@@ -831,23 +831,43 @@ export async function saveBalita(formData: FormData) {
       if (tinggiBadan < (usiaBulan * 2.5)) statusGizi = 'Stunting';
     }
 
-    const newBalita = await prisma.balitaKms.create({
-      data: {
-        nama,
-        namaIbu,
-        jenisKelamin,
-        usiaBulan,
-        beratBadan,
-        tinggiBadan,
-        posyanduId,
-        statusGizi,
-        nik: Date.now().toString().slice(-16)
-      }
-    });
+    const id = formData.get('id') ? Number(formData.get('id')) : undefined;
 
-    await prisma.kmsPengukuran.create({
-      data: {
-        balitaId: newBalita.id,
+    let balita;
+    if (id) {
+      balita = await prisma.balitaKms.update({
+        where: { id },
+        data: {
+          nama,
+          namaIbu,
+          jenisKelamin,
+          usiaBulan,
+          beratBadan,
+          tinggiBadan,
+          posyanduId,
+          statusGizi
+        }
+      });
+    } else {
+      balita = await prisma.balitaKms.create({
+        data: {
+          nama,
+          namaIbu,
+          jenisKelamin,
+          usiaBulan,
+          beratBadan,
+          tinggiBadan,
+          posyanduId,
+          statusGizi,
+          nik: Date.now().toString().slice(-16)
+        }
+      });
+    }
+
+    if (!id) {
+      await prisma.kmsPengukuran.create({
+        data: {
+          balitaId: balita.id,
         usiaBulan,
         beratBadan,
         tinggiBadan,
@@ -856,7 +876,8 @@ export async function saveBalita(formData: FormData) {
         petugas: 'Kader Posyandu',
         tanggalUkur: new Date()
       }
-    });
+      });
+    }
 
     revalidatePath('/admin/pkk');
     return { success: true };
@@ -954,21 +975,23 @@ export async function deletePengukuran(id: number, balitaId: number) {
 
 export async function saveJadwal(formData: FormData) {
   try {
+    const id = formData.get('id') ? Number(formData.get('id')) : undefined;
     const posyanduId = Number(formData.get('posyanduId'));
     const kaderId = Number(formData.get('kaderId'));
     const tanggal = new Date(formData.get('tanggal') as string);
     const waktu = formData.get('waktu') as string;
     const sasaran = formData.get('sasaran') as string;
 
-    await prisma.jadwalPosyandu.create({
-      data: {
-        posyanduId,
-        kaderId,
-        tanggal,
-        waktu,
-        sasaran
-      }
-    });
+    if (id) {
+      await prisma.jadwalPosyandu.update({
+        where: { id },
+        data: { posyanduId, kaderId, tanggal, waktu, sasaran }
+      });
+    } else {
+      await prisma.jadwalPosyandu.create({
+        data: { posyanduId, kaderId, tanggal, waktu, sasaran }
+      });
+    }
 
     revalidatePath('/admin/pkk');
     return { success: true };

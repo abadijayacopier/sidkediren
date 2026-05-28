@@ -52,6 +52,14 @@ const settingMenus = [
     color: 'bg-rose-50'
   },
   {
+    title: 'Manajemen Pengguna',
+    description: 'Kelola akun administrator, staf desa, operator, dan penugasan hak akses.',
+    icon: <Users className="text-cyan-600" />,
+    href: '/admin/settings/users',
+    status: 'Aktif',
+    color: 'bg-cyan-50'
+  },
+  {
     title: 'Berita Desa',
     description: 'Kelola artikel berita, pengumuman, dan kegiatan terbaru untuk warga.',
     icon: <Newspaper className="text-emerald-600" />,

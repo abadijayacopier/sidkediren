@@ -7,6 +7,7 @@ import ExportButton from '@/components/ExportButton';
 import MutasiButton from '@/components/MutasiButton';
 import PrintBiodata from '@/components/PrintBiodata';
 import FilterPenduduk from '@/components/FilterPenduduk';
+import GeneratePinButton from '@/components/GeneratePinButton';
 import { syncDatabaseStructure } from '@/app/actions/system';
 
 export default async function PendudukDashboard({
@@ -212,6 +213,7 @@ export default async function PendudukDashboard({
                       <Link href={`/admin/penduduk/view/${warga.nik}`} title="Preview" className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Eye size={16} /></Link>
                       <PrintBiodata warga={warga} iconOnly={true} />
                       <Link href={`/admin/penduduk/edit/${warga.nik}`} title="Edit" className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"><Edit size={16} /></Link>
+                      <GeneratePinButton nik={warga.nik} nama={warga.namaLengkap} hasPin={!!warga.pinHash} />
                       <MutasiButton warga={warga} />
                       <DeletePenduduk nik={warga.nik} />
                     </div>
@@ -283,6 +285,7 @@ export default async function PendudukDashboard({
                     <Link href={`/admin/penduduk/view/${warga.nik}`} title="Preview" className="p-2 text-slate-500 hover:text-indigo-600 active:bg-indigo-100 rounded-xl transition-all border border-slate-200 bg-slate-50"><Eye size={16} /></Link>
                     <PrintBiodata warga={warga} iconOnly={true} />
                     <Link href={`/admin/penduduk/edit/${warga.nik}`} title="Edit" className="p-2 text-slate-500 hover:text-emerald-600 active:bg-emerald-100 rounded-xl transition-all border border-slate-200 bg-slate-50"><Edit size={16} /></Link>
+                    <GeneratePinButton nik={warga.nik} nama={warga.namaLengkap} hasPin={!!warga.pinHash} />
                     <MutasiButton warga={warga} />
                     <DeletePenduduk nik={warga.nik} />
                  </div>

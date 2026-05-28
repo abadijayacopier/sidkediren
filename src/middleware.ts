@@ -16,7 +16,7 @@ export default auth((req) => {
     return Response.redirect(new URL("/login", req.nextUrl));
   }
 
-  if (isAdminPage && isLoggedIn && loginType === "warga") {
+  if (isAdminPage && isLoggedIn && role === "Warga") {
     return Response.redirect(new URL("/portal", req.nextUrl));
   }
 
@@ -25,17 +25,21 @@ export default auth((req) => {
     return Response.redirect(new URL("/portal/login", req.nextUrl));
   }
 
-  if (isPortalPage && isLoggedIn && loginType === "admin") {
+  if (isPortalPage && isLoggedIn && role !== "Warga") {
     return Response.redirect(new URL("/admin", req.nextUrl));
   }
 
   // If admin is logged in and tries to access admin login page, redirect to dashboard
-  if (isAdminLoginPage && isLoggedIn && loginType === "admin") {
-    return Response.redirect(new URL("/admin", req.nextUrl));
+  if (isAdminLoginPage && isLoggedIn) {
+    if (role === "Warga") {
+      return Response.redirect(new URL("/portal", req.nextUrl));
+    } else {
+      return Response.redirect(new URL("/admin", req.nextUrl));
+    }
   }
 
   // If warga is logged in and tries to access warga login page, redirect to portal
-  if (isWargaLoginPage && isLoggedIn && loginType === "warga") {
+  if (isWargaLoginPage && isLoggedIn && role === "Warga") {
     return Response.redirect(new URL("/portal", req.nextUrl));
   }
 

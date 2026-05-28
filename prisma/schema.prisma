@@ -17,6 +17,7 @@ model Pengguna {
   passwordHash  String    @map("password_hash")
   peran         String    // Admin, Kepala Desa, Kasi Pemerintahan
   namaPetugas   String    @map("nama_petugas")
+  aksesModul    String?   @map("akses_modul") @db.Text // JSON string of allowed modules
   isActive      Boolean   @default(true) @map("is_active")
   lastLogin     DateTime? @map("last_login")
   createdAt     DateTime  @default(now()) @map("created_at")
