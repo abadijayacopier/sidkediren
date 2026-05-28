@@ -16,8 +16,9 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
   
   const [notifData, setNotifData] = useState<{ count: number, data: any[] }>({ count: 0, data: [] });
   
+  const userEmail = session?.user?.email;
   const userName = session?.user?.name || 'Admin';
-  const userRole = (session?.user as any)?.role || 'Operator Desa';
+  const userRole = (session?.user as any)?.role || (userEmail === 'admin' ? 'Admin' : 'Operator Desa');
 
   const fetchNotifs = async () => {
     if (userRole === 'Warga') return; // Only admin checks

@@ -42,8 +42,10 @@ export default function Sidebar({
     aksesModul = rawAkses ? JSON.parse(rawAkses) : [];
   } catch(e) {}
 
+  const userEmail = session?.user?.email;
+  
   const hasAccess = (modulId: string) => {
-    if (userRole?.toLowerCase() === 'admin') return true;
+    if (userRole?.toLowerCase() === 'admin' || userEmail === 'admin') return true;
     return aksesModul.includes(modulId);
   };
 
