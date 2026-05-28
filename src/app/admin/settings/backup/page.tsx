@@ -1,13 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Download, Upload, Clock, HardDrive, CheckCircle2, AlertTriangle, ArrowLeft, Shield, Cloud } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { getDatabaseSize } from '@/app/actions/backupStats';
 
 export default function BackupPage() {
   const [isExporting, setIsExporting] = useState(false);
-  const [lastBackup] = useState('19 Mei 2026, 08:30 WIB');
+  const [lastBackup, setLastBackup] = useState('Belum Pernah');
+  const [dbSize, setDbSize] = useState('Menghitung...');
+
+  useEffect(() => {
+    // Ambil data size dari database
+    getDatabaseSize().then(size => setDbSize(size));
+    
+    // Ambil riwayat backup terakhir dari local storage
+    const history = localStorage.getItem('last_db_backup');
+    if (history) {
+      setLastBackup(history);
+    }
+  }, []);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -29,6 +42,12 @@ export default function BackupPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      // Simpan riwayat backup
+      const now = new Date();
+      const formattedDate = new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short' }).format(now) + ' WIB';
+      localStorage.setItem('last_db_backup', formattedDate);
+      setLastBackup(formattedDate);
     } catch (error) {
       console.error(error);
       alert('Gagal mengekspor database. Silakan coba lagi.');
@@ -71,7 +90,7 @@ export default function BackupPage() {
             <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600"><HardDrive size={18} /></div>
             <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Ukuran Database</span>
           </div>
-          <p className="text-sm font-bold text-slate-800">~12.4 MB</p>
+          <p className="text-sm font-bold text-slate-800">{dbSize}</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -80,7 +99,7 @@ export default function BackupPage() {
             <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600"><Clock size={18} /></div>
             <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Jadwal Otomatis</span>
           </div>
-          <p className="text-sm font-bold text-slate-800">Setiap Hari 02:00 WIB</p>
+          <p className="text-sm font-bold text-slate-800">Manual (Sesuai Permintaan)</p>
         </motion.div>
       </div>
 
@@ -114,12 +133,12 @@ export default function BackupPage() {
             <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600"><Upload size={24} /></div>
             <div>
               <h3 className="font-bold text-slate-800">Restore Data</h3>
-              <p className="text-xs text-slate-500">Pulihkan dari file backup JSON</p>
+              <p className="text-xs text-slate-500">Pulihkan dari file backup SQL</p>
             </div>
           </div>
           <label className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-dashed border-slate-300">
-            <Upload size={16} /> Pilih File Backup (.json)
-            <input type="file" accept=".json" className="hidden" />
+            <Upload size={16} /> Pilih File Backup (.sql)
+            <input type="file" accept=".sql" className="hidden" />
           </label>
         </motion.div>
       </div>
