@@ -76,7 +76,7 @@ export default function Footer({ profil }: { profil: any }) {
               </li>
               <li className="flex gap-2 items-start">
                 <MapPin size={12} className="text-[#4CAF50] mt-0.5 shrink-0" />
-                <span>Kec. Kawedanan, Kab. Magetan, Jawa Timur</span>
+                <span>Kec. {profil?.kecamatan || 'Lembeyan'}, Kab. {profil?.kabupaten || 'Magetan'}, {profil?.provinsi || 'Jawa Timur'}</span>
               </li>
             </ul>
           </div>
@@ -89,8 +89,8 @@ export default function Footer({ profil }: { profil: any }) {
           <p className="text-[10px] text-gray-500 text-center">
             © {currentYear} Pemerintah Desa {profil?.namaDesa || 'Kediren'}. Hak Cipta Dilindungi.
           </p>
-          <p className="text-[10px] text-gray-500">
-            Powered by <span className="text-[#4CAF50] font-semibold">Desa Digital</span>
+          <p className="text-[10px] text-gray-500 text-center sm:text-right">
+            Powered by <span className="text-[#4CAF50] font-semibold">Desa {profil?.namaDesa || 'Kediren'}</span> <br className="sm:hidden" /><span className="hidden sm:inline">|</span> Developer: <span className="text-white/80 font-medium">Abadi Jaya</span>
           </p>
         </div>
       </div>

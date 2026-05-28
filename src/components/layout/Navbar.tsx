@@ -46,7 +46,7 @@ export default function Navbar({ profil }: { profil: any }) {
               Desa {profil?.namaDesa || 'Kediren'}
             </span>
             <span className="text-[10px] sm:text-[11px] text-gray-400 leading-none">
-              Kecamatan {profil?.kecamatan || 'Kawedanan'} Kabupaten {profil?.kabupaten || 'Magetan'}
+              Kecamatan {profil?.kecamatan || 'Lembeyan'} Kabupaten {profil?.kabupaten || 'Magetan'}
             </span>
           </div>
         </Link>

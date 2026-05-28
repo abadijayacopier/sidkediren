@@ -137,41 +137,43 @@ export default function ProfilDesaSettings() {
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/settings" className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-start md:items-center gap-4">
+          <Link href="/admin/settings" className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500 shrink-0">
             <ArrowLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Profil Desa Kediren</h1>
-            <p className="text-slate-500 text-sm font-medium">Informasi publik yang dipublikasikan secara resmi.</p>
+            <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight leading-tight">Profil Desa Kediren</h1>
+            <p className="text-slate-500 text-xs md:text-sm font-medium leading-relaxed">Informasi publik yang dipublikasikan secara resmi.</p>
           </div>
         </div>
         <button 
           type="submit" 
           disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-200"
+          className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-200"
         >
           <Save size={18} /> {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${
-              activeTab === tab.id 
-                ? 'bg-white text-emerald-600 shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {tab.icon} {tab.label.toUpperCase()}
-          </button>
-        ))}
+      <div className="w-full overflow-hidden">
+        <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`shrink-0 flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-[10px] md:text-xs font-black transition-all ${
+                activeTab === tab.id 
+                  ? 'bg-white text-emerald-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab.icon} {tab.label.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content */}
@@ -180,7 +182,7 @@ export default function ProfilDesaSettings() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
-            className="p-10 space-y-8"
+            className="p-6 md:p-10 space-y-8"
           >
             <div className="grid md:grid-cols-3 gap-10">
                {/* Logo Upload */}
@@ -247,7 +249,7 @@ export default function ProfilDesaSettings() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
-            className="p-10 space-y-10"
+            className="p-6 md:p-10 space-y-10"
           >
             <div>
                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Visi Desa</label>
@@ -278,7 +280,7 @@ export default function ProfilDesaSettings() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
-            className="p-10 space-y-8"
+            className="p-6 md:p-10 space-y-8"
           >
              <div className="flex items-center justify-between">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Total {struktur.length} Jabatan Terdefinisi</p>
@@ -328,7 +330,7 @@ export default function ProfilDesaSettings() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
-            className="p-10 space-y-12"
+            className="p-6 md:p-10 space-y-12"
           >
              {/* Running Text Settings */}
              <div className="bg-slate-900 p-8 rounded-[2rem] border border-slate-800 text-white space-y-6">
@@ -491,7 +493,7 @@ export default function ProfilDesaSettings() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
-            className="p-10 grid md:grid-cols-2 gap-8"
+            className="p-6 md:p-10 grid md:grid-cols-2 gap-8"
           >
              <div className="space-y-6">
                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Kontak Resmi</h3>

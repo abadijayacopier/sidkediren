@@ -30,10 +30,10 @@ export default function Marquee({ text }: { text: string }) {
         <div ref={containerRef} className="flex-1 overflow-hidden relative">
           <div
             ref={textRef}
-            className="whitespace-nowrap font-medium text-[13px] animate-marquee inline-block"
+            className="whitespace-nowrap font-medium text-[13px] animate-marquee inline-block hover:[animation-play-state:paused] cursor-default"
             style={{ animationDuration: `${animDuration}s` }}
           >
-            {text} &nbsp;&nbsp;●&nbsp;&nbsp; {text} &nbsp;&nbsp;●&nbsp;&nbsp; {text}
+            {text} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {text} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {text}
           </div>
         </div>
       </div>
@@ -45,6 +45,9 @@ export default function Marquee({ text }: { text: string }) {
         }
         .animate-marquee {
           animation: marquee linear infinite;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
         }
       `}</style>
     </div>

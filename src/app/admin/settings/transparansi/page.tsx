@@ -293,13 +293,13 @@ export default function AdminTransparansiPage() {
     <div className="space-y-8 min-h-screen pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-          <Link href="/admin/settings" className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-all border border-slate-100 shadow-sm group">
+        <div className="flex items-start md:items-center gap-4 md:gap-6">
+          <Link href="/admin/settings" className="w-12 h-12 md:w-14 md:h-14 shrink-0 bg-white rounded-2xl flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-all border border-slate-100 shadow-sm group">
             <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-all" />
           </Link>
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Transparansi</h1>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Pengaturan APBDes dan Monitoring Program Kerja</p>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight">Manajemen Transparansi</h1>
+            <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed">Pengaturan APBDes dan Monitoring Program Kerja</p>
           </div>
         </div>
 
@@ -343,11 +343,11 @@ export default function AdminTransparansiPage() {
       </div>
 
       {/* Beautiful Tabs Navigation */}
-      <div className="flex justify-center md:justify-start">
-        <div className="bg-white/50 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-1">
+      <div className="flex justify-center md:justify-start w-full overflow-hidden">
+        <div className="bg-white/50 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-1 overflow-x-auto custom-scrollbar w-full md:w-auto no-scrollbar">
           <button 
             onClick={() => setActiveTab('apbdes')}
-            className={`flex items-center gap-2.5 px-8 py-3 rounded-[20px] text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+            className={`flex items-center gap-2 md:gap-2.5 px-4 md:px-8 py-3 rounded-[20px] text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all duration-300 shrink-0 ${
               activeTab === 'apbdes' 
                 ? 'bg-slate-800 text-white shadow-lg shadow-slate-200' 
                 : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
@@ -358,7 +358,7 @@ export default function AdminTransparansiPage() {
           </button>
           <button 
             onClick={() => setActiveTab('program')}
-            className={`flex items-center gap-2.5 px-8 py-3 rounded-[20px] text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+            className={`flex items-center gap-2 md:gap-2.5 px-4 md:px-8 py-3 rounded-[20px] text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all duration-300 shrink-0 ${
               activeTab === 'program' 
                 ? 'bg-slate-800 text-white shadow-lg shadow-slate-200' 
                 : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
@@ -369,7 +369,7 @@ export default function AdminTransparansiPage() {
           </button>
           <button 
             onClick={() => setActiveTab('infografis')}
-            className={`flex items-center gap-2.5 px-8 py-3 rounded-[20px] text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+            className={`flex items-center gap-2 md:gap-2.5 px-4 md:px-8 py-3 rounded-[20px] text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all duration-300 shrink-0 ${
               activeTab === 'infografis' 
                 ? 'bg-slate-800 text-white shadow-lg shadow-slate-200' 
                 : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
@@ -384,24 +384,24 @@ export default function AdminTransparansiPage() {
         {/* Tab Content */}
         <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl overflow-hidden">
           <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap w-full md:w-auto">
               {activeTab === 'apbdes' && (
-                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto w-full md:w-auto no-scrollbar">
                   <button 
                     onClick={() => setSelectedJenis('ALL')}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'ALL' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`shrink-0 px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'ALL' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                   >SEMUA</button>
                   <button 
                     onClick={() => setSelectedJenis('PENDAPATAN')}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'PENDAPATAN' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`shrink-0 px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'PENDAPATAN' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                   >PENDAPATAN</button>
                   <button 
                     onClick={() => setSelectedJenis('BELANJA')}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'BELANJA' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`shrink-0 px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'BELANJA' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                   >BELANJA</button>
                   <button 
                     onClick={() => setSelectedJenis('PEMBIAYAAN')}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'PEMBIAYAAN' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`shrink-0 px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${selectedJenis === 'PEMBIAYAAN' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                   >PEMBIAYAAN</button>
                 </div>
               )}

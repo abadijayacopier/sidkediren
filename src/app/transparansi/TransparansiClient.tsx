@@ -448,8 +448,8 @@ export default function TransparansiClient({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto">
                   <DownloadCard title="LPPDes 2023" size="2.4 MB" date="Jan 2024" />
                   <DownloadCard title="Perdes APBDes 2024" size="1.8 MB" date="Mar 2024" />
-                  <DownloadCard title="Profil Desa Kediren" size="4.2 MB" date="Des 2023" />
-                  <DownloadCard title="Buku Desa Digital" size="3.1 MB" date="Apr 2024" />
+                  <DownloadCard title={`Profil Desa ${profil?.namaDesa || 'Kediren'}`} size="4.2 MB" date="Des 2023" />
+                  <DownloadCard title="Buku Panduan Desa" size="3.1 MB" date="Apr 2024" />
                 </div>
               </div>
             </div>
@@ -465,7 +465,7 @@ export default function TransparansiClient({
             </div>
             <h3 className="text-4xl font-black text-[#0b1c30] mb-6 tracking-tight">Peta Spasial Proyek (GIS)</h3>
             <p className="text-slate-500 max-w-2xl mx-auto text-lg mb-12">
-              Segera hadir! Warga dapat memantau lokasi proyek secara interaktif di peta desa digital, lengkap dengan koordinat GPS dan navigasi langsung ke lokasi.
+              Segera hadir! Warga dapat memantau lokasi proyek secara interaktif di sistem peta spasial desa, lengkap dengan koordinat GPS dan navigasi langsung ke lokasi.
             </p>
             <div className="relative max-w-4xl mx-auto h-[400px] bg-slate-200 rounded-[40px] overflow-hidden border-8 border-white shadow-2xl flex items-center justify-center group">
               <div className="absolute inset-0 bg-emerald-900/40 backdrop-blur-sm flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all cursor-not-allowed">

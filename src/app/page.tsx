@@ -77,7 +77,7 @@ export default async function HomePage() {
       <Marquee 
         text={
           berita && berita.length > 0 
-            ? "UPDATE TERKINI: " + berita.map((b: any) => b.judul).join('  —  ') 
+            ? "UPDATE TERKINI:    " + berita.map((b: any) => b.judul).join('   ✦   ') 
             : profil?.runningText || "Selamat Datang di Portal Resmi Desa Kediren — Informasi Transparan, Warga Sejahtera."
         } 
       />
@@ -315,8 +315,8 @@ export default async function HomePage() {
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <MapPin size={20} />
                 </div>
-                <p className="text-sm font-semibold">Kec. Kawedanan</p>
-                <p className="text-xs text-white/50 mt-1">Kab. Magetan, Jawa Timur</p>
+                <p className="text-sm font-semibold">Kec. {profil?.kecamatan || 'Lembeyan'}</p>
+                <p className="text-xs text-white/50 mt-1">Kab. {profil?.kabupaten || 'Magetan'}, {profil?.provinsi || 'Jawa Timur'}</p>
               </div>
             </div>
             {/* Social */}
