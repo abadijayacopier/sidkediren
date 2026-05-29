@@ -15,8 +15,9 @@ export default async function BuatSuratPage() {
         include: { klasifikasi: true }
       }),
       prisma.penduduk.findMany({
-        take: 10,
-        orderBy: { namaLengkap: 'asc' }
+        take: 500,
+        orderBy: { namaLengkap: 'asc' },
+        include: { keluarga: true }
       })
     ]);
     masterSurat = mSurat;
@@ -30,8 +31,9 @@ export default async function BuatSuratPage() {
           include: { klasifikasi: true }
         }),
         prisma.penduduk.findMany({
-          take: 10,
-          orderBy: { namaLengkap: 'asc' }
+          take: 500,
+          orderBy: { namaLengkap: 'asc' },
+          include: { keluarga: true }
         })
       ]);
       masterSurat = mSurat;
