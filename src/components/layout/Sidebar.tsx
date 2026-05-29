@@ -35,9 +35,9 @@ export default function Sidebar({
   const pathname = usePathname();
   const { data: session, status } = useSession();
   
-  // While session is loading (e.g. right after login redirect),
-  // optimistically show all menu items to prevent flash of missing items
-  const isSessionLoading = status === 'loading';
+  // While session is loading (e.g. right after login redirect) or stuck in stale unauthenticated cache,
+  // optimistically show all menu items to prevent flash of missing items. (Middleware protects actual access).
+  const isSessionLoading = status === 'loading' || status === 'unauthenticated';
   
   const userRole = (session?.user as any)?.role;
   let aksesModul: string[] = [];

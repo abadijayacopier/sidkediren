@@ -33,7 +33,7 @@ export default function BottomNav() {
   const { data: session, status } = useSession();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const isSessionLoading = status === 'loading';
+  const isSessionLoading = status === 'loading' || status === 'unauthenticated';
   const userRole = (session?.user as any)?.role;
   const userEmail = session?.user?.email;
   let aksesModul: string[] = [];
