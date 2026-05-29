@@ -40,14 +40,14 @@ export default function ExportButton() {
     <button 
       onClick={handleExport}
       disabled={loading}
-      className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all font-bold text-sm shadow-sm"
+      className="flex flex-1 sm:flex-none justify-center items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all font-bold text-sm shadow-sm w-full sm:w-auto"
     >
       {loading ? (
-        <Loader2 className="animate-spin text-emerald-600" size={18} />
+        <Loader2 className="animate-spin text-emerald-600 shrink-0" size={18} />
       ) : (
-        <Download size={18} className="text-emerald-600" />
+        <Download size={18} className="text-emerald-600 shrink-0" />
       )}
-      Ekspor Excel
+      <span>Ekspor</span>
     </button>
   );
 }

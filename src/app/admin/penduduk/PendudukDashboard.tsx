@@ -129,11 +129,11 @@ export default async function PendudukDashboard({
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Kependudukan Kediren</h1>
           <p className="text-slate-500 text-sm">Total: <span className="font-bold text-emerald-600">{totalItems}</span> Jiwa terdaftar.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
           <ImportButton />
           <ExportButton />
-          <Link href="/admin/penduduk/tambah" className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold text-sm shadow-lg shadow-emerald-100">
-            <UserPlus size={18} /> Tambah Warga
+          <Link href="/admin/penduduk/tambah" className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold text-sm shadow-lg shadow-emerald-100 col-span-2 sm:col-span-1 w-full sm:w-auto mt-1 sm:mt-0">
+            <UserPlus size={18} className="shrink-0" /> <span>Tambah Warga</span>
           </Link>
         </div>
       </div>

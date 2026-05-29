@@ -52,7 +52,7 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-10 relative">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Hamburger - hidden on mobile (bottom nav replaces it), shown on tablet when sidebar is collapsed */}
         <button 
           className="hidden text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
@@ -60,7 +60,16 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
         >
           <Menu size={24} />
         </button>
-        <h1 className="font-bold text-slate-700 text-lg hidden sm:block">Selamat Datang, {userName.split(' ')[0]}</h1>
+        <div>
+          <h1 className="font-bold text-slate-800 text-base sm:text-lg leading-tight tracking-tight">
+            <span className="sm:hidden">Hai, </span>
+            <span className="hidden sm:inline">Selamat Datang, </span>
+            {userName.split(' ')[0]}
+          </h1>
+          <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest sm:hidden">
+            SID Kediren
+          </p>
+        </div>
       </div>
       
       <div className="flex items-center gap-4">
