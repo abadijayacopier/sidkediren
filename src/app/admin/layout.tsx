@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import BottomNav from '@/components/layout/BottomNav';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function AdminFooter() {
@@ -62,14 +63,17 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
 
-        {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative flex flex-col">
+        {/* Page Content - extra pb on mobile for bottom nav clearance */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative flex flex-col pb-24 lg:pb-4">
           <div className="flex-1">
             {children}
           </div>
           <AdminFooter />
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

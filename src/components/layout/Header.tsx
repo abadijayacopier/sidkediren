@@ -53,8 +53,9 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-10 relative">
       <div className="flex items-center gap-4">
+        {/* Hamburger - hidden on mobile (bottom nav replaces it), shown on tablet when sidebar is collapsed */}
         <button 
-          className="lg:hidden text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
+          className="hidden text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
         >
           <Menu size={24} />
