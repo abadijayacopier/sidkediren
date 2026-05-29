@@ -43,6 +43,11 @@ interface Penduduk {
   pekerjaan: string;
   statusPerkawinan: string;
   agama: string;
+  keluarga?: {
+    dusun?: string;
+    rt?: string;
+    rw?: string;
+  };
 }
 
 export default function SuratForm({ masterSurat, initialPenduduk }: { masterSurat: MasterSurat[], initialPenduduk: any[] }) {
@@ -320,8 +325,8 @@ export default function SuratForm({ masterSurat, initialPenduduk }: { masterSura
                                </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                                <p className="text-xs font-bold text-slate-600 uppercase">{p.alamat || 'KEDIREN'}</p>
-                                <p className="text-[10px] text-slate-400 font-mono italic">RT -- / RW --</p>
+                                <p className="text-xs font-bold text-slate-600 uppercase">{p.keluarga?.dusun || p.alamat || 'KEDIREN'}</p>
+                                <p className="text-[10px] text-slate-400 font-mono italic">RT {p.keluarga?.rt || '--'} / RW {p.keluarga?.rw || '--'}</p>
                             </td>
                             <td className="px-6 py-4">
                                <div className="flex justify-center opacity-40 group-hover:opacity-100 transition-all">

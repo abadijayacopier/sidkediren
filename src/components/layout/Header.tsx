@@ -159,7 +159,7 @@ export default function Header({ isMobileOpen, setIsMobileOpen }: { isMobileOpen
               
               <div className="px-2 py-2 flex flex-col gap-1">
                 <Link 
-                  href="/admin/settings" 
+                  href="/admin/settings/profil" 
                   onClick={() => setIsDropdownOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors"
                 >
