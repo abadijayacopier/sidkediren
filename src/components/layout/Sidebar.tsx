@@ -33,7 +33,11 @@ export default function Sidebar({
   setIsMobileOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  
+  // While session is loading (e.g. right after login redirect),
+  // optimistically show all menu items to prevent flash of missing items
+  const isSessionLoading = status === 'loading';
   
   const userRole = (session?.user as any)?.role;
   let aksesModul: string[] = [];
@@ -45,6 +49,8 @@ export default function Sidebar({
   const userEmail = session?.user?.email;
   
   const hasAccess = (modulId: string) => {
+    // During loading, show all items to prevent layout shift after login
+    if (isSessionLoading) return true;
     if (userRole?.toLowerCase() === 'admin' || userEmail === 'admin') return true;
     return aksesModul.includes(modulId);
   };
